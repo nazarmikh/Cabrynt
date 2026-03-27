@@ -26,7 +26,7 @@ public class User
     }
 
     private string _passwordHash;
-    public string PasswordHash
+    public required string PasswordHash
     {
         get { return _passwordHash; }
         set { _passwordHash = value; }

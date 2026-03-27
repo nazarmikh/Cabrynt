@@ -1,13 +1,45 @@
+using System.ComponentModel.DataAnnotations;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 namespace Project.Models;
+
 
 public class VehicleTelemetry
 {
-    public int Id {get;set;}
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string Id {get;set;}
     public string GPS {get;set;}
-    public double CurrentSpeed {get;set;}
-    public double RemainingBatteryPercentage {get;set;}
+    private double _currentSpeed;
+    public double CurrentSpeed
+    {
+        get 
+        {return _currentSpeed;}
+        set
+        {
+            if (value < 0)
+            {
+                throw new ArgumentOutOfRangeException("Speed cannot be negative");
+            }
+            _currentSpeed = value;
+        }
+    }
+
+    private double _remainingBatteryPercentage;
+    public double RemainingBatteryPercentage
+    {
+        get {return _remainingBatteryPercentage;}
+        set
+        {
+            if (value < 0 || value > 100)
+            {
+                throw new ArgumentOutOfRangeException("Battery cannot be out of [0,100]");
+            }
+            _remainingBatteryPercentage = value;
+        }
+    }
+
     public double HardwareTemperature {get;set;}
     public DateTime TimeStamp {get;set;}
-    public SensorDiagnostic SensorDiagnostic {get;set;}
-    public Vehicle Vehicle {get;set;}   
+    public int VehicleId {get;set;}   
 }

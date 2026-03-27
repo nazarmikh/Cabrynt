@@ -7,7 +7,7 @@ public class Vehicle
 {
     public int Id {get;set;}
     private string _vin;
-    public string VIN
+    public required string VIN
     {
         get
         {
@@ -56,7 +56,7 @@ public class Vehicle
         }
         set
         {
-            if (value >= 1990 || value <= DateTime.Now.Year)
+            if (value < 1970 || value > DateTime.Now.Year)
             {
                 throw new ArgumentOutOfRangeException("Manufacture year cannot be lower then 1990");
             }
@@ -64,18 +64,8 @@ public class Vehicle
         }
     }
 
-    private VehicleStatus _vehiсleStatus;   
-    public VehicleStatus VehicleStatus
-    {
-        get
-        {
-            return _vehiсleStatus;
-        }
-        set
-        {
-            _vehiсleStatus = value;
-        }
-    }
+    public VehicleStatus VehicleStatus {get;set;}
+
     
 
 }

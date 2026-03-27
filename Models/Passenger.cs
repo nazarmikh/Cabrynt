@@ -38,6 +38,10 @@ public class Passenger : User
         }
         set
         {
+            if (value < 0)
+            {
+                throw new ArgumentOutOfRangeException("Points cannot be negative");
+            }
             _points = value;
         }
     }
@@ -55,6 +59,7 @@ public class Passenger : User
         }
     }
 
-    public ICollection<Ticket> tickets {get;set;} = new List<Ticket>();
+    public ICollection<Ticket> Tickets {get;set;} = new List<Ticket>();
+    public ICollection<Ride> Rides {get;set;} = new List<Ride>();
 }
 
