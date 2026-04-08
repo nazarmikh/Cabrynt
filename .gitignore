@@ -1,0 +1,28 @@
+# Build output
+bin/
+obj/
+
+# Local SDK/runtime cache
+.dotnet/
+
+# IDE/editor
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs/temp
+*.log
+*.tmp
+
+# Test/coverage artifacts
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
