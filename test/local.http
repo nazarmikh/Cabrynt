@@ -1,0 +1,51 @@
+@host = http://localhost:5113
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4IiwiZW1haWwiOiJhZG1pbkBub3ZhZHJpdmUuY29tIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3NzUwNDk3NDksImlzcyI6Ik5vdmFEcml2ZSIsImF1ZCI6Ik5vdmFEcml2ZUNsaWVudHMifQ.VnGRVQzqxh9t1cd6SbY_nDursNjirnHi7fppQVVSsUQ
+
+### Health/root
+GET {{host}}/
+Accept: application/json
+
+### Register passenger
+POST {{host}}/api/public/auth/register
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "nazar.test123567@novadrie.com",
+  "password": "StrongPass123!",
+  "name": "Nazar Test",
+  "homeAddress": "Main Street 1, Bruges",
+  "preferredPaymentMethod": "Card"
+}
+
+### Login / Get token
+
+POST {{host}}/api/public/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "admin@novadrive.com",
+  "password": "AdminPassword123!"
+}
+
+
+###
+// Test /me (paste token into @accessToken above)
+
+GET {{host}}/api/public/auth/me
+Authorization: Bearer {{accessToken}}
+
+###
+
+POST {{host}}/api/private/registervehicle
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "VIN": "1HGCM82633A004353",
+  "LicencePlate": "ABC1231",
+  "Model": "Toyota Camry",
+  "VehicleType": "Standard",
+  "Year": 2020
+}

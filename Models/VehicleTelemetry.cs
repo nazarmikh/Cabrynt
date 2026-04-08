@@ -9,7 +9,9 @@ public class VehicleTelemetry
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id {get;set;}
-    public string GPS {get;set;}
+    public required string Latitude {get;set;}
+    public required string Longitude {get;set;}
+
     private double _currentSpeed;
     public double CurrentSpeed
     {

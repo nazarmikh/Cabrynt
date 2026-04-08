@@ -65,7 +65,4 @@ public class Vehicle
     }
 
     public VehicleStatus VehicleStatus {get;set;}
-
-    
-
 }

@@ -9,6 +9,6 @@ public class Ride
     public required string DestinationLocation {get;set;}
     public RideStatus RideStatus {get;set;}
     public DateTime RequestTime {get;set;}
-    public required Passenger Passenger {get;set;}
-    public Vehicle Vehicle {get;set;} 
+    public required PassengerProfile PassengerProfile {get;set;}
+    public Vehicle? Vehicle {get;set;} 
 }

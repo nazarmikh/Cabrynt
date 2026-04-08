@@ -7,7 +7,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
-    public DbSet<Passenger> Passengers {get;set;}
+    public DbSet<PassengerProfile> PassengerProfiles {get;set;}
     public DbSet<Maintenance> Maintenances {get;set;}
     public DbSet<Payment> Payments {get;set;}
     public DbSet<Ride> Rides {get;set;}
@@ -27,9 +27,9 @@ public class AppDbContext : DbContext
         // Length and requirement
         modelBuilder.Entity<User>().Property(e => e.Email).HasMaxLength(254).IsRequired();
         modelBuilder.Entity<User>().Property(e => e.PasswordHash).IsRequired();
-        modelBuilder.Entity<Passenger>().Property(e => e.Name).HasMaxLength(254).IsRequired();
-        modelBuilder.Entity<Passenger>().Property(e => e.HomeAddress).HasMaxLength(300).IsRequired();
-        modelBuilder.Entity<Passenger>().Property(e => e.PreferredPaymentMethod).HasMaxLength(100).IsRequired();
+        modelBuilder.Entity<PassengerProfile>().Property(e => e.Name).HasMaxLength(254).IsRequired();
+        modelBuilder.Entity<PassengerProfile>().Property(e => e.HomeAddress).HasMaxLength(300).IsRequired();
+        modelBuilder.Entity<PassengerProfile>().Property(e => e.PreferredPaymentMethod).HasMaxLength(100).IsRequired();
 
         modelBuilder.Entity<Vehicle>().Property(v => v.VIN).HasMaxLength(17).IsRequired();
         modelBuilder.Entity<Vehicle>().Property(v => v.LicencePlate).HasMaxLength(20).IsRequired();
@@ -45,9 +45,19 @@ public class AppDbContext : DbContext
 
         // Foreign keys and delete behavior
         modelBuilder.Entity<Ticket>()
-            .HasOne(p => p.Passenger)
+            .HasOne(p => p.PassengerProfile)
             .WithMany(p => p.Tickets)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PassengerProfile>(entity =>
+        {
+            entity.HasKey(p => p.UserId);                // PK
+            entity.Property(p => p.UserId).ValueGeneratedNever();
+            entity.HasOne(u => u.User)                        // reference Users table
+                .WithOne()                             // no back-navigation on User
+                .HasForeignKey<PassengerProfile>(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         modelBuilder.Entity<Payment>()
             .HasOne(r => r.Ride)
@@ -55,7 +65,7 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Ride>()
-            .HasOne(p => p.Passenger)
+            .HasOne(p => p.PassengerProfile)
             .WithMany(r => r.Rides)
             .OnDelete(DeleteBehavior.Restrict);
 
@@ -75,7 +85,7 @@ public class AppDbContext : DbContext
                 "CK_Vehicle_Year",
                 "\"Year\" >= 1970 AND \"Year\" <= EXTRACT(YEAR FROM CURRENT_DATE)"));
 
-        modelBuilder.Entity<Passenger>()
+        modelBuilder.Entity<PassengerProfile>()
             .ToTable(p => p.HasCheckConstraint("CK_Passenger_Points", "\"Points\" >= 0"));
 
         modelBuilder.Entity<Payment>()
@@ -85,11 +95,12 @@ public class AppDbContext : DbContext
             .ToTable(m => m.HasCheckConstraint("CK_Maintenance_Cost", "\"Cost\" >= 0"));
 
         modelBuilder.Entity<Maintenance>()
-            .ToTable(m => m.HasCheckConstraint("CK_Maintenance_NextInspectionMileage", "\"NextInspectionMileaga\" > 0"));
+            .ToTable(m => m.HasCheckConstraint("CK_Maintenance_NextInspectionMileage", "\"NextInspectionMileage\" > 0"));
 
         modelBuilder.Entity<Maintenance>()
             .ToTable(m => m.HasCheckConstraint("CK_Maintenance_ServiceDate", "\"ServiceDate\" <= CURRENT_DATE"));
 
     }
 }
+
 

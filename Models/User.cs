@@ -6,9 +6,7 @@ using System.ComponentModel.DataAnnotations;
 public class User
 {
     public int Id {get;set;}
-    private string _email;
-    [Required]
-    [EmailAddress]
+    private string _email = null!;
     public string Email
     {
         get
@@ -25,7 +23,7 @@ public class User
         }
     }
 
-    private string _passwordHash;
+    private string _passwordHash = string.Empty;
     public required string PasswordHash
     {
         get { return _passwordHash; }
@@ -73,16 +71,17 @@ public class User
 
     public bool IsValidEmail(string email)
     {
-    try
-    {
-        var addr = new MailAddress(email);
-        return addr.Address == email;
+        try
+        {
+            var addr = new MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
     }
-    catch
-    {
-        return false;
-    }
-    }
+
 
 }
 

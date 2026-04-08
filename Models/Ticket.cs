@@ -9,6 +9,6 @@ public class Ticket
     public TicketPriority TicketPriority {get;set;}
     public TicketStatus TicketStatus {get;set;}
     public DateTime ReportTime {get;set;}
-    public Passenger Passenger {get;set;}
+    public PassengerProfile PassengerProfile {get;set;}
 }
 

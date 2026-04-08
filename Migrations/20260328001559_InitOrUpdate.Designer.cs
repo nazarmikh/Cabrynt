@@ -12,8 +12,8 @@ using Project.Data;
 namespace exam_project_backend_NazarMikhin.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260327175353_InitSchema")]
-    partial class InitSchema
+    [Migration("20260328001559_InitOrUpdate")]
+    partial class InitOrUpdate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -65,6 +65,37 @@ namespace exam_project_backend_NazarMikhin.Migrations
                             t.HasCheckConstraint("CK_Maintenance_NextInspectionMileage", "\"NextInspectionMileage\" > 0");
 
                             t.HasCheckConstraint("CK_Maintenance_ServiceDate", "\"ServiceDate\" <= CURRENT_DATE");
+                        });
+                });
+
+            modelBuilder.Entity("Project.Models.PassengerProfile", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("HomeAddress")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PreferredPaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("PassengerProfiles", t =>
+                        {
+                            t.HasCheckConstraint("CK_Passenger_Points", "\"Points\" >= 0");
                         });
                 });
 
@@ -126,7 +157,7 @@ namespace exam_project_backend_NazarMikhin.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("PassengerId")
+                    b.Property<int>("PassengerProfileUserId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("RequestTime")
@@ -140,7 +171,7 @@ namespace exam_project_backend_NazarMikhin.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PassengerId");
+                    b.HasIndex("PassengerProfileUserId");
 
                     b.HasIndex("VehicleId");
 
@@ -160,7 +191,7 @@ namespace exam_project_backend_NazarMikhin.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
-                    b.Property<int>("PassengerId")
+                    b.Property<int>("PassengerProfileUserId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("ReportTime")
@@ -179,7 +210,7 @@ namespace exam_project_backend_NazarMikhin.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PassengerId");
+                    b.HasIndex("PassengerProfileUserId");
 
                     b.ToTable("Tickets");
                 });
@@ -194,11 +225,6 @@ namespace exam_project_backend_NazarMikhin.Migrations
 
                     b.Property<DateTime>("AccountCreated")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(13)
-                        .HasColumnType("character varying(13)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -221,10 +247,6 @@ namespace exam_project_backend_NazarMikhin.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
-
-                    b.HasDiscriminator<string>("Discriminator").HasValue("User");
-
-                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("Project.Models.Vehicle", b =>
@@ -273,36 +295,6 @@ namespace exam_project_backend_NazarMikhin.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Project.Models.Passenger", b =>
-                {
-                    b.HasBaseType("Project.Models.User");
-
-                    b.Property<string>("HomeAddress")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(254)
-                        .HasColumnType("character varying(254)");
-
-                    b.Property<int>("Points")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("PreferredPaymentMethod")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.ToTable(t =>
-                        {
-                            t.HasCheckConstraint("CK_Passenger_Points", "\"Points\" >= 0");
-                        });
-
-                    b.HasDiscriminator().HasValue("Passenger");
-                });
-
             modelBuilder.Entity("Project.Models.Maintenance", b =>
                 {
                     b.HasOne("Project.Models.Vehicle", "Vehicle")
@@ -312,6 +304,15 @@ namespace exam_project_backend_NazarMikhin.Migrations
                         .IsRequired();
 
                     b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("Project.Models.PassengerProfile", b =>
+                {
+                    b.HasOne("Project.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("Project.Models.PassengerProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Project.Models.Payment", b =>
@@ -327,9 +328,9 @@ namespace exam_project_backend_NazarMikhin.Migrations
 
             modelBuilder.Entity("Project.Models.Ride", b =>
                 {
-                    b.HasOne("Project.Models.Passenger", "Passenger")
+                    b.HasOne("Project.Models.PassengerProfile", "PassengerProfile")
                         .WithMany("Rides")
-                        .HasForeignKey("PassengerId")
+                        .HasForeignKey("PassengerProfileUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -339,23 +340,23 @@ namespace exam_project_backend_NazarMikhin.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Passenger");
+                    b.Navigation("PassengerProfile");
 
                     b.Navigation("Vehicle");
                 });
 
             modelBuilder.Entity("Project.Models.Ticket", b =>
                 {
-                    b.HasOne("Project.Models.Passenger", "Passenger")
+                    b.HasOne("Project.Models.PassengerProfile", "PassengerProfile")
                         .WithMany("Tickets")
-                        .HasForeignKey("PassengerId")
+                        .HasForeignKey("PassengerProfileUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Passenger");
+                    b.Navigation("PassengerProfile");
                 });
 
-            modelBuilder.Entity("Project.Models.Passenger", b =>
+            modelBuilder.Entity("Project.Models.PassengerProfile", b =>
                 {
                     b.Navigation("Rides");
 

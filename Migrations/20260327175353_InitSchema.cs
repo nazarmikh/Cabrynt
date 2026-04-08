@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -88,14 +88,14 @@ namespace exam_project_backend_NazarMikhin.Migrations
                     Description = table.Column<string>(type: "text", nullable: false),
                     TechnicianName = table.Column<string>(type: "text", nullable: false),
                     Cost = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    NextInspectionMileaga = table.Column<double>(type: "double precision", nullable: false),
+                    NextInspectionMileage = table.Column<double>(type: "double precision", nullable: false),
                     VehicleId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Maintenances", x => x.Id);
                     table.CheckConstraint("CK_Maintenance_Cost", "\"Cost\" >= 0");
-                    table.CheckConstraint("CK_Maintenance_NextInspectionMileage", "\"NextInspectionMileaga\" > 0");
+                    table.CheckConstraint("CK_Maintenance_NextInspectionMileage", "\"NextInspectionMileage\" > 0");
                     table.CheckConstraint("CK_Maintenance_ServiceDate", "\"ServiceDate\" <= CURRENT_DATE");
                     table.ForeignKey(
                         name: "FK_Maintenances_Vehicles_VehicleId",
@@ -233,3 +233,4 @@ namespace exam_project_backend_NazarMikhin.Migrations
         }
     }
 }
+

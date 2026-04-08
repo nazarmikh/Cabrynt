@@ -63,19 +63,20 @@ public class Maintenance
         }
     }
 
-    private double _nextInspectionMileaga;
-    public double NextInspectionMileaga
+    private double _nextInspectionMileage;
+    public double NextInspectionMileage
     {
-        get {return _nextInspectionMileaga;}
+        get {return _nextInspectionMileage;}
         set
         {
             if (value <= 0)
             {
                 throw new ArgumentOutOfRangeException("Mileage cannot be <= 0");
             }
-            _nextInspectionMileaga = value;
+            _nextInspectionMileage = value;
         }
     }
 
     public Vehicle Vehicle {get;set;}
 }
+
