@@ -37,4 +37,43 @@ public sealed class LoginTest : IClassFixture<CustomWebApplicationFactory>
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Login_ReturnsUnauthorized_WhenUserDoesNotExist()
+    {
+        var loginRequest = new
+        {
+            email = "invalid@example.com",
+            password = "InvalidPass123!"
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/public/auth/login", loginRequest);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Login_ReturnsUnauthorized_WhenPasswordIsWrong()
+    {
+        var registerRequest = new
+        {
+            email = $"it-auth-{Guid.NewGuid():N}@novadrive.test",
+            password = "StrongPass123!",
+            name = "Test User",
+            homeAddress = "Main Street 1",
+            preferredPaymentMethod = "Card"
+        };
+
+        await _client.PostAsJsonAsync("/api/public/auth/register", registerRequest);
+
+        var loginRequest = new
+        {
+            email = registerRequest.email,
+            password = "WrongPass228"
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/public/auth/login", loginRequest);
+        
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }
