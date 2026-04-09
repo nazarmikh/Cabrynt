@@ -9,7 +9,7 @@ public static class VehicleEndpoints
 {
     public static IEndpointRouteBuilder MapVehicleEndpoints(this IEndpointRouteBuilder builder)
     {
-        builder.MapPost("/api/private/registervehicle", async (
+        builder.MapPost("/api/private/vehicles", async (
             RegisterVehicleRequestDto request,
             IValidator<RegisterVehicleRequestDto> validator,
             IVehicleService vehicleService) =>

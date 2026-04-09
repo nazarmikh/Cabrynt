@@ -12,11 +12,14 @@ public interface IVehicleService
 public class VehicleService : IVehicleService
 {
     private readonly IVehicleRepository _vehicleRepository;
+    private readonly ITokenProvider _tokenProvider;
 
-    public VehicleService(IVehicleRepository vehicleRepository)
+    public VehicleService(IVehicleRepository vehicleRepository, ITokenProvider tokenProvider)
     {
         _vehicleRepository = vehicleRepository;
+        _tokenProvider = tokenProvider;
     }
+
 
     public async Task<Vehicle?> GetVehicleByIdAsync(int id)
     {
@@ -25,7 +28,6 @@ public class VehicleService : IVehicleService
 
     public async Task<RegisterVehicleResponseDto?> RegisterVehicleAsync(RegisterVehicleRequestDto registerVehicleDto)
     {
-
         var vehicle = new Vehicle
         {
             VIN = registerVehicleDto.VIN,
@@ -33,7 +35,7 @@ public class VehicleService : IVehicleService
             Model = registerVehicleDto.Model,
             VehicleType = registerVehicleDto.VehicleType,
             Year = registerVehicleDto.Year,
-            VehicleStatus = Enums.VehicleStatus.Active
+            VehicleStatus = VehicleStatus.Active
         };
 
         await _vehicleRepository.AddVehicleAsync(vehicle);
@@ -46,6 +48,7 @@ public class VehicleService : IVehicleService
             LicencePlate = vehicle.LicencePlate,
             Model = vehicle.Model,
             VehicleType = vehicle.VehicleType,
+            VehicleStatus = vehicle.VehicleStatus,
             Year = vehicle.Year
         };
     }

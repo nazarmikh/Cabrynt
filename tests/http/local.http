@@ -38,7 +38,7 @@ Authorization: Bearer {{accessToken}}
 
 ###
 
-POST {{host}}/api/private/registervehicle
+POST {{host}}/api/private/vehicles
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
 
