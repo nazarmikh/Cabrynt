@@ -45,4 +45,12 @@ public sealed class MeTest : IClassFixture<CustomWebApplicationFactory>
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Me_ReturnUnauthorized_WhenNoToken()
+    {
+        var response = await _client.GetAsync("/api/public/auth/me");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }
