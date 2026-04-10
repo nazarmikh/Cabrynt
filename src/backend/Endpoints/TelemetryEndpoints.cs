@@ -7,7 +7,7 @@ public static class TelemetryEndpoints
 {
     public static IEndpointRouteBuilder MapTelemetryEndpoints(this IEndpointRouteBuilder builder)
     {
-        builder.MapPost("/telemetry", async (
+        builder.MapPost("/api/private/telemetry", async (
             AddTelemetryRequestDto request, 
             ITelemetryService telemetryService,
             IValidator<AddTelemetryRequestDto> validator) =>
@@ -20,8 +20,8 @@ public static class TelemetryEndpoints
 
 
             await telemetryService.AddTelemetryAsync(request);
-            return Results.Ok();
-        }).RequireAuthorization("Telemetry");
+            return Results.Created();
+        }).RequireAuthorization("Vehicle");
 
         return builder;
     }

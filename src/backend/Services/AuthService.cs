@@ -18,11 +18,14 @@ public class AuthService : IAuthService
     private readonly IPassengerRepository _passengerRepository;
     private readonly IPasswordHasher<User> _hasher;
     private readonly ITokenProvider _tokenProvider;
-    public AuthService(IPassengerRepository passengerRepository, IPasswordHasher<User> hasher, ITokenProvider tokenProvider)
+    private readonly IVehicleRepository _vehicleRepository;
+
+    public AuthService(IPassengerRepository passengerRepository, IPasswordHasher<User> hasher, ITokenProvider tokenProvider, IVehicleRepository vehicleRepository)
     {
         _hasher = hasher;
         _passengerRepository = passengerRepository;
         _tokenProvider = tokenProvider;
+        _vehicleRepository = vehicleRepository;
     }
 
     public async Task<PassengerProfile> RegisterPassengerAsync(RegisterRequestDto registerRequestDto)
@@ -130,7 +133,6 @@ public class AuthService : IAuthService
             };
             return response;
         }
-
         return null;
     }
 

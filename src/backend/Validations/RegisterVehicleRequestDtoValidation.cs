@@ -20,6 +20,14 @@ public class RegisterVehicleRequestDtoValidation : AbstractValidator<RegisterVeh
 
         RuleFor(v => v.Year)
             .InclusiveBetween(1970, DateTime.Now.Year);
+
+        RuleFor(v => v.SystemEmail)
+            .NotEmpty()
+            .EmailAddress();
+
+        RuleFor(v => v.SystemPassword)
+            .NotEmpty()
+            .MinimumLength(8);
     }
 
 }

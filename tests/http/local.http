@@ -47,5 +47,8 @@ Content-Type: application/json
   "LicencePlate": "ABC1231",
   "Model": "Toyota Camry",
   "VehicleType": "Standard",
-  "Year": 2020
+  "Year": 2020,
+  "SystemEmail": "it-register-vehicle-123456@novadrive.test",
+  "SystemPassword": "StrongPass123!"
+
 }

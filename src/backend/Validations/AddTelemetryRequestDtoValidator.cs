@@ -8,10 +8,12 @@ public class AddTelemetryRequestDtoValidator : AbstractValidator<AddTelemetryReq
     {
         RuleFor(x => x.Latitude)
             .NotEmpty()
+            .InclusiveBetween(-90, 90)
             .WithMessage("Latitude is required");
 
         RuleFor(x => x.Longitude)
             .NotEmpty()
+            .InclusiveBetween(-180, 180)
             .WithMessage("Longitude is required");
 
         RuleFor(x => x.CurrentSpeed)

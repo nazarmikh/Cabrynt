@@ -37,7 +37,9 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
             LicencePlate = $"TEST{suffix}",
             Model = "Toyota Camry",
             VehicleType = 0,
-            Year = 2020
+            Year = 2020,
+            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
+            SystemPassword = "StrongPass123!"
         };
 
         // Act
@@ -53,7 +55,7 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
     {
         var registerRequest = new
         {
-            email = $"it-auth-{Guid.NewGuid():N}@novadrive.test",
+            email = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
             password = "StrongPass123!",
             name = "Test User",
             homeAddress = "Main Street 1",
@@ -81,7 +83,9 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
             LicencePlate = $"TEST{suffix}",
             Model = "Toyota Camry",
             VehicleType = 0,
-            Year = 2020
+            Year = 2020,
+            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
+            SystemPassword = "StrongPass123!"
         };
 
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken); 

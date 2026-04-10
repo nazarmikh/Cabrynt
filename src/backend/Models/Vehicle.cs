@@ -1,6 +1,3 @@
-using Microsoft.Extensions.Options;
-using Project.Enums;
-
 namespace Project.Models;
 
 public class Vehicle
@@ -65,4 +62,6 @@ public class Vehicle
     }
 
     public VehicleStatus VehicleStatus {get;set;}
+    public User? User {get;set;}
+    public int? UserId {get;set;}
 }

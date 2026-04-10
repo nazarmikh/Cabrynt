@@ -23,6 +23,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Vehicle>().HasIndex(n => n.VIN).IsUnique();
         modelBuilder.Entity<Vehicle>().HasIndex(n => n.LicencePlate).IsUnique();
         modelBuilder.Entity<Payment>().HasIndex(n => n.TransactionReference).IsUnique();
+        modelBuilder.Entity<Vehicle>().HasIndex(n => n.UserId).IsUnique();
 
         // Length and requirement
         modelBuilder.Entity<User>().Property(e => e.Email).HasMaxLength(254).IsRequired();
@@ -63,6 +64,13 @@ public class AppDbContext : DbContext
             .HasOne(r => r.Ride)
             .WithMany()
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Vehicle>()
+            .HasOne(p => p.User)
+            .WithOne()
+            .HasForeignKey<Vehicle>(v => v.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
 
         modelBuilder.Entity<Ride>()
             .HasOne(p => p.PassengerProfile)

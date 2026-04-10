@@ -94,6 +94,7 @@ builder.Services
     });
 
 builder.Services.AddAuthorization(o => o.AddPolicy("Admin", p => p.RequireRole("Admin"))); 
+builder.Services.AddAuthorization(o => o.AddPolicy("Vehicle", p => p.RequireRole("Vehicle"))); 
 
 var app = builder.Build();
 

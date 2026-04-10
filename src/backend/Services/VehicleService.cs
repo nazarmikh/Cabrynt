@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 
 namespace Project.Services;
 
@@ -12,12 +13,14 @@ public interface IVehicleService
 public class VehicleService : IVehicleService
 {
     private readonly IVehicleRepository _vehicleRepository;
-    private readonly ITokenProvider _tokenProvider;
+    private readonly IPassengerRepository _passengerRepository;
+    private readonly IPasswordHasher<User> _hasher;
 
-    public VehicleService(IVehicleRepository vehicleRepository, ITokenProvider tokenProvider)
+    public VehicleService(IVehicleRepository vehicleRepository, IPassengerRepository passengerRepository, IPasswordHasher<User> hasher)
     {
         _vehicleRepository = vehicleRepository;
-        _tokenProvider = tokenProvider;
+        _passengerRepository = passengerRepository;
+        _hasher = hasher;
     }
 
 
@@ -28,6 +31,25 @@ public class VehicleService : IVehicleService
 
     public async Task<RegisterVehicleResponseDto?> RegisterVehicleAsync(RegisterVehicleRequestDto registerVehicleDto)
     {
+    
+        
+        User? existingVehicle = await _passengerRepository.GetUserByEmailAsync(registerVehicleDto.SystemEmail);
+        if (existingVehicle != null)
+        {
+            throw new InvalidOperationException("A vehicle with this email already exists.");
+        }
+        
+        User user = new User
+        {
+            Email = registerVehicleDto.SystemEmail,
+            PasswordHash = "",
+            Role = Role.Vehicle,
+            AccountCreated = DateTime.UtcNow
+        };
+        user.PasswordHash = HashPassword(registerVehicleDto.SystemPassword, user);
+
+        await _passengerRepository.AddUserAsync(user);
+
         var vehicle = new Vehicle
         {
             VIN = registerVehicleDto.VIN,
@@ -35,8 +57,10 @@ public class VehicleService : IVehicleService
             Model = registerVehicleDto.Model,
             VehicleType = registerVehicleDto.VehicleType,
             Year = registerVehicleDto.Year,
-            VehicleStatus = VehicleStatus.Active
+            VehicleStatus = VehicleStatus.Active,
+            User = user
         };
+
 
         await _vehicleRepository.AddVehicleAsync(vehicle);
         await _vehicleRepository.UpdateDbAsync();
@@ -51,6 +75,12 @@ public class VehicleService : IVehicleService
             VehicleStatus = vehicle.VehicleStatus,
             Year = vehicle.Year
         };
+    }
+
+    public string HashPassword(string password, User user)
+    {
+        string hashedPassword = _hasher.HashPassword(user, password);
+        return hashedPassword;
     }
 }
 
