@@ -137,11 +137,15 @@ using (var scope = app.Services.CreateScope())
         }
 
     }
-    catch(DbUpdateException)
+    catch (DbUpdateException)
     {
-        throw new InvalidOperationException("Failed to create admin user.");
+        var adminExists = await db.Users.AnyAsync(x => x.Role == Role.Admin);
+        if (!adminExists)
+        {
+            throw new InvalidOperationException("Failed to create admin user.");
+        }
     }
-    
+
 }
 
 
