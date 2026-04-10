@@ -10,13 +10,15 @@ namespace exam_project_backend_NazarMikhin.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Rides_Users_PassengerId",
-                table: "Rides");
+            migrationBuilder.Sql("""
+                ALTER TABLE "Rides"
+                DROP CONSTRAINT IF EXISTS "FK_Rides_Users_PassengerId";
+                """);
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_Tickets_Users_PassengerId",
-                table: "Tickets");
+            migrationBuilder.Sql("""
+                ALTER TABLE "Tickets"
+                DROP CONSTRAINT IF EXISTS "FK_Tickets_Users_PassengerId";
+                """);
 
             migrationBuilder.DropCheckConstraint(
                 name: "CK_Passenger_Points",
