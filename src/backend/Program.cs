@@ -93,11 +93,19 @@ builder.Services
         };
     });
 
+
+
 builder.Services.AddAuthorization(o => o.AddPolicy("Admin", p => p.RequireRole("Admin"))); 
 builder.Services.AddAuthorization(o => o.AddPolicy("Vehicle", p => p.RequireRole("Vehicle"))); 
 builder.Services.AddAuthorization(o => o.AddPolicy("Passenger", p => p.RequireRole("Passenger"))); 
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 using (var scope = app.Services.CreateScope())
 {
