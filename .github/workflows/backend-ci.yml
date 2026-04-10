@@ -1,0 +1,58 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: NovaDrivePostgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: change-me
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d NovaDrivePostgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      mongo:
+        image: mongo:8
+        ports:
+          - 27017:27017
+
+    env:
+      ConnectionStrings__Postgres: Host=localhost;Port=5432;Database=NovaDrivePostgres;Username=postgres;Password=change-me
+      ConnectionStrings__Mongo: mongodb://localhost:27017
+      Mongo__DatabaseName: NovaDriveMongo
+      JwtToken: change-me-to-a-long-random-secret-for-ci
+      Jwt__Issuer: NovaDrive
+      Jwt__Audience: NovaDriveClient
+      Admin__Email: admin@novadrive.com
+      Admin__Password: AdminPassword123!
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore exam-project-backend-NazarMikhin.sln
+
+      - name: Build
+        run: dotnet build exam-project-backend-NazarMikhin.sln --no-restore
+
+      - name: Test
+        run: dotnet test exam-project-backend-NazarMikhin.sln --no-build
