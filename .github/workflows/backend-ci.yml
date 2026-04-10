@@ -36,6 +36,7 @@ jobs:
       JwtToken: change-me-to-a-long-random-secret-for-ci
       Jwt__Issuer: NovaDrive
       Jwt__Audience: NovaDriveClient
+      Jwt__ExpiryMinutes: 60
       Admin__Email: admin@novadrive.com
       Admin__Password: AdminPassword123!
 
