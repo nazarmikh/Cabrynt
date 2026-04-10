@@ -33,6 +33,14 @@ public class RideService : IRideService
         if (passenger is null)
             return null;
 
+        int? vehicleId = await _rideRepository.GetNearestVehicle(rideRequest.DepartureLatitude, rideRequest.DepartureLongitude);
+        if (vehicleId is null)
+            throw new InvalidOperationException("No available vehicle found.");
+
+        Vehicle? vehicle = await _rideRepository.GetVehicleById(vehicleId.Value);
+        if (vehicle is null)
+            throw new InvalidOperationException("Selected vehicle is not available.");
+
         Ride ride = new Ride()
         {
             DepartureLocation = rideRequest.DepartureLocation,
@@ -40,7 +48,7 @@ public class RideService : IRideService
             RequestTime = DateTime.UtcNow,
             PassengerProfile = passenger,
             RideStatus = RideStatus.Requested,
-            Vehicle = null
+            Vehicle = vehicle
         };
 
         await _rideRepository.AddRideAsync(ride);
@@ -51,7 +59,7 @@ public class RideService : IRideService
             RideId = ride.Id,
             RideStatus = ride.RideStatus,
             RequestTime = ride.RequestTime,
-            VehicleId = ride.Vehicle?.Id ?? null
+            VehicleId = vehicleId
         };
 
         return response;

@@ -31,10 +31,13 @@ public static class RideEndpoints
                 RideResponseDto? ride = await rideService.CreateRideAsync(token, request);
                 if (ride is null)
                     return Results.Unauthorized();
-                    
                 return Results.Created($"/api/public/rides/{ride.RideId}", ride);
             }
             catch (ArgumentException ex)
+            {
+                return Results.BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
             {
                 return Results.BadRequest(new { message = ex.Message });
             }
@@ -42,7 +45,7 @@ public static class RideEndpoints
             {
                 return Results.Problem("Failed to create ride.");
             }
-        }).RequireAuthorization();
+        }).RequireAuthorization("Passenger");
 
 
 

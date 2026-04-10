@@ -62,7 +62,7 @@ public class TelemetryTest : IClassFixture<CustomWebApplicationFactory>
 
 
         Random random = new Random();
-        var addTelementryRequest = new
+        var addTelemetryRequest = new
         {
             Latitude = random.NextDouble() * 180 - 90,
             Longitude = random.NextDouble() * 360 - 180,
@@ -74,9 +74,9 @@ public class TelemetryTest : IClassFixture<CustomWebApplicationFactory>
 
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", vehicleToken); 
 
-        var addTelementryResponse = await _client.PostAsJsonAsync("/api/private/telemetry", addTelementryRequest);
+        var addTelemetryResponse = await _client.PostAsJsonAsync("/api/private/telemetry", addTelemetryRequest);
 
-        Assert.Equal(HttpStatusCode.Created, addTelementryResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, addTelemetryResponse.StatusCode);
     }
 
 }

@@ -18,14 +18,12 @@ public class AuthService : IAuthService
     private readonly IPassengerRepository _passengerRepository;
     private readonly IPasswordHasher<User> _hasher;
     private readonly ITokenProvider _tokenProvider;
-    private readonly IVehicleRepository _vehicleRepository;
 
-    public AuthService(IPassengerRepository passengerRepository, IPasswordHasher<User> hasher, ITokenProvider tokenProvider, IVehicleRepository vehicleRepository)
+    public AuthService(IPassengerRepository passengerRepository, IPasswordHasher<User> hasher, ITokenProvider tokenProvider)
     {
         _hasher = hasher;
         _passengerRepository = passengerRepository;
         _tokenProvider = tokenProvider;
-        _vehicleRepository = vehicleRepository;
     }
 
     public async Task<PassengerProfile> RegisterPassengerAsync(RegisterRequestDto registerRequestDto)
