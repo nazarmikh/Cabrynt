@@ -20,9 +20,10 @@ namespace exam_project_backend_NazarMikhin.Migrations
                 DROP CONSTRAINT IF EXISTS "FK_Tickets_Users_PassengerId";
                 """);
 
-            migrationBuilder.DropCheckConstraint(
-                name: "CK_Passenger_Points",
-                table: "Users");
+            migrationBuilder.Sql("""
+            ALTER TABLE "Users"
+            DROP CONSTRAINT IF EXISTS "CK_Passenger_Points";
+            """);
 
             migrationBuilder.DropColumn(
                 name: "Discriminator",
