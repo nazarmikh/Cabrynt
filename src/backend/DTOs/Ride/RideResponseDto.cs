@@ -9,3 +9,4 @@ public class RideResponseDto
     public DateTime RequestTime {get;set;}
     public int? VehicleId {get;set;}
 }
+

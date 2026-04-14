@@ -5,6 +5,8 @@ public interface IVehicleRepository
     Task UpdateDbAsync();
     Task<Vehicle?> GetVehicleByIdAsync(int id);
     Task AddVehicleAsync(Vehicle vehicle);
+    Task<bool> ExistsByVinAsync(string vin);
+    Task<bool> ExistsByLicencePlateAsync(string licencePlate);
 }
 
 public class VehicleRepository : IVehicleRepository
@@ -29,6 +31,16 @@ public class VehicleRepository : IVehicleRepository
     public async Task UpdateDbAsync()
     {
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<bool> ExistsByVinAsync(string vin)
+    {
+        return await _context.Vehicles.AnyAsync(v => v.VIN == vin);
+    }
+
+    public async Task<bool> ExistsByLicencePlateAsync(string licencePlate)
+    {
+        return await _context.Vehicles.AnyAsync(v => v.LicencePlate == licencePlate);
     }
 
 }

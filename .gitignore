@@ -26,3 +26,5 @@ coverage/
 .env
 .env.*
 !.env.example
+
+backend.sln

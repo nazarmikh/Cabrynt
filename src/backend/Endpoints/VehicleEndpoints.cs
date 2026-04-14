@@ -37,9 +37,9 @@ public static class VehicleEndpoints
            {
                return Results.Conflict("A vehicle with the same VIN or licence plate already exists.");
            }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
            {
-               return Results.Conflict("A vehicle with this email already exists.");
+               return Results.Conflict(ex.Message);
            }
 
            catch (Exception)

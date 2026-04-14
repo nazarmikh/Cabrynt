@@ -48,10 +48,54 @@ public static class RideEndpoints
         }).RequireAuthorization("Passenger");
 
 
+        app.MapGet("/api/public/rides", async (
+            IRideService rideService,
+            ClaimsPrincipal token) =>
+        {
 
 
+            try
+            {
+                List<RideResponseDto>? response = await rideService.GetAllRidesAsync(token);
+                if (response is null)
+                {
+                    return Results.Unauthorized();
+                }
+                return Results.Ok(response);
+            }
+            catch (Exception)
+            {
+                return Results.Problem("Failed to get rides.");
+            }
+        }).RequireAuthorization("Passenger");
 
 
+        app.MapGet("/api/public/rides/{rideId}", async (
+            int rideId,
+            IRideService rideService,
+            ClaimsPrincipal token) =>
+        {
+
+
+            try
+            {
+                GetRideByIdResponseDto? response = await rideService.GetRideByIdAsync(token, rideId);
+                if (response is null)
+                {
+                    return Results.Unauthorized();
+                }
+                return Results.Ok(response);
+            }
+            catch(UnauthorizedAccessException)
+            {
+                return Results.Forbid();
+            }
+            catch (Exception)
+            {
+                return Results.Problem("Failed to get ride.");
+            }
+        }).RequireAuthorization("Passenger");
+        
 
         return app;
     }

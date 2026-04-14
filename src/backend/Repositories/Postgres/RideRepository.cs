@@ -5,10 +5,11 @@ namespace Project.Repositories;
 public interface IRideRepository
 {
     Task SaveChangesAsync();
+    Task<List<Ride>> GetAllRidesAsync(int passengerId);
     Task<Ride?> GetRideByIdAsync(int id);
     Task AddRideAsync(Ride ride);
     void UpdateRide(Ride ride);
-    Task<int?> GetNearestVehicle(double latitude, double longitude);
+    Task<int?> GetNearestVehicleAsync(double latitude, double longitude);
     Task<Vehicle?> GetVehicleById(int id);
 }
 
@@ -32,9 +33,9 @@ public class RideRepository : IRideRepository
         return _appDbContext.Rides.Include(x => x.Vehicle).Include(x => x.PassengerProfile).ThenInclude(x => x.User).FirstOrDefaultAsync(r => r.Id == id);
     }
 
-    public async Task AddRideAsync(Ride ride)
+    public async Task<List<Ride>> GetAllRidesAsync(int passengerId)
     {
-        await _appDbContext.Rides.AddAsync(ride);
+        return await _appDbContext.Rides.Include(x => x.Vehicle).Include(x => x.PassengerProfile).ThenInclude(x => x.User).Where(r => r.PassengerProfile.UserId == passengerId).ToListAsync();
     }
 
     public void UpdateRide(Ride ride)
@@ -42,7 +43,7 @@ public class RideRepository : IRideRepository
         _appDbContext.Rides.Update(ride);
     }
 
-    public async Task<int?> GetNearestVehicle(double latitude, double longitude)
+    public async Task<int?> GetNearestVehicleAsync(double latitude, double longitude)
     {
         var latestTelemetry = await _mongoContext.VehicleTelemetries
             .Aggregate()
@@ -75,5 +76,8 @@ public class RideRepository : IRideRepository
         return vehicle;
     }
 
-
+    public async Task AddRideAsync(Ride ride)
+    {
+        await _appDbContext.Rides.AddAsync(ride);
+    }
 }

@@ -38,6 +38,12 @@ public class VehicleService : IVehicleService
         {
             throw new InvalidOperationException("A vehicle with this email already exists.");
         }
+
+        if (await _vehicleRepository.ExistsByVinAsync(registerVehicleDto.VIN)
+            || await _vehicleRepository.ExistsByLicencePlateAsync(registerVehicleDto.LicencePlate))
+        {
+            throw new InvalidOperationException("A vehicle with the same VIN or licence plate already exists.");
+        }
         
         User user = new User
         {
