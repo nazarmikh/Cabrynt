@@ -16,26 +16,20 @@ public sealed class LoginTest : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task Login_ReturnsOk_WhenCredentialsAreValid()
     {
-        var registerRequest = new
+        var registerRequest = await IntegrationTestData.RegisterPassengerAsync(_client);
+        var response = await _client.PostAsJsonAsync("/api/public/auth/login", new
         {
-            email = $"it-auth-{Guid.NewGuid():N}@novadrive.test",
-            password = "StrongPass123!",
-            name = "Test User",
-            homeAddress = "Main Street 1",
-            preferredPaymentMethod = "Card"
-        };
-
-        await _client.PostAsJsonAsync("/api/public/auth/register", registerRequest);
-
-        var request = new
-        {
-            email = registerRequest.email,
-            password = registerRequest.password
-        };
-
-        var response = await _client.PostAsJsonAsync("/api/public/auth/login", request);
+            email = registerRequest.Email,
+            password = registerRequest.Password
+        });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+
+        Assert.NotNull(body);
+        Assert.True(body!.ContainsKey("accessToken"));
+        Assert.False(string.IsNullOrWhiteSpace(body["accessToken"]));
     }
 
     [Fact]
@@ -55,24 +49,12 @@ public sealed class LoginTest : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task Login_ReturnsUnauthorized_WhenPasswordIsWrong()
     {
-        var registerRequest = new
+        var registerRequest = await IntegrationTestData.RegisterPassengerAsync(_client);
+        var response = await _client.PostAsJsonAsync("/api/public/auth/login", new
         {
-            email = $"it-auth-{Guid.NewGuid():N}@novadrive.test",
-            password = "StrongPass123!",
-            name = "Test User",
-            homeAddress = "Main Street 1",
-            preferredPaymentMethod = "Card"
-        };
-
-        await _client.PostAsJsonAsync("/api/public/auth/register", registerRequest);
-
-        var loginRequest = new
-        {
-            email = registerRequest.email,
+            email = registerRequest.Email,
             password = "WrongPass228"
-        };
-
-        var response = await _client.PostAsJsonAsync("/api/public/auth/login", loginRequest);
+        });
         
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }

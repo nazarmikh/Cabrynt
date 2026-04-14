@@ -1,8 +1,6 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using backend.IntegrationTests.Infrastructure;
-using Project.Models;
 
 namespace backend.IntegrationTests.RegisterVehicle;
 
@@ -17,67 +15,29 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task RegisterVehicle_ReturnsCreated_WhenRequestIsValid()
     {
-        var adminLoginRequest = new
-        {
-            Email = "admin@novadrive.com",
-            Password = "AdminPassword123!"
-        };
+        var adminToken = await IntegrationTestData.LoginAsAdminAsync(_client);
+        IntegrationTestData.Authorize(_client, adminToken);
 
-        var adminLoginResponse = await _client.PostAsJsonAsync("/api/public/auth/login", adminLoginRequest);
-        var loginBody = await adminLoginResponse.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-        var accessToken = loginBody!["accessToken"];
+        var result = await IntegrationTestData.RegisterVehicleAsync(_client);
 
-        // Arrange
-
-        var suffix = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
-
-        var registerVehicleRequest = new
-        {
-            VIN = $"1HGCM82633A{suffix}",
-            LicencePlate = $"TEST{suffix}",
-            Model = "Toyota Camry",
-            VehicleType = 0,
-            Year = 2020,
-            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
-            SystemPassword = "StrongPass123!"
-        };
-
-        // Act
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken); 
-        var response = await _client.PostAsJsonAsync("/api/private/vehicles", registerVehicleRequest);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.True(result.VehicleId > 0);
+        Assert.Equal(result.Request.VIN, result.VIN);
+        Assert.Equal(result.Request.LicencePlate, result.LicencePlate);
+        Assert.Equal(result.Request.Model, result.Model);
+        Assert.Equal(result.Request.Year, result.Year);
+        Assert.Equal("Standard", result.VehicleType);
+        Assert.Equal("Active", result.VehicleStatus);
     }
 
     [Fact]
     public async Task RegisterVehicle_ReturnedUnauthorized_WhenNotAdmin()
     {
-        var registerRequest = new
-        {
-            email = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
-            password = "StrongPass123!",
-            name = "Test User",
-            homeAddress = "Main Street 1",
-            preferredPaymentMethod = "Card"
-        };
-
-        await _client.PostAsJsonAsync("/api/public/auth/register", registerRequest);
-
-        var loginRequest = new
-        {
-            email = registerRequest.email,
-            password = registerRequest.password
-        };
-
-
-        var loginResponse = await _client.PostAsJsonAsync("/api/public/auth/login", loginRequest);
-        var loginBody = await loginResponse.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-        var accessToken = loginBody!["accessToken"];
+        var passenger = await IntegrationTestData.RegisterPassengerAsync(_client, $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test");
+        var accessToken = await IntegrationTestData.LoginAsync(_client, passenger.Email, passenger.Password);
+        IntegrationTestData.Authorize(_client, accessToken);
 
         var suffix = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
-
-        var registerVehicleRequest = new
+        var response = await _client.PostAsJsonAsync("/api/private/vehicles", new
         {
             VIN = $"1HGCM82633A{suffix}",
             LicencePlate = $"TEST{suffix}",
@@ -85,13 +45,45 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
             VehicleType = 0,
             Year = 2020,
             SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
-            SystemPassword = "StrongPass123!"
-        };
-
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken); 
-        var response = await _client.PostAsJsonAsync("/api/private/vehicles", registerVehicleRequest);
+            SystemPassword = IntegrationTestData.DefaultPassword
+        });
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RegisterVehicle_ReturnsConflict_WhenVinAlreadyExists()
+    {
+        var adminToken = await IntegrationTestData.LoginAsAdminAsync(_client);
+        IntegrationTestData.Authorize(_client, adminToken);
+
+        var suffix = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+        var existingVin = $"1HGCM82633A{suffix}";
+
+        var firstResponse = await _client.PostAsJsonAsync("/api/private/vehicles", new
+        {
+            VIN = existingVin,
+            LicencePlate = $"TEST{suffix}",
+            Model = "Toyota Camry",
+            VehicleType = 0,
+            Year = 2020,
+            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
+            SystemPassword = IntegrationTestData.DefaultPassword
+        });
+
+        var duplicateResponse = await _client.PostAsJsonAsync("/api/private/vehicles", new
+        {
+            VIN = existingVin,
+            LicencePlate = $"DUPL{suffix}",
+            Model = "Toyota Camry",
+            VehicleType = 0,
+            Year = 2020,
+            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
+            SystemPassword = IntegrationTestData.DefaultPassword
+        });
+
+        Assert.Equal(HttpStatusCode.Created, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, duplicateResponse.StatusCode);
     }
 
 }

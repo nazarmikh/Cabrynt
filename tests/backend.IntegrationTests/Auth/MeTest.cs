@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using backend.IntegrationTests.Infrastructure;
 using System.Net.Http.Headers;
+using System.Text.Json;
 
 
 namespace backend.IntegrationTests.Me;
@@ -16,34 +17,24 @@ public sealed class MeTest : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Me_ReturnsToken_WhenCredentialsAreValid()
+    public async Task Me_ReturnsPassengerProfile_WhenCredentialsAreValid()
     {
-        var registerRequest = new
-        {
-            email = $"it-auth-{Guid.NewGuid():N}@novadrive.test",
-            password = "StrongPass123!",
-            name = "Test User",
-            homeAddress = "Main Street 1",
-            preferredPaymentMethod = "Card"
-        };
-
-        await _client.PostAsJsonAsync("/api/public/auth/register", registerRequest);
-
-        var loginRequest = new
-        {
-            email = registerRequest.email,
-            password = registerRequest.password
-        };
-
-        var responseToken = await _client.PostAsJsonAsync("/api/public/auth/login", loginRequest);
-        var loginBody = await responseToken.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-        var accessToken = loginBody!["accessToken"];
+        var registerRequest = await IntegrationTestData.RegisterPassengerAsync(_client);
+        var accessToken = await IntegrationTestData.LoginAsync(_client, registerRequest.Email, registerRequest.Password);
 
     
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         var response = await _client.GetAsync("/api/public/auth/me");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
+
+        Assert.NotNull(body);
+        Assert.Equal(registerRequest.Email, body!["email"].GetString());
+        Assert.Equal(registerRequest.Name, body["name"].GetString());
+        Assert.Equal(registerRequest.HomeAddress, body["homeAddress"].GetString());
+        Assert.Equal(registerRequest.PreferredPaymentMethod, body["preferredPaymentMethod"].GetString());
     }
 
     [Fact]
