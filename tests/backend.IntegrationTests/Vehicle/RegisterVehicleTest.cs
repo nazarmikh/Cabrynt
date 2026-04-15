@@ -86,4 +86,39 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(HttpStatusCode.Conflict, duplicateResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task RegisterVehicle_ReturnsConflict_WhenLicencePlateAlreadyExists()
+    {
+        var adminToken = await IntegrationTestData.LoginAsAdminAsync(_client);
+        IntegrationTestData.Authorize(_client, adminToken);
+
+        var suffix = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+        var existingLicencePlate = $"TEST{suffix}";
+
+        var firstResponse = await _client.PostAsJsonAsync("/api/private/vehicles", new
+        {
+            VIN = $"1HGCM82633A{suffix}",
+            LicencePlate = existingLicencePlate,
+            Model = "Toyota Camry",
+            VehicleType = 0,
+            Year = 2020,
+            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
+            SystemPassword = IntegrationTestData.DefaultPassword
+        });
+
+        var duplicateResponse = await _client.PostAsJsonAsync("/api/private/vehicles", new
+        {
+            VIN = $"1HGCM82633B{suffix}",
+            LicencePlate = existingLicencePlate,
+            Model = "Toyota Camry",
+            VehicleType = 0,
+            Year = 2020,
+            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
+            SystemPassword = IntegrationTestData.DefaultPassword
+        });
+
+        Assert.Equal(HttpStatusCode.Created, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, duplicateResponse.StatusCode);
+    }
+
 }
