@@ -7,9 +7,10 @@ public interface IRideRepository
     Task SaveChangesAsync();
     Task<List<Ride>> GetAllRidesAsync(int passengerId);
     Task<Ride?> GetRideByIdAsync(int id);
+    Task<DiscountCode?> GetDiscountCodeByCodeAsync(string code);
     Task AddRideAsync(Ride ride);
     void UpdateRide(Ride ride);
-    Task<int?> GetNearestVehicleAsync(double latitude, double longitude);
+    Task<int?> GetNearestVehicleAsync(double latitude, double longitude, VehicleType preferredVehicleType);
     Task<Vehicle?> GetVehicleById(int id);
 }
 
@@ -30,12 +31,23 @@ public class RideRepository : IRideRepository
 
     public Task<Ride?> GetRideByIdAsync(int id)
     {
-        return _appDbContext.Rides.Include(x => x.Vehicle).Include(x => x.PassengerProfile).ThenInclude(x => x.User).FirstOrDefaultAsync(r => r.Id == id);
+        return _appDbContext.Rides.Include(x => x.Vehicle).Include(x => x.PassengerProfile).ThenInclude(x => x.User).Include(x => x.DiscountCode).FirstOrDefaultAsync(r => r.Id == id);
     }
 
     public async Task<List<Ride>> GetAllRidesAsync(int passengerId)
     {
-        return await _appDbContext.Rides.Include(x => x.Vehicle).Include(x => x.PassengerProfile).ThenInclude(x => x.User).Where(r => r.PassengerProfile.UserId == passengerId).ToListAsync();
+        return await _appDbContext.Rides
+            .Include(x => x.Vehicle)
+            .Include(x => x.PassengerProfile)
+            .ThenInclude(x => x.User)
+            .Include(x => x.DiscountCode)
+            .Where(r => r.PassengerProfile.UserId == passengerId)
+            .ToListAsync();
+    }
+
+    public async Task<DiscountCode?> GetDiscountCodeByCodeAsync(string code)
+    {
+        return await _appDbContext.DiscountCodes.FirstOrDefaultAsync(d => d.Code == code);
     }
 
     public void UpdateRide(Ride ride)
@@ -43,7 +55,7 @@ public class RideRepository : IRideRepository
         _appDbContext.Rides.Update(ride);
     }
 
-    public async Task<int?> GetNearestVehicleAsync(double latitude, double longitude)
+    public async Task<int?> GetNearestVehicleAsync(double latitude, double longitude, VehicleType preferredVehicleType)
     {
         var latestTelemetry = await _mongoContext.VehicleTelemetries
             .Aggregate()
@@ -55,10 +67,20 @@ public class RideRepository : IRideRepository
                     VehicleId = g.Key,
                     Latitude = g.First().Latitude,
                     Longitude = g.First().Longitude
-                })
+                 })
+            .ToListAsync();
+
+        var candidateVehicleIds = latestTelemetry.Select(t => t.VehicleId).ToList();
+
+        var eligibleVehicles = await _appDbContext.Vehicles
+            .Where(v => candidateVehicleIds.Contains(v.Id)
+                && v.VehicleType == preferredVehicleType
+                && v.VehicleStatus == VehicleStatus.Active)
+            .Select(v => v.Id)
             .ToListAsync();
 
         var nearest = latestTelemetry
+            .Where(t => eligibleVehicles.Contains(t.VehicleId))
             .Select(t => new
             {
                 t.VehicleId,

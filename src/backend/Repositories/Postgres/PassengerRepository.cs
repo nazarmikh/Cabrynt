@@ -8,6 +8,7 @@ public interface IPassengerRepository
     public Task AddUserAsync(User user);
     public Task<PassengerProfile?>GetPassengerByIdAsync (int userId);
     public Task AddPassengerAsync(PassengerProfile passenger);
+    public Task UpdatePassengerLoyaltyPointsByIdAsync(int userId, int newLoyaltyPoints);
 }
 
 public class PassengerRepository : IPassengerRepository
@@ -48,6 +49,15 @@ public class PassengerRepository : IPassengerRepository
         await _appDbContext.PassengerProfiles.AddAsync(passenger);
     }
 
-    
+    public async Task UpdatePassengerLoyaltyPointsByIdAsync(int userId, int newLoyaltyPoints)
+    {
+        PassengerProfile? passenger = await _appDbContext.PassengerProfiles.FirstOrDefaultAsync(x => x.UserId == userId);
+        if (passenger != null)
+        {
+            passenger.Points = newLoyaltyPoints;
+        }
+
+    }
+
 }
 

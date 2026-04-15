@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Ride> Rides {get;set;}
     public DbSet<Vehicle> Vehicles {get;set;}
     public DbSet<Ticket> Tickets {get;set;}
+    public DbSet<DiscountCode> DiscountCodes {get;set;}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,6 +25,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Vehicle>().HasIndex(n => n.LicencePlate).IsUnique();
         modelBuilder.Entity<Payment>().HasIndex(n => n.TransactionReference).IsUnique();
         modelBuilder.Entity<Vehicle>().HasIndex(n => n.UserId).IsUnique();
+        modelBuilder.Entity<DiscountCode>().HasIndex(n => n.Code).IsUnique();
+       
+        
 
         // Length and requirement
         modelBuilder.Entity<User>().Property(e => e.Email).HasMaxLength(254).IsRequired();
@@ -39,10 +43,19 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Ticket>().Property(t => t.Subject).HasMaxLength(200).IsRequired();
         modelBuilder.Entity<Ticket>().Property(t => t.Description).HasMaxLength(2000).IsRequired();
         modelBuilder.Entity<Payment>().Property(p => p.TransactionReference).HasMaxLength(100).IsRequired();
+        modelBuilder.Entity<DiscountCode>().Property(d => d.Code).HasMaxLength(50).IsRequired();
+
+        modelBuilder.Entity<Ride>().Property(r => r.DepartureLocation).HasMaxLength(200).IsRequired();
+        modelBuilder.Entity<Ride>().Property(r => r.DestinationLocation).HasMaxLength(200).IsRequired();
 
         // Decimal precision
         modelBuilder.Entity<Payment>().Property(p => p.PayAmount).HasPrecision(18, 2);
         modelBuilder.Entity<Maintenance>().Property(c => c.Cost).HasPrecision(18, 2);
+        modelBuilder.Entity<Ride>().Property(r => r.Distance).HasPrecision(18, 2);
+        modelBuilder.Entity<Ride>().Property(r => r.Duration).HasPrecision(18, 2);
+        modelBuilder.Entity<Ride>().Property(r => r.EstimatedPrice).HasPrecision(18, 2);
+        modelBuilder.Entity<DiscountCode>().Property(d => d.Value).HasPrecision(18, 2);
+        modelBuilder.Entity<DiscountCode>().Property(d => d.MinimumRideValue).HasPrecision(18, 2);
 
         // Foreign keys and delete behavior
         modelBuilder.Entity<Ticket>()
@@ -82,6 +95,11 @@ public class AppDbContext : DbContext
             .WithMany()
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<Ride>()
+            .HasOne(r => r.DiscountCode)
+            .WithMany()
+            .OnDelete(DeleteBehavior.SetNull);
+
         modelBuilder.Entity<Maintenance>()
             .HasOne(p => p.Vehicle)
             .WithMany()
@@ -108,7 +126,25 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Maintenance>()
             .ToTable(m => m.HasCheckConstraint("CK_Maintenance_ServiceDate", "\"ServiceDate\" <= CURRENT_DATE"));
 
+        modelBuilder.Entity<Ride>()
+            .ToTable(r => r.HasCheckConstraint("CK_Ride_Distance", "\"Distance\" >= 0"));
+
+        modelBuilder.Entity<Ride>()
+            .ToTable(r => r.HasCheckConstraint("CK_Ride_Duration", "\"Duration\" >= 0"));
+
+        modelBuilder.Entity<Ride>()
+            .ToTable(r => r.HasCheckConstraint("CK_Ride_EstimatedPrice", "\"EstimatedPrice\" >= 0"));
+
+        modelBuilder.Entity<DiscountCode>()
+            .ToTable(d => d.HasCheckConstraint("CK_DiscountCode_Value", "\"Value\" > 0"));
+
+        modelBuilder.Entity<DiscountCode>()
+            .ToTable(d => d.HasCheckConstraint("CK_DiscountCode_MinimumRideValue", "\"MinimumRideValue\" >= 0"));
+
+        modelBuilder.Entity<DiscountCode>()
+            .ToTable(d => d.HasCheckConstraint(
+                "CK_DiscountCode_PercentageRange",
+                "\"Type\" <> 1 OR (\"Value\" > 0 AND \"Value\" <= 100)"));
+
     }
 }
-
-

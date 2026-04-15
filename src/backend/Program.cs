@@ -25,6 +25,7 @@ builder.Services.AddScoped<IPassengerRepository, PassengerRepository>();
 builder.Services.AddScoped<IRideRepository, RideRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<ITelemetryRepository, TelemetryRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
 // Services
 
@@ -32,6 +33,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRideService, RideService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<ITelemetryService, TelemetryService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IPriceService, PriceService>();
+
 
 // Enums as a string not index
 
@@ -98,6 +102,8 @@ builder.Services
 builder.Services.AddAuthorization(o => o.AddPolicy("Admin", p => p.RequireRole("Admin"))); 
 builder.Services.AddAuthorization(o => o.AddPolicy("Vehicle", p => p.RequireRole("Vehicle"))); 
 builder.Services.AddAuthorization(o => o.AddPolicy("Passenger", p => p.RequireRole("Passenger"))); 
+builder.Services.AddAuthorization(o => o.AddPolicy("AdminOrVehicle", p => p.RequireAssertion(ctx =>
+    ctx.User.IsInRole("Admin") || ctx.User.IsInRole("Vehicle"))));
 
 var app = builder.Build();
 
@@ -165,6 +171,8 @@ app.MapRideEndpoints();
 app.MapVehicleEndpoints();
 
 app.MapTelemetryEndpoints();
+
+app.MapPaymentEndpoints();
 
 
 

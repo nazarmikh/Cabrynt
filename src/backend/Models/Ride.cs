@@ -11,6 +11,11 @@ public class Ride
     public required string DestinationLocation {get;set;}
     public double DestinationLatitude {get;set;}
     public double DestinationLongitude {get;set;}
+    public decimal Distance {get;set;}
+    public decimal Duration {get;set;}
+    public VehicleType PreferredVehicleType {get;set;}
+    public decimal EstimatedPrice {get;set;}
+    public DiscountCode? DiscountCode {get;set;}
     public RideStatus RideStatus {get;set;}
     public DateTime RequestTime {get;set;}
     public required PassengerProfile PassengerProfile {get;set;}

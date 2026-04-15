@@ -17,11 +17,13 @@ public class RideService : IRideService
 {
     private readonly IRideRepository _rideRepository;
     private readonly IPassengerRepository _passengerRepository;
+    private readonly IPriceService _priceService;
 
-    public RideService(IRideRepository rideRepository, IPassengerRepository passengerRepository)
+    public RideService(IRideRepository rideRepository, IPassengerRepository passengerRepository, IPriceService priceService)
     {
         _rideRepository = rideRepository;
         _passengerRepository = passengerRepository;
+        _priceService = priceService;
     }
 
     public async Task<RideResponseDto?> CreateRideAsync(ClaimsPrincipal principal, RideRequestDto rideRequest)
@@ -36,7 +38,10 @@ public class RideService : IRideService
         if (passenger is null)
             return null;
 
-        int? vehicleId = await _rideRepository.GetNearestVehicleAsync(rideRequest.DepartureLatitude, rideRequest.DepartureLongitude);
+        int? vehicleId = await _rideRepository.GetNearestVehicleAsync(
+            rideRequest.DepartureLatitude,
+            rideRequest.DepartureLongitude,
+            rideRequest.PreferredVehicleType);
         
 
         Vehicle? vehicle = null;
@@ -46,6 +51,32 @@ public class RideService : IRideService
             vehicle = await _rideRepository.GetVehicleById(vehicleId.Value);
         }
 
+        decimal distance = CalculateDistanceKm(
+                rideRequest.DepartureLatitude, 
+                rideRequest.DepartureLongitude, 
+                rideRequest.DestinationLatitude, 
+                rideRequest.DestinationLongitude
+        );
+
+        decimal duration = CalculateEstimatedDurationMinutes(distance);
+        DiscountCode? discountCode = null;
+
+        if (!string.IsNullOrWhiteSpace(rideRequest.DiscountCode))
+        {
+            discountCode = await _rideRepository.GetDiscountCodeByCodeAsync(rideRequest.DiscountCode.Trim());
+            if (discountCode is null)
+            {
+                throw new InvalidOperationException("Invalid discount code");
+            }
+            if (discountCode.ExpirationDate <= DateTime.UtcNow)
+            {
+                throw new InvalidOperationException("Discount code has expired");
+            }
+            if (!discountCode.IsActive)
+            {
+                throw new InvalidOperationException("Discount code is not active");
+            }
+        }
 
         Ride ride = new Ride()
         {
@@ -55,12 +86,27 @@ public class RideService : IRideService
             DestinationLocation = rideRequest.DestinationLocation,
             DestinationLatitude = rideRequest.DestinationLatitude,
             DestinationLongitude = rideRequest.DestinationLongitude,
+            Distance = distance,
+            Duration = duration,
+            DiscountCode = discountCode,
+            EstimatedPrice = 0,
             RequestTime = DateTime.UtcNow,
             PassengerProfile = passenger,
             RideStatus = RideStatus.Requested,
+            PreferredVehicleType = rideRequest.PreferredVehicleType,
             Vehicle = null
         };
-        
+
+        decimal price = _priceService.EstimatePrice(
+            distance,
+            duration,
+            rideRequest.PreferredVehicleType,
+            DateTime.UtcNow,
+            passenger.Points,
+            discountCode);
+
+        ride.EstimatedPrice = price;
+
         if (vehicle is not null)
         {
             ride.RideStatus = RideStatus.InProgress;
@@ -75,7 +121,8 @@ public class RideService : IRideService
             RideId = ride.Id,
             RideStatus = ride.RideStatus,
             RequestTime = ride.RequestTime,
-            VehicleId = vehicleId
+            VehicleId = vehicleId,
+            EstimatedPrice = ride.EstimatedPrice
         };
 
         return response;
@@ -98,7 +145,8 @@ public class RideService : IRideService
                 RideId = item.Id,
                 RideStatus = item.RideStatus,
                 RequestTime = item.RequestTime,
-                VehicleId = item.Vehicle?.Id
+                VehicleId = item.Vehicle?.Id,
+                EstimatedPrice = item.EstimatedPrice
             };
             response.Add(newRecord);
         }
@@ -149,7 +197,10 @@ public class RideService : IRideService
             throw new InvalidOperationException("Ride not found");
         }
 
-        int? vehicleId = await _rideRepository.GetNearestVehicleAsync(ride.DepartureLatitude, ride.DepartureLongitude);
+        int? vehicleId = await _rideRepository.GetNearestVehicleAsync(
+            ride.DepartureLatitude,
+            ride.DepartureLongitude,
+            ride.PreferredVehicleType);
         if (vehicleId is null)
         {
             return;
@@ -167,4 +218,40 @@ public class RideService : IRideService
         await _rideRepository.SaveChangesAsync();
 
     }
+
+    private static decimal CalculateDistanceKm(
+        double startLat,
+        double startLon,
+        double endLat,
+        double endLon)
+    {
+        const double earthRadiusKm = 6371.0;
+
+        static double ToRadians(double angle) => Math.PI * angle / 180.0;
+
+        var dLat = ToRadians(endLat - startLat);
+        var dLon = ToRadians(endLon - startLon);
+
+        var lat1 = ToRadians(startLat);
+        var lat2 = ToRadians(endLat);
+
+        var a =
+            Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+            Math.Cos(lat1) * Math.Cos(lat2) *
+            Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        var distance = earthRadiusKm * c;
+
+        return Math.Round((decimal)distance, 2);
+    }
+
+    private static decimal CalculateEstimatedDurationMinutes(decimal distanceKm)
+    {
+        const decimal averageSpeedKmPerHour = 40m;
+        var hours = distanceKm / averageSpeedKmPerHour;
+        return Math.Round(hours * 60m, 2);
+    }
+
+
 }

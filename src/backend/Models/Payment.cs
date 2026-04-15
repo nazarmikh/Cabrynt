@@ -21,7 +21,7 @@ public class Payment
 
     public Currency Currency {get;set;}
     public TransactionStatus TransactionStatus {get;set;}
-    public string TransactionReference {get;set;}
+    public string? TransactionReference {get;set;}
     public DateTime PaymentDate {get;set;}
-    public Ride Ride {get;set;}
+    public required Ride Ride {get;set;}
 }
