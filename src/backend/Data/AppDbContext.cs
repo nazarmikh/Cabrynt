@@ -44,6 +44,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Ticket>().Property(t => t.Description).HasMaxLength(2000).IsRequired();
         modelBuilder.Entity<Payment>().Property(p => p.TransactionReference).HasMaxLength(100).IsRequired();
         modelBuilder.Entity<DiscountCode>().Property(d => d.Code).HasMaxLength(50).IsRequired();
+        modelBuilder.Entity<Maintenance>().Property(m => m.Description).HasMaxLength(2000).IsRequired();
+        modelBuilder.Entity<Maintenance>().Property(m => m.TechnicianName).HasMaxLength(200).IsRequired();
 
         modelBuilder.Entity<Ride>().Property(r => r.DepartureLocation).HasMaxLength(200).IsRequired();
         modelBuilder.Entity<Ride>().Property(r => r.DestinationLocation).HasMaxLength(200).IsRequired();

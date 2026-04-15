@@ -26,6 +26,8 @@ builder.Services.AddScoped<IRideRepository, RideRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<ITelemetryRepository, TelemetryRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 
 // Services
 
@@ -35,6 +37,8 @@ builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<ITelemetryService, TelemetryService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IPriceService, PriceService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 
 
 // Enums as a string not index
@@ -173,6 +177,10 @@ app.MapVehicleEndpoints();
 app.MapTelemetryEndpoints();
 
 app.MapPaymentEndpoints();
+
+app.MapTicketEndpoints();
+
+app.MapMaintenanceEndpoints();
 
 
 

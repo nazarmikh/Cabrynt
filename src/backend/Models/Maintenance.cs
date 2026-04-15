@@ -20,8 +20,8 @@ public class Maintenance
         }
     }
 
-    private string _description;
-    public string Description
+    private string _description = string.Empty;
+    public required string Description
     {
         get
         {
@@ -33,8 +33,8 @@ public class Maintenance
         }
     }
 
-    private string _technicianName;
-    public string TechnicianName
+    private string _technicianName = string.Empty;
+    public required string TechnicianName
     {
         get
         {
@@ -63,8 +63,8 @@ public class Maintenance
         }
     }
 
-    private double _nextInspectionMileage;
-    public double NextInspectionMileage
+    private int _nextInspectionMileage;
+    public int NextInspectionMileage
     {
         get {return _nextInspectionMileage;}
         set
@@ -77,6 +77,6 @@ public class Maintenance
         }
     }
 
-    public Vehicle Vehicle {get;set;}
+    public required Vehicle Vehicle {get;set;}
 }
 
