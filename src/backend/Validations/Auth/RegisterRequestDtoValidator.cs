@@ -24,7 +24,6 @@ public class RegisterRequestDtoValidator : AbstractValidator<RegisterRequestDto>
             .MaximumLength(300);
 
         RuleFor(x => x.PreferredPaymentMethod)
-            .NotEmpty()
-            .MaximumLength(50);
+            .IsInEnum();
     }
 }

@@ -15,12 +15,14 @@ public class VehicleService : IVehicleService
     private readonly IVehicleRepository _vehicleRepository;
     private readonly IPassengerRepository _passengerRepository;
     private readonly IPasswordHasher<User> _hasher;
+    private readonly ILogger<VehicleService> _logger;
 
-    public VehicleService(IVehicleRepository vehicleRepository, IPassengerRepository passengerRepository, IPasswordHasher<User> hasher)
+    public VehicleService(IVehicleRepository vehicleRepository, IPassengerRepository passengerRepository, IPasswordHasher<User> hasher, ILogger<VehicleService> logger)
     {
         _vehicleRepository = vehicleRepository;
         _passengerRepository = passengerRepository;
         _hasher = hasher;
+        _logger = logger;
     }
 
 
@@ -36,12 +38,14 @@ public class VehicleService : IVehicleService
         User? existingVehicle = await _passengerRepository.GetUserByEmailAsync(registerVehicleDto.SystemEmail);
         if (existingVehicle != null)
         {
+            _logger.LogWarning("Vehicle registration rejected because system email {Email} already exists", registerVehicleDto.SystemEmail);
             throw new InvalidOperationException("A vehicle with this email already exists.");
         }
 
         if (await _vehicleRepository.ExistsByVinAsync(registerVehicleDto.VIN)
             || await _vehicleRepository.ExistsByLicencePlateAsync(registerVehicleDto.LicencePlate))
         {
+            _logger.LogWarning("Vehicle registration rejected because VIN {Vin} or licence plate {LicencePlate} already exists", registerVehicleDto.VIN, registerVehicleDto.LicencePlate);
             throw new InvalidOperationException("A vehicle with the same VIN or licence plate already exists.");
         }
         
@@ -70,6 +74,13 @@ public class VehicleService : IVehicleService
 
         await _vehicleRepository.AddVehicleAsync(vehicle);
         await _vehicleRepository.UpdateDbAsync();
+
+        _logger.LogInformation(
+            "Vehicle {VehicleId} registered with type {VehicleType}, plate {LicencePlate}, and system user {UserId}",
+            vehicle.Id,
+            vehicle.VehicleType,
+            vehicle.LicencePlate,
+            user.Id);
 
         return new RegisterVehicleResponseDto
         {

@@ -11,11 +11,13 @@ public class MaintenanceService : IMaintenanceService
 {
     private readonly IMaintenanceRepository _maintenanceRepository;
     private readonly IVehicleRepository _vehicleRepository;
+    private readonly ILogger<MaintenanceService> _logger;
 
-    public MaintenanceService(IMaintenanceRepository maintenanceRepository, IVehicleRepository vehicleRepository)
+    public MaintenanceService(IMaintenanceRepository maintenanceRepository, IVehicleRepository vehicleRepository, ILogger<MaintenanceService> logger)
     {
         _maintenanceRepository = maintenanceRepository;
         _vehicleRepository = vehicleRepository;
+        _logger = logger;
     }
 
     public async Task<CreateMaintenanceResponseDto?> AddMaintenanceAsync(int vehicleId, CreateMaintenanceRequestDto request)
@@ -37,6 +39,12 @@ public class MaintenanceService : IMaintenanceService
 
         await _maintenanceRepository.AddMaintenanceAsync(maintenance);
         await _maintenanceRepository.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Maintenance {MaintenanceId} created for vehicle {VehicleId} by technician {TechnicianName}",
+            maintenance.Id,
+            vehicleId,
+            maintenance.TechnicianName);
 
         CreateMaintenanceResponseDto response = new CreateMaintenanceResponseDto()
         {

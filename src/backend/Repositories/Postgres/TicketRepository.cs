@@ -4,6 +4,7 @@ public interface ITicketRepository
 {
     Task<Ticket?> GetTicketByIdAsync(int id);
     Task<List<Ticket>> GetAllTicketsAsync(int userId);
+    Task<List<Ticket>> GetAllTicketsForAdminAsync();
     Task CreateTicketAsync(Ticket ticket);
     Task SaveChangesAsync();
 }
@@ -29,10 +30,20 @@ public class TicketRepository : ITicketRepository
             .ToListAsync();
     }
 
+    public async Task<List<Ticket>> GetAllTicketsForAdminAsync()
+    {
+        return await _appDbContext.Tickets
+            .Include(x => x.PassengerProfile)
+            .ThenInclude(x => x.User)
+            .OrderByDescending(x => x.ReportTime)
+            .ToListAsync();
+    }
+
     public async Task<Ticket?> GetTicketByIdAsync(int id)
     {
         return await _appDbContext.Tickets
             .Include(x => x.PassengerProfile)
+            .ThenInclude(x => x.User)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 

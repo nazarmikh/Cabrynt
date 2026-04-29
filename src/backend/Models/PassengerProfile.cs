@@ -1,3 +1,5 @@
+using Project.Enums;
+
 namespace Project.Models;
 
 public class PassengerProfile
@@ -48,8 +50,8 @@ public class PassengerProfile
         }
     }
 
-    private string _preferredPaymentMethod = null!;
-    public string PreferredPaymentMethod
+    private PaymentMethod _preferredPaymentMethod = PaymentMethod.Card;
+    public PaymentMethod PreferredPaymentMethod
     {
         get 
         {

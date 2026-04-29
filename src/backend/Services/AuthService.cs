@@ -10,6 +10,7 @@ public interface IAuthService
     Task<PassengerProfile> RegisterPassengerAsync(RegisterRequestDto registerRequestDto);
     Task<string?> LoginAsync(LoginRequestDto loginRequestDto);
     Task<MeResponseDto?> GetMeAsync(ClaimsPrincipal claimsPrincipal);
+    Task<MeResponseDto?> UpdateMeAsync(ClaimsPrincipal claimsPrincipal, UpdateMeRequestDto request);
     string HashPassword(string password, User user);
 }
 
@@ -18,12 +19,14 @@ public class AuthService : IAuthService
     private readonly IPassengerRepository _passengerRepository;
     private readonly IPasswordHasher<User> _hasher;
     private readonly ITokenProvider _tokenProvider;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(IPassengerRepository passengerRepository, IPasswordHasher<User> hasher, ITokenProvider tokenProvider)
+    public AuthService(IPassengerRepository passengerRepository, IPasswordHasher<User> hasher, ITokenProvider tokenProvider, ILogger<AuthService> logger)
     {
         _hasher = hasher;
         _passengerRepository = passengerRepository;
         _tokenProvider = tokenProvider;
+        _logger = logger;
     }
 
     public async Task<PassengerProfile> RegisterPassengerAsync(RegisterRequestDto registerRequestDto)
@@ -31,6 +34,7 @@ public class AuthService : IAuthService
         var existingUser = await _passengerRepository.GetUserByEmailAsync(registerRequestDto.Email);
         if (existingUser != null)
         {
+            _logger.LogWarning("Passenger registration rejected because email {Email} already exists", registerRequestDto.Email);
             throw new InvalidOperationException("Email is already registered");
         }
 
@@ -61,6 +65,8 @@ public class AuthService : IAuthService
         await _passengerRepository.AddPassengerAsync(passengerProfile);
         await _passengerRepository.SaveChangesAsync();
 
+        _logger.LogInformation("Passenger {PassengerUserId} registered with email {Email}", user.Id, user.Email);
+
         return passengerProfile;
 
     }
@@ -70,19 +76,23 @@ public class AuthService : IAuthService
         User? user = await _passengerRepository.GetUserByEmailAsync(loginRequestDto.Email);
         if (user == null)
         {
+            _logger.LogWarning("Login failed because email {Email} was not found", loginRequestDto.Email);
             return null;
         }
 
-        user.LastLogin = DateTime.UtcNow;
         var checkHash = _hasher.VerifyHashedPassword(user, user.PasswordHash, loginRequestDto.Password);
         if (checkHash == PasswordVerificationResult.Failed)
         {
+            _logger.LogWarning("Login failed for user {UserId} with email {Email} because password verification failed", user.Id, user.Email);
             return null;
         }
 
         if (checkHash == PasswordVerificationResult.Success || checkHash == PasswordVerificationResult.SuccessRehashNeeded)
         {
+            user.LastLogin = DateTime.UtcNow;
+            await _passengerRepository.SaveChangesAsync();
             string token = _tokenProvider.CreateToken(user);
+            _logger.LogInformation("User {UserId} with role {Role} logged in successfully", user.Id, user.Role);
             return token;
         }
 
@@ -132,6 +142,38 @@ public class AuthService : IAuthService
             return response;
         }
         return null;
+    }
+
+    public async Task<MeResponseDto?> UpdateMeAsync(ClaimsPrincipal claimsPrincipal, UpdateMeRequestDto request)
+    {
+        var sub = claimsPrincipal.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        var role = claimsPrincipal.FindFirstValue(ClaimTypes.Role);
+
+        if (!int.TryParse(sub, out var userId) || role != "Passenger")
+            return null;
+
+        PassengerProfile? passenger = await _passengerRepository.GetPassengerByIdAsync(userId);
+        if (passenger is null)
+            return null;
+
+        passenger.Name = request.Name;
+        passenger.HomeAddress = request.HomeAddress;
+        passenger.PreferredPaymentMethod = request.PreferredPaymentMethod;
+
+        await _passengerRepository.SaveChangesAsync();
+
+        _logger.LogInformation("Passenger {PassengerUserId} updated profile details", passenger.UserId);
+
+        return new MeResponseDto
+        {
+            Name = passenger.Name,
+            Email = passenger.User.Email,
+            HomeAddress = passenger.HomeAddress,
+            Points = passenger.Points,
+            PreferredPaymentMethod = passenger.PreferredPaymentMethod
+        };
     }
 
     public string HashPassword(string password, User user)

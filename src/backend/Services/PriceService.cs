@@ -4,6 +4,7 @@ public interface IPriceService
 {
     decimal EstimatePrice(decimal distance, decimal duration, VehicleType vehicleType, DateTime rideTime, int loyaltyPoints, DiscountCode? discountCode);
     (decimal finalPrice, int loyaltyPointRecalculated) GetFinalPrice(decimal distance, decimal duration, VehicleType vehicleType, DateTime rideTime, int loyaltyPoints, DiscountCode? discountCode);
+    PriceQuoteBreakdown GetEstimatedBreakdown(decimal distance, decimal duration, VehicleType vehicleType, DateTime rideTime, int loyaltyPoints, DiscountCode? discountCode);
 }
 
 public class PriceService : IPriceService
@@ -23,11 +24,25 @@ public class PriceService : IPriceService
             rideTime,
             loyaltyPoints,
             discountCode,
-            recalculateLoyaltyPoints: false).finalPrice;
+            recalculateLoyaltyPoints: false).Total;
     }
 
 
     public (decimal finalPrice, int loyaltyPointRecalculated) GetFinalPrice(decimal distance, decimal duration, VehicleType vehicleType, DateTime rideTime, int loyaltyPoints, DiscountCode? discountCode)
+    {
+        var result = CalculatePriceCore(
+            distance,
+            duration,
+            vehicleType,
+            rideTime,
+            loyaltyPoints,
+            discountCode,
+            recalculateLoyaltyPoints: true);
+
+        return (result.Total, result.LoyaltyPointRecalculated);
+    }
+
+    public PriceQuoteBreakdown GetEstimatedBreakdown(decimal distance, decimal duration, VehicleType vehicleType, DateTime rideTime, int loyaltyPoints, DiscountCode? discountCode)
     {
         return CalculatePriceCore(
             distance,
@@ -36,10 +51,10 @@ public class PriceService : IPriceService
             rideTime,
             loyaltyPoints,
             discountCode,
-            recalculateLoyaltyPoints: true);
+            recalculateLoyaltyPoints: false);
     }
 
-    private (decimal finalPrice, int loyaltyPointRecalculated) CalculatePriceCore(
+    private PriceQuoteBreakdown CalculatePriceCore(
         decimal distance,
         decimal duration,
         VehicleType vehicleType,
@@ -48,29 +63,39 @@ public class PriceService : IPriceService
         DiscountCode? discountCode,
         bool recalculateLoyaltyPoints)
     {
-        decimal finalPrice = startingRate + (distance * distancePricePerKilometer) + (duration * durationPricePerMinute);
+        decimal distanceCost = distance * distancePricePerKilometer;
+        decimal durationCost = duration * durationPricePerMinute;
+        decimal finalPrice = startingRate + distanceCost + durationCost;
         int loyaltyPointRecalculated = loyaltyPoints;
+        decimal vehicleMultiplier = 1m;
 
         if (vehicleType == VehicleType.Van)
         {
-            finalPrice *= 1.5m;
+            vehicleMultiplier = 1.5m;
         }
         else if (vehicleType == VehicleType.Luxury)
         {
-            finalPrice *= 2.2m; 
+            vehicleMultiplier = 2.2m;
         }
 
+        finalPrice *= vehicleMultiplier;
+
         TimeOnly rideTimeOnly = TimeOnly.FromDateTime(rideTime);
+        decimal nightSurcharge = 0m;
+        bool isNightRateApplied = false;
 
         if (rideTimeOnly >= new TimeOnly(22, 0) || rideTimeOnly <= new TimeOnly(6, 0))
         {
-            finalPrice *= 1.15m;
+            isNightRateApplied = true;
+            nightSurcharge = finalPrice * 0.15m;
+            finalPrice += nightSurcharge;
         }
 
         var availablePointBlocks = loyaltyPoints / 100;
         var requestedLoyaltyDiscount = availablePointBlocks * discountPer100LoyaltyPoints;
         var maxLoyaltyDiscount = Math.Floor(finalPrice * 0.2m);
         var appliedLoyaltyDiscount = Math.Min(requestedLoyaltyDiscount, maxLoyaltyDiscount);
+        decimal codeDiscount = 0m;
 
         if (appliedLoyaltyDiscount >= 1)
         {
@@ -88,11 +113,13 @@ public class PriceService : IPriceService
         {
             if (discountCode.Type == DiscountType.Percentage)
             {
-                finalPrice *= 1 - (discountCode.Value / 100m);
+                codeDiscount = finalPrice * (discountCode.Value / 100m);
+                finalPrice -= codeDiscount;
             }
             else if (discountCode.Type == DiscountType.Flat)
             {
-                finalPrice -= discountCode.Value;
+                codeDiscount = discountCode.Value;
+                finalPrice -= codeDiscount;
             }
         }
 
@@ -104,11 +131,40 @@ public class PriceService : IPriceService
             finalPrice = 5;
         }
 
+        decimal vatAmount = Math.Round(finalPrice * (vatMultiplier - 1), 2, MidpointRounding.AwayFromZero);
         finalPrice *= vatMultiplier;
         // We round to 2 decimals with AwayFromZero so midpoint values use the
         // more typical financial rounding behavior, for example 19.965 -> 19.97.
         finalPrice = Math.Round(finalPrice, 2, MidpointRounding.AwayFromZero);
 
-        return (finalPrice, loyaltyPointRecalculated);
+        return new PriceQuoteBreakdown(
+            StartingRate: startingRate,
+            DistanceCost: Math.Round(distanceCost, 2, MidpointRounding.AwayFromZero),
+            DurationCost: Math.Round(durationCost, 2, MidpointRounding.AwayFromZero),
+            VehicleMultiplier: vehicleMultiplier,
+            NightSurcharge: Math.Round(nightSurcharge, 2, MidpointRounding.AwayFromZero),
+            LoyaltyDiscount: Math.Round(appliedLoyaltyDiscount, 2, MidpointRounding.AwayFromZero),
+            CodeDiscount: Math.Round(codeDiscount, 2, MidpointRounding.AwayFromZero),
+            VatAmount: vatAmount,
+            Total: finalPrice,
+            Distance: distance,
+            Duration: duration,
+            IsNightRateApplied: isNightRateApplied,
+            LoyaltyPointRecalculated: loyaltyPointRecalculated);
     }
 }
+
+public record PriceQuoteBreakdown(
+    decimal StartingRate,
+    decimal DistanceCost,
+    decimal DurationCost,
+    decimal VehicleMultiplier,
+    decimal NightSurcharge,
+    decimal LoyaltyDiscount,
+    decimal CodeDiscount,
+    decimal VatAmount,
+    decimal Total,
+    decimal Distance,
+    decimal Duration,
+    bool IsNightRateApplied,
+    int LoyaltyPointRecalculated);

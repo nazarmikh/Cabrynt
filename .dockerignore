@@ -1,0 +1,16 @@
+.git
+.github
+.vscode
+generatedFrontend
+src/frontend/node_modules
+src/frontend/.next
+src/frontend/tsconfig.tsbuildinfo
+src/backend/bin
+src/backend/obj
+tests/**/bin
+tests/**/obj
+tests/http
+src/backend/GeneratedEmails
+src/backend/GeneratedInvoices
+postgres_data
+mongo_data

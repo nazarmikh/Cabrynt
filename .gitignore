@@ -5,6 +5,13 @@ obj/
 # Local SDK/runtime cache
 .dotnet/
 
+# Frontend package/build output
+generatedFrontend/
+src/frontend/node_modules/
+src/frontend/.next/
+src/frontend/.vercel/
+src/frontend/*.tsbuildinfo
+
 # IDE/editor
 .vs/
 *.user
@@ -26,5 +33,9 @@ coverage/
 .env
 .env.*
 !.env.example
+
+# Generated runtime artifacts
+src/backend/GeneratedEmails/
+src/backend/GeneratedInvoices/
 
 backend.sln

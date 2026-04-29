@@ -7,6 +7,7 @@ public interface IRideRepository
     Task SaveChangesAsync();
     Task<List<Ride>> GetAllRidesAsync(int passengerId);
     Task<Ride?> GetRideByIdAsync(int id);
+    Task<Ride?> GetOldestRequestedRideAsync(VehicleType preferredVehicleType);
     Task<DiscountCode?> GetDiscountCodeByCodeAsync(string code);
     Task AddRideAsync(Ride ride);
     void UpdateRide(Ride ride);
@@ -32,6 +33,19 @@ public class RideRepository : IRideRepository
     public Task<Ride?> GetRideByIdAsync(int id)
     {
         return _appDbContext.Rides.Include(x => x.Vehicle).Include(x => x.PassengerProfile).ThenInclude(x => x.User).Include(x => x.DiscountCode).FirstOrDefaultAsync(r => r.Id == id);
+    }
+
+    public Task<Ride?> GetOldestRequestedRideAsync(VehicleType preferredVehicleType)
+    {
+        return _appDbContext.Rides
+            .Include(x => x.PassengerProfile)
+            .ThenInclude(x => x.User)
+            .Include(x => x.DiscountCode)
+            .Where(r => r.RideStatus == RideStatus.Requested
+                && r.Vehicle == null
+                && r.PreferredVehicleType == preferredVehicleType)
+            .OrderBy(r => r.RequestTime)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<List<Ride>> GetAllRidesAsync(int passengerId)

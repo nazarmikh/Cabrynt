@@ -8,16 +8,20 @@ public interface ITicketService
     Task<CreateTicketResponseDto?> CreateTicketAsync(ClaimsPrincipal principal, CreateTicketRequestDto ticketDto);
     Task<GetAllTicketsResponseDto?> GetAllTicketsAsync(ClaimsPrincipal principal);
     Task<GetTicketByIdResponseDto?> GetTicketByIdAsync(ClaimsPrincipal principal, int id);
+    Task<List<AdminTicketResponseDto>> GetAdminTicketsAsync();
+    Task<AdminTicketResponseDto?> UpdateTicketStatusAsync(int id, UpdateTicketStatusRequestDto request);
 }
 
 public class TicketService : ITicketService
 {
     private readonly ITicketRepository _ticketRepository;
     private readonly IPassengerRepository _passengerRepository;
-    public TicketService(ITicketRepository ticketRepository, IPassengerRepository passengerRepository)
+    private readonly ILogger<TicketService> _logger;
+    public TicketService(ITicketRepository ticketRepository, IPassengerRepository passengerRepository, ILogger<TicketService> logger)
     {
         _ticketRepository = ticketRepository;
         _passengerRepository = passengerRepository;
+        _logger = logger;
     }
 
     public async Task<CreateTicketResponseDto?> CreateTicketAsync(ClaimsPrincipal principal,CreateTicketRequestDto ticketDto)
@@ -44,6 +48,12 @@ public class TicketService : ITicketService
         };
         await _ticketRepository.CreateTicketAsync(ticket);
         await _ticketRepository.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Ticket {TicketId} created by passenger {PassengerUserId} with priority {Priority}",
+            ticket.Id,
+            passenger.UserId,
+            ticket.TicketPriority);
 
         CreateTicketResponseDto response = new CreateTicketResponseDto()
         {
@@ -116,5 +126,44 @@ public class TicketService : ITicketService
         };
 
         return response;
+    }
+
+    public async Task<List<AdminTicketResponseDto>> GetAdminTicketsAsync()
+    {
+        var tickets = await _ticketRepository.GetAllTicketsForAdminAsync();
+
+        return tickets.Select(MapAdminTicket).ToList();
+    }
+
+    public async Task<AdminTicketResponseDto?> UpdateTicketStatusAsync(int id, UpdateTicketStatusRequestDto request)
+    {
+        var ticket = await _ticketRepository.GetTicketByIdAsync(id);
+        if (ticket is null)
+        {
+            return null;
+        }
+
+        ticket.TicketStatus = request.TicketStatus;
+        await _ticketRepository.SaveChangesAsync();
+
+        _logger.LogInformation("Ticket {TicketId} status updated to {TicketStatus}", ticket.Id, ticket.TicketStatus);
+
+        ticket = await _ticketRepository.GetTicketByIdAsync(id);
+        return ticket is null ? null : MapAdminTicket(ticket);
+    }
+
+    private static AdminTicketResponseDto MapAdminTicket(Ticket ticket)
+    {
+        return new AdminTicketResponseDto
+        {
+            Id = ticket.Id,
+            Subject = ticket.Subject,
+            Description = ticket.Description,
+            TicketPriority = ticket.TicketPriority,
+            TicketStatus = ticket.TicketStatus,
+            ReportTime = ticket.ReportTime,
+            PassengerUserId = ticket.PassengerProfile.UserId,
+            PassengerEmail = ticket.PassengerProfile.User.Email
+        };
     }
 }

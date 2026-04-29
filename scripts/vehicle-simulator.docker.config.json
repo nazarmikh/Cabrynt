@@ -1,0 +1,47 @@
+{
+  "baseUrl": "http://backend:8080",
+  "intervalSeconds": 5,
+  "includeAnomalies": true,
+  "vehicles": [
+    {
+      "email": "vehicle.standard1@novadrive.test",
+      "password": "StrongPass123!",
+      "vehicleId": 414,
+      "baseLatitude": 51.0543,
+      "baseLongitude": 3.7174,
+      "batteryStart": 84,
+      "hardwareTemperatureStart": 48,
+      "speedStart": 22
+    },
+    {
+      "email": "vehicle.standard2@novadrive.test",
+      "password": "StrongPass123!",
+      "vehicleId": 415,
+      "baseLatitude": 51.0498,
+      "baseLongitude": 3.7301,
+      "batteryStart": 76,
+      "hardwareTemperatureStart": 46,
+      "speedStart": 18
+    },
+    {
+      "email": "vehicle.van1@novadrive.test",
+      "password": "StrongPass123!",
+      "vehicleId": 416,
+      "baseLatitude": 51.0604,
+      "baseLongitude": 3.7052,
+      "batteryStart": 79,
+      "hardwareTemperatureStart": 50,
+      "speedStart": 16
+    },
+    {
+      "email": "vehicle.luxury1@novadrive.test",
+      "password": "StrongPass123!",
+      "vehicleId": 417,
+      "baseLatitude": 51.0455,
+      "baseLongitude": 3.7218,
+      "batteryStart": 91,
+      "hardwareTemperatureStart": 47,
+      "speedStart": 20
+    }
+  ]
+}

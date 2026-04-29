@@ -69,6 +69,35 @@ public static class TicketEndpoints
             }
         }).RequireAuthorization("Passenger");
 
+        builder.MapGet("/api/private/tickets", async (
+            ITicketService ticketService) =>
+        {
+            var response = await ticketService.GetAdminTicketsAsync();
+            return Results.Ok(response);
+        }).RequireAuthorization("Admin");
+
+        builder.MapPatch("/api/private/tickets/{id:int}/status", async (
+            int id,
+            UpdateTicketStatusRequestDto request,
+            IValidator<UpdateTicketStatusRequestDto> validator,
+            ITicketService ticketService) =>
+        {
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(
+                    validationResult.Errors
+                        .GroupBy(e => e.PropertyName)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => g.Select(e => e.ErrorMessage).ToArray()
+                        ));
+            }
+
+            var response = await ticketService.UpdateTicketStatusAsync(id, request);
+            return response is null ? Results.NotFound() : Results.Ok(response);
+        }).RequireAuthorization("Admin");
+
         return builder;
     }
 }

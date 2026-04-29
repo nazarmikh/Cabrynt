@@ -96,6 +96,35 @@ public static class AuthEndpoints
             }
         }).RequireAuthorization();
 
+        app.MapPatch("/api/public/auth/me", async (
+            ClaimsPrincipal token,
+            UpdateMeRequestDto request,
+            IValidator<UpdateMeRequestDto> validator,
+            IAuthService service) =>
+        {
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(
+                    validationResult.Errors
+                        .GroupBy(e => e.PropertyName)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => g.Select(e => e.ErrorMessage).ToArray()
+                        ));
+            }
+
+            try
+            {
+                var response = await service.UpdateMeAsync(token, request);
+                return response is null ? Results.Unauthorized() : Results.Ok(response);
+            }
+            catch (Exception)
+            {
+                return Results.Problem("Profile update failed.");
+            }
+        }).RequireAuthorization("Passenger");
+
         return app;
     }
 

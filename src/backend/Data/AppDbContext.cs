@@ -34,7 +34,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>().Property(e => e.PasswordHash).IsRequired();
         modelBuilder.Entity<PassengerProfile>().Property(e => e.Name).HasMaxLength(254).IsRequired();
         modelBuilder.Entity<PassengerProfile>().Property(e => e.HomeAddress).HasMaxLength(300).IsRequired();
-        modelBuilder.Entity<PassengerProfile>().Property(e => e.PreferredPaymentMethod).HasMaxLength(100).IsRequired();
+        modelBuilder.Entity<PassengerProfile>()
+            .Property(e => e.PreferredPaymentMethod)
+            .HasConversion<string>()
+            .HasMaxLength(100)
+            .IsRequired();
 
         modelBuilder.Entity<Vehicle>().Property(v => v.VIN).HasMaxLength(17).IsRequired();
         modelBuilder.Entity<Vehicle>().Property(v => v.LicencePlate).HasMaxLength(20).IsRequired();

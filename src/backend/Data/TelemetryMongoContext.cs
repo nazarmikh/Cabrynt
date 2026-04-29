@@ -68,14 +68,17 @@ public class TelemetryMongoContext
                 "$jsonSchema", new BsonDocument
                 {
                     { "bsonType", "object" },
-                    { "required", new BsonArray {"VehicleId", "TimeStamp", "ErrorCode", "SensorType"}},
+                    { "required", new BsonArray {"VehicleId", "VehicleTelemetryId", "TimeStamp", "ErrorCode", "SensorType", "DeviationSeverity", "RawSensorValue"}},
                     {
                         "properties", new BsonDocument
                         {
                             { "VehicleId", new BsonDocument{ {"bsonType", "int"}, {"minimum", 1}}},
+                            { "VehicleTelemetryId", new BsonDocument{ {"bsonType", "string"}}},
                             { "TimeStamp", new BsonDocument { {"bsonType", "date"}}},
                             { "ErrorCode", new BsonDocument { {"bsonType", new BsonArray {"int"}}}},
-                            { "SensorType", new BsonDocument { {"bsonType", new BsonArray {"string"}}}}
+                            { "SensorType", new BsonDocument { {"bsonType", new BsonArray {"string"}}}},
+                            { "DeviationSeverity", new BsonDocument { {"bsonType", new BsonArray {"string"}}}},
+                            { "RawSensorValue", new BsonDocument { {"bsonType", "string"}}}
                         }
                     }
                 }
