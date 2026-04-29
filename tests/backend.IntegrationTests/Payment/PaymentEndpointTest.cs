@@ -151,7 +151,7 @@ public class PaymentEndpointTest : IClassFixture<CustomWebApplicationFactory>
         await using var scope = _factory.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        var timestamp = DateTime.UtcNow;
+        var timestamp = new DateTime(2026, 4, 16, 12, 0, 0, DateTimeKind.Utc);
         var user = new User
         {
             Email = $"it-payment-endpoint-{Guid.NewGuid():N}@novadrive.test",
@@ -171,7 +171,7 @@ public class PaymentEndpointTest : IClassFixture<CustomWebApplicationFactory>
             Name = "Payment Endpoint Passenger",
             HomeAddress = "Main Street 1",
             Points = loyaltyPoints,
-            PreferredPaymentMethod = "Card"
+            PreferredPaymentMethod = PaymentMethod.Card
         };
 
         await dbContext.PassengerProfiles.AddAsync(passenger);

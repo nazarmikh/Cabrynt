@@ -86,7 +86,7 @@ public class CreatePaymentTest : IClassFixture<CustomWebApplicationFactory>
 
     private static async Task<int> SeedRideAsync(AppDbContext appDbContext, RideStatus rideStatus, int loyaltyPoints)
     {
-        var timestamp = DateTime.UtcNow;
+        var timestamp = new DateTime(2026, 4, 16, 12, 0, 0, DateTimeKind.Utc);
         var user = new User
         {
             Email = $"it-payment-{Guid.NewGuid():N}@novadrive.test",
@@ -106,7 +106,7 @@ public class CreatePaymentTest : IClassFixture<CustomWebApplicationFactory>
             Name = "Payment Test Passenger",
             HomeAddress = "Main Street 1",
             Points = loyaltyPoints,
-            PreferredPaymentMethod = "Card"
+            PreferredPaymentMethod = PaymentMethod.Card
         };
 
         await appDbContext.PassengerProfiles.AddAsync(passenger);

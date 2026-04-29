@@ -131,6 +131,78 @@ public class CreateRideTest : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task CreateRide_DoesNotAssignVehicle_WhenNearestVehicleIsAlreadyBusy()
+    {
+        var random = new Random();
+        var systemEmail = $"it-busy-vehicle-{Guid.NewGuid():N}@novadrive.test";
+        var firstPassengerEmail = $"it-busy-passenger-one-{Guid.NewGuid():N}@novadrive.test";
+        var secondPassengerEmail = $"it-busy-passenger-two-{Guid.NewGuid():N}@novadrive.test";
+
+        var adminToken = await LoginAsync(AdminEmail, AdminPassword);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+
+        var vehicleId = await RegisterVehicleAsync(systemEmail);
+
+        var vehicleToken = await LoginAsync(systemEmail, DefaultPassword);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", vehicleToken);
+        await AddTelemetryAsync(vehicleId, random);
+
+        await RegisterPassengerAsync(firstPassengerEmail);
+        await RegisterPassengerAsync(secondPassengerEmail);
+
+        var firstPassengerToken = await LoginAsync(firstPassengerEmail, DefaultPassword);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", firstPassengerToken);
+
+        var firstResponse = await _client.PostAsJsonAsync("/api/public/rides", new RideRequestPayload
+        {
+            DepartureLocation = "Kortrijk",
+            DestinationLocation = "Ghent",
+            DepartureLatitude = 50.826,
+            DepartureLongitude = 3.264,
+            DestinationLatitude = 51.054,
+            DestinationLongitude = 3.717
+        });
+
+        firstResponse.EnsureSuccessStatusCode();
+
+        var firstBody = await firstResponse.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
+
+        Assert.NotNull(firstBody);
+        Assert.Equal("InProgress", firstBody!["rideStatus"].GetString());
+        Assert.True(firstBody["vehicleId"].ValueKind != JsonValueKind.Null);
+
+        var firstAssignedVehicleId = firstBody["vehicleId"].GetInt32();
+
+        var secondPassengerToken = await LoginAsync(secondPassengerEmail, DefaultPassword);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", secondPassengerToken);
+
+        var secondResponse = await _client.PostAsJsonAsync("/api/public/rides", new RideRequestPayload
+        {
+            DepartureLocation = "Brussels",
+            DestinationLocation = "Leuven",
+            DepartureLatitude = 50.8503,
+            DepartureLongitude = 4.3517,
+            DestinationLatitude = 50.8798,
+            DestinationLongitude = 4.7005
+        });
+
+        Assert.Equal(HttpStatusCode.Created, secondResponse.StatusCode);
+
+        var secondBody = await secondResponse.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
+
+        Assert.NotNull(secondBody);
+
+        if (secondBody!["vehicleId"].ValueKind == JsonValueKind.Null)
+        {
+            Assert.Equal("Requested", secondBody["rideStatus"].GetString());
+            return;
+        }
+
+        Assert.Equal("InProgress", secondBody["rideStatus"].GetString());
+        Assert.NotEqual(firstAssignedVehicleId, secondBody["vehicleId"].GetInt32());
+    }
+
     private async Task<(HttpResponseMessage Response, Dictionary<string, JsonElement> RideBody, int RideId, RideRequestPayload RideRequest)> CreateRideScenarioAsync()
     {
         var random = new Random();

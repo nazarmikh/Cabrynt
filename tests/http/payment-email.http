@@ -1,0 +1,32 @@
+@host = http://localhost:5113
+@adminEmail = admin@novadrive.com
+@adminPassword = AdminPassword123!
+
+# Optional legacy check for the standalone payment endpoint.
+# In the current app flow, ride completion already creates payment automatically.
+
+@adminToken =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4IiwiZW1haWwiOiJhZG1pbkBub3ZhZHJpdmUuY29tIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3Nzc0ODg5MDUsImlzcyI6Ik5vdmFEcml2ZSIsImF1ZCI6Ik5vdmFEcml2ZUNsaWVudHMifQ.pyBi9SWmm2Ef8h1B70B___Yx0oIFluSyYgQxEP2vWJU
+@rideId =
+
+###
+# 1. Admin login
+POST {{host}}/api/public/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+###
+# 2. Manual payment creation for an already completed ride
+POST {{host}}/api/private/rides/{{rideId}}/payments
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "rideId": {{rideId}}
+}
+

@@ -4,6 +4,7 @@ using backend.IntegrationTests.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using Project.Data;
+using Project.Enums;
 
 namespace backend.IntegrationTests.Telemetry;
 
@@ -103,4 +104,49 @@ public class TelemetryTest : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task AddTelemetry_CreatesSensorDiagnostic_WhenThresholdIsExceeded()
+    {
+        var adminToken = await IntegrationTestData.LoginAsAdminAsync(_client);
+        IntegrationTestData.Authorize(_client, adminToken);
+
+        var vehicle = await IntegrationTestData.RegisterVehicleAsync(_client);
+
+        var vehicleToken = await IntegrationTestData.LoginAsync(_client, vehicle.Request.SystemEmail, vehicle.Request.SystemPassword);
+        IntegrationTestData.Authorize(_client, vehicleToken);
+
+        var request = new
+        {
+            Latitude = 50.85,
+            Longitude = 4.35,
+            CurrentSpeed = 45,
+            RemainingBatteryPercentage = 65,
+            HardwareTemperature = 90,
+            VehicleId = vehicle.VehicleId
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/private/telemetry", request);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var mongoContext = scope.ServiceProvider.GetRequiredService<TelemetryMongoContext>();
+        var savedTelemetry = await mongoContext.VehicleTelemetries
+            .Find(x => x.VehicleId == vehicle.VehicleId)
+            .SortByDescending(x => x.TimeStamp)
+            .FirstOrDefaultAsync();
+
+        Assert.NotNull(savedTelemetry);
+
+        var savedDiagnostic = await mongoContext.SensorDiagnostics
+            .Find(x => x.VehicleId == vehicle.VehicleId && x.VehicleTelemetryId == savedTelemetry!.Id)
+            .SortByDescending(x => x.TimeStamp)
+            .FirstOrDefaultAsync();
+
+        Assert.NotNull(savedDiagnostic);
+        Assert.Equal(SensorType.Camera, savedDiagnostic!.SensorType);
+        Assert.Equal(9101, savedDiagnostic.ErrorCode);
+        Assert.Equal(DeviationSeverity.Severe, savedDiagnostic.DeviationSeverity);
+        Assert.Contains("HighHardwareTemperatureThresholdExceeded", savedDiagnostic.RawSensorValue);
+    }
 }

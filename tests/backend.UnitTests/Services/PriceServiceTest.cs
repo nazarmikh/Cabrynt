@@ -160,4 +160,26 @@ public class PriceServiceTest
 
         Assert.Equal(23.60m, result);
     }
+
+    [Fact]
+    public void GetEstimatedBreakdown_ReturnsComponentsConsistentWithTotal()
+    {
+        var result = _service.GetEstimatedBreakdown(
+            distance: 10m,
+            duration: 20m,
+            vehicleType: VehicleType.Standard,
+            rideTime: new DateTime(2026, 4, 15, 14, 0, 0, DateTimeKind.Utc),
+            loyaltyPoints: 0,
+            discountCode: null);
+
+        Assert.Equal(2.5m, result.StartingRate);
+        Assert.Equal(11m, result.DistanceCost);
+        Assert.Equal(6m, result.DurationCost);
+        Assert.Equal(1m, result.VehicleMultiplier);
+        Assert.Equal(0m, result.NightSurcharge);
+        Assert.Equal(0m, result.LoyaltyDiscount);
+        Assert.Equal(0m, result.CodeDiscount);
+        Assert.Equal(4.10m, result.VatAmount);
+        Assert.Equal(23.60m, result.Total);
+    }
 }

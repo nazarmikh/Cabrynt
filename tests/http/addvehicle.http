@@ -1,0 +1,86 @@
+@host = http://localhost:5113
+@adminEmail = admin@novadrive.com
+@adminPassword = AdminPassword123!
+
+# Setup helper only. Keep this file if you want to register dedicated demo vehicles quickly.
+
+@adminToken =
+
+###
+# Admin login
+POST {{host}}/api/public/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+###
+# Register Standard Vehicle 1
+POST {{host}}/api/private/vehicles
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "vin": "1HGCM82633A004351",
+  "licencePlate": "ND-ST-001",
+  "model": "Tesla Model 3",
+  "vehicleType": "Standard",
+  "year": 2023,
+  "systemEmail": "vehicle.standard1@novadrive.test",
+  "systemPassword": "StrongPass123!"
+}
+
+###
+# Register Standard Vehicle 2
+POST {{host}}/api/private/vehicles
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "vin": "1HGCM82633A004352",
+  "licencePlate": "ND-ST-002",
+  "model": "Hyundai Ioniq 5",
+  "vehicleType": "Standard",
+  "year": 2024,
+  "systemEmail": "vehicle.standard2@novadrive.test",
+  "systemPassword": "StrongPass123!"
+}
+
+###
+# Register Van Vehicle
+POST {{host}}/api/private/vehicles
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "vin": "1HGCM82633A004353",
+  "licencePlate": "ND-VN-001",
+  "model": "Mercedes EQV",
+  "vehicleType": "Van",
+  "year": 2023,
+  "systemEmail": "vehicle.van1@novadrive.test",
+  "systemPassword": "StrongPass123!"
+}
+
+###
+# Register Luxury Vehicle
+POST {{host}}/api/private/vehicles
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "vin": "1HGCM82633A004354",
+  "licencePlate": "ND-LX-001",
+  "model": "BMW i7",
+  "vehicleType": "Luxury",
+  "year": 2024,
+  "systemEmail": "vehicle.luxury1@novadrive.test",
+  "systemPassword": "StrongPass123!"
+}
