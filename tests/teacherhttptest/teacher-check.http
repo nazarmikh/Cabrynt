@@ -1,16 +1,19 @@
 @host = http://localhost:5113
-@runId = teacher01
+@runId = teacher02
 @adminEmail = admin@novadrive.com
 @adminPassword = AdminPassword123!
 
-# Paste generated tokens and ids here while running the file.
-@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4IiwiZW1haWwiOiJhZG1pbkBub3ZhZHJpdmUuY29tIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3Nzc0ODg5MjcsImlzcyI6Ik5vdmFEcml2ZSIsImF1ZCI6Ik5vdmFEcml2ZUNsaWVudHMifQ.XOlsaEkAxbMEH67o0XQOa9EbReLPnCZIVVnVap67pe8
-@passengerToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjIyIiwiZW1haWwiOiJ0ZWFjaGVyLXBhc3Nlbmdlci10ZWFjaGVyMDFAbm92YWRyaXZlLnRlc3QiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJQYXNzZW5nZXIiLCJleHAiOjE3Nzc0ODg5NTQsImlzcyI6Ik5vdmFEcml2ZSIsImF1ZCI6Ik5vdmFEcml2ZUNsaWVudHMifQ.PTtw-ClJMg3jInKvIGQlXc_rFz0Os48Rxo3rxk4Dcbc
+# Paste generated tokens and ids here while running the file,
+# otherwise some of them wont work
+
+@adminToken = 
+@passengerToken = 
 @vehicleToken =
-@rideId = 295
-@ticketId = 91
+@rideId = 
+@ticketId =
 @maintenanceId =
-@vehicleId = 414
+# optional for telementry and vehicle inserts
+@vehicleId = 
 
 ###
 # 1. Admin login

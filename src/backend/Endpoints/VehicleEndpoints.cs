@@ -46,7 +46,8 @@ public static class VehicleEndpoints
            {
                return Results.Problem("An error occurred while registering the vehicle.");
            }
-       }).RequireAuthorization("Admin");
+       }).RequireAuthorization("Admin")
+         .ExcludeFromDescription();
         return builder;
     }
 
