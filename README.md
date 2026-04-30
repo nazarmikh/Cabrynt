@@ -31,6 +31,7 @@ Backend:
 - Entity Framework Core
 - FluentValidation
 - JWT authentication
+- Swagger / OpenAPI
 - Hot Chocolate GraphQL
 
 Frontend:
@@ -158,6 +159,7 @@ This starts:
 URLs:
 - frontend: `http://localhost:3000`
 - backend: `http://localhost:5113`
+- Swagger: `http://localhost:5113/swagger`
 - GraphQL: `http://localhost:5113/graphql`
 - pgAdmin: `http://localhost:5050`
 - mongo-express: `http://localhost:8081`
@@ -189,6 +191,26 @@ The admin account is seeded automatically from `.env` on backend startup:
 - email: value of `Admin__Email`
 - password: value of `Admin__Password`
 
+## Swagger
+
+Swagger UI is available at:
+
+```text
+http://localhost:5113/swagger
+```
+
+You can use it to test the documented REST endpoints directly from the browser.
+
+For protected endpoints:
+1. call `POST /api/public/auth/login`
+2. copy the returned JWT access token
+3. click `Authorize` in Swagger UI
+4. paste the token value
+
+Swagger will send it as a bearer token automatically.
+
+The vehicle registration endpoint is intentionally hidden from Swagger because vehicle setup is handled separately for the telemetry simulator flow.
+
 ## Telemetry Simulator
 
 The assignment requires a self-made script to simulate vehicle telemetry. This project includes:
@@ -215,6 +237,7 @@ The simulator:
 - sends telemetry every few seconds
 - moves coordinates around a base point
 - can trigger diagnostic thresholds automatically
+- runs automatically in Docker Compose through the `telemetry-simulator` service
 
 ## Email and Invoices
 
@@ -252,6 +275,8 @@ Manual API checks are available in:
 - `tests/http/payment-email.http` for the legacy standalone payment endpoint
 - other `.http` files in `tests/http`
 
+For the teacher/demo flow, `tests/http/teacher-check.http` is the main script.
+
 ## Logging
 
 Structured logs were added in the main backend services:
@@ -283,4 +308,5 @@ GitHub Actions currently:
 
 - Distance is calculated using straight-line coordinates, not real road routing.
 - GraphQL is mainly used for admin read flows.
+- Swagger is used for quick REST endpoint inspection and manual authenticated checks.
 - Vehicle web login is not implemented in the frontend; vehicle actions are primarily demonstrated through API calls and the simulator.
