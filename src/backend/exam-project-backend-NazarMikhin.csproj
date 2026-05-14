@@ -9,21 +9,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
-    <PackageReference Include="HotChocolate.AspNetCore" Version="16.0.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
+    <PackageReference Include="FluentValidation.AspNetCore" />
+    <PackageReference Include="HotChocolate.AspNetCore" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.8">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="MongoDB.Driver" Version="3.8.1" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.5" />
+    <PackageReference Include="MongoDB.Driver" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
 
 </Project>
