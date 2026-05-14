@@ -51,7 +51,7 @@ public class AuthService : IAuthService
         user.PasswordHash = hashedPassword;
 
         await _passengerRepository.AddUserAsync(user);
-        
+
 
         PassengerProfile passengerProfile = new PassengerProfile()
         {
@@ -112,7 +112,7 @@ public class AuthService : IAuthService
         if (role == "Passenger")
         {
             PassengerProfile? passenger = await _passengerRepository.GetPassengerByIdAsync(userId);
-            if(passenger is null)
+            if (passenger is null)
                 return null;
 
             MeResponseDto response = new MeResponseDto()
@@ -130,8 +130,8 @@ public class AuthService : IAuthService
         {
             // Handle admin-specific logic
             User? admin = await _passengerRepository.GetUserByIdAsync(userId);
-            
-            if(admin is null)
+
+            if (admin is null)
                 return null;
 
             MeResponseDto response = new MeResponseDto()

@@ -2,7 +2,7 @@ namespace Project.Models;
 
 public class Maintenance
 {
-    public int Id {get;set;}
+    public int Id { get; set; }
     private DateTime _serviceDate;
     public DateTime ServiceDate
     {
@@ -66,7 +66,7 @@ public class Maintenance
     private int _nextInspectionMileage;
     public int NextInspectionMileage
     {
-        get {return _nextInspectionMileage;}
+        get { return _nextInspectionMileage; }
         set
         {
             if (value <= 0)
@@ -77,6 +77,6 @@ public class Maintenance
         }
     }
 
-    public required Vehicle Vehicle {get;set;}
+    public required Vehicle Vehicle { get; set; }
 }
 

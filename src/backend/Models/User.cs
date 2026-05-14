@@ -1,11 +1,12 @@
 namespace Project.Models;
+
 using Project.Enums;
 using System.Net.Mail;
 using System.ComponentModel.DataAnnotations;
 
 public class User
 {
-    public int Id {get;set;}
+    public int Id { get; set; }
     private string _email = null!;
     public string Email
     {
@@ -13,13 +14,13 @@ public class User
         {
             return _email;
         }
-        set 
-        {   
-            if(IsValidEmail(value) == false)
+        set
+        {
+            if (IsValidEmail(value) == false)
             {
                 throw new ArgumentException("Provide correct email");
             }
-            _email = value; 
+            _email = value;
         }
     }
 
@@ -44,7 +45,7 @@ public class User
     }
 
     private DateTime _lastLogin;
-    public DateTime LastLogin 
+    public DateTime LastLogin
     {
         get
         {

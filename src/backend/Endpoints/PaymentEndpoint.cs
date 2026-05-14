@@ -7,7 +7,7 @@ public static class PaymentEndpoints
 {
     public static IEndpointRouteBuilder MapPaymentEndpoints(this IEndpointRouteBuilder builder)
     {
-        builder.MapPost("/api/private/rides/{rideId}/payments", async 
+        builder.MapPost("/api/private/rides/{rideId}/payments", async
         (int rideId,
         IPaymentService paymentService,
         CreatePaymentRequestDto request,
@@ -26,12 +26,12 @@ public static class PaymentEndpoints
 
             try
             {
-               var response = await paymentService.CreatePaymentAsync(request);
+                var response = await paymentService.CreatePaymentAsync(request);
                 if (response is null)
                 {
                     return Results.BadRequest("Ride must be completed before payment can be created");
                 }
-                return Results.Created($"/api/private/rides/payments/{response.Id}", response); 
+                return Results.Created($"/api/private/rides/payments/{response.Id}", response);
             }
             catch (InvalidOperationException exception) when (exception.Message == "Ride not found")
             {

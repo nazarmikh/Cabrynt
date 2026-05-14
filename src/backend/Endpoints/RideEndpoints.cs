@@ -119,7 +119,7 @@ public static class RideEndpoints
                 }
                 return Results.Ok(response);
             }
-            catch(UnauthorizedAccessException)
+            catch (UnauthorizedAccessException)
             {
                 return Results.Forbid();
             }
@@ -161,7 +161,7 @@ public static class RideEndpoints
                 return Results.Problem("Failed to complete ride.");
             }
         }).RequireAuthorization("AdminOrVehicle");
-        
+
 
         return app;
     }

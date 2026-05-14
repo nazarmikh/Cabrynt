@@ -56,7 +56,7 @@ public static class AuthEndpoints
                 return Results.Problem("Registration failed.");
             }
 
-        
+
         });
 
         app.MapPost("/api/public/auth/login", async (
@@ -80,7 +80,7 @@ public static class AuthEndpoints
         });
 
 
-        app.MapGet("/api/public/auth/me", async 
+        app.MapGet("/api/public/auth/me", async
         (
             ClaimsPrincipal token,
             IAuthService service) =>

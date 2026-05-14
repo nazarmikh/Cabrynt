@@ -4,11 +4,11 @@ namespace Project.Models;
 
 public class Payment
 {
-    public int Id {get;set;}
-    private decimal _payAmount {get;set;}
-    public decimal PayAmount 
-    { 
-        get {return _payAmount;}
+    public int Id { get; set; }
+    private decimal _payAmount { get; set; }
+    public decimal PayAmount
+    {
+        get { return _payAmount; }
         set
         {
             if (value < 0)
@@ -19,9 +19,9 @@ public class Payment
         }
     }
 
-    public Currency Currency {get;set;}
-    public TransactionStatus TransactionStatus {get;set;}
-    public string? TransactionReference {get;set;}
-    public DateTime PaymentDate {get;set;}
-    public required Ride Ride {get;set;}
+    public Currency Currency { get; set; }
+    public TransactionStatus TransactionStatus { get; set; }
+    public string? TransactionReference { get; set; }
+    public DateTime PaymentDate { get; set; }
+    public required Ride Ride { get; set; }
 }

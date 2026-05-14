@@ -8,7 +8,7 @@ public class RegisterVehicleResponseDto
     public string VIN { get; set; } = string.Empty;
     public string LicencePlate { get; set; } = string.Empty;
     public string Model { get; set; } = string.Empty;
-    public VehicleStatus VehicleStatus {get;set;}
+    public VehicleStatus VehicleStatus { get; set; }
     public VehicleType VehicleType { get; set; }
     public int Year { get; set; }
 

@@ -24,7 +24,7 @@ public class SensorDiagnosticService : ISensorDiagnosticService
             VehicleTelemetryId = request.VehicleTelemetryId,
             VehicleId = request.VehicleId
         };
-        
+
         await _sensorDiagnosticRepository.AddSensorDiagnosticAsync(sensorDiagnostic);
     }
 }

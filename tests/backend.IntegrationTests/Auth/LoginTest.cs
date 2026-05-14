@@ -55,7 +55,7 @@ public sealed class LoginTest : IClassFixture<CustomWebApplicationFactory>
             email = registerRequest.Email,
             password = "WrongPass228"
         });
-        
+
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 }

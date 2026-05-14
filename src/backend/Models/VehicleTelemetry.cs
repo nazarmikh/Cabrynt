@@ -8,15 +8,15 @@ public class VehicleTelemetry
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string Id {get;set;} = null!;
-    public required double Latitude {get;set;}
-    public required double Longitude {get;set;}
+    public string Id { get; set; } = null!;
+    public required double Latitude { get; set; }
+    public required double Longitude { get; set; }
 
     private double _currentSpeed;
     public double CurrentSpeed
     {
-        get 
-        {return _currentSpeed;}
+        get
+        { return _currentSpeed; }
         set
         {
             if (value < 0)
@@ -30,7 +30,7 @@ public class VehicleTelemetry
     private double _remainingBatteryPercentage;
     public double RemainingBatteryPercentage
     {
-        get {return _remainingBatteryPercentage;}
+        get { return _remainingBatteryPercentage; }
         set
         {
             if (value < 0 || value > 100)
@@ -41,7 +41,7 @@ public class VehicleTelemetry
         }
     }
 
-    public double HardwareTemperature {get;set;}
-    public DateTime TimeStamp {get;set;}
-    public int VehicleId {get;set;}   
+    public double HardwareTemperature { get; set; }
+    public DateTime TimeStamp { get; set; }
+    public int VehicleId { get; set; }
 }

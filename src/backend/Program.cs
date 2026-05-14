@@ -158,9 +158,9 @@ builder.Services
 
 
 
-builder.Services.AddAuthorization(o => o.AddPolicy("Admin", p => p.RequireRole("Admin"))); 
-builder.Services.AddAuthorization(o => o.AddPolicy("Vehicle", p => p.RequireRole("Vehicle"))); 
-builder.Services.AddAuthorization(o => o.AddPolicy("Passenger", p => p.RequireRole("Passenger"))); 
+builder.Services.AddAuthorization(o => o.AddPolicy("Admin", p => p.RequireRole("Admin")));
+builder.Services.AddAuthorization(o => o.AddPolicy("Vehicle", p => p.RequireRole("Vehicle")));
+builder.Services.AddAuthorization(o => o.AddPolicy("Passenger", p => p.RequireRole("Passenger")));
 builder.Services.AddAuthorization(o => o.AddPolicy("AdminOrVehicle", p => p.RequireAssertion(ctx =>
     ctx.User.IsInRole("Admin") || ctx.User.IsInRole("Vehicle"))));
 

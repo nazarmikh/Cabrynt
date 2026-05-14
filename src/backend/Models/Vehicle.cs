@@ -2,7 +2,7 @@ namespace Project.Models;
 
 public class Vehicle
 {
-    public int Id {get;set;}
+    public int Id { get; set; }
     private string _vin = null!;
     public required string VIN
     {
@@ -42,7 +42,7 @@ public class Vehicle
         }
     }
 
-    public VehicleType VehicleType {get;set;}
+    public VehicleType VehicleType { get; set; }
 
     private int _year;
     public int Year
@@ -61,7 +61,7 @@ public class Vehicle
         }
     }
 
-    public VehicleStatus VehicleStatus {get;set;}
-    public User? User {get;set;}
-    public int? UserId {get;set;}
+    public VehicleStatus VehicleStatus { get; set; }
+    public User? User { get; set; }
+    public int? UserId { get; set; }
 }

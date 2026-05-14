@@ -42,7 +42,7 @@ public class RideService : IRideService
             rideRequest.DepartureLatitude,
             rideRequest.DepartureLongitude,
             rideRequest.PreferredVehicleType);
-        
+
 
         Vehicle? vehicle = null;
 
@@ -52,9 +52,9 @@ public class RideService : IRideService
         }
 
         decimal distance = CalculateDistanceKm(
-                rideRequest.DepartureLatitude, 
-                rideRequest.DepartureLongitude, 
-                rideRequest.DestinationLatitude, 
+                rideRequest.DepartureLatitude,
+                rideRequest.DepartureLongitude,
+                rideRequest.DestinationLatitude,
                 rideRequest.DestinationLongitude
         );
 
@@ -98,7 +98,7 @@ public class RideService : IRideService
         }
 
         await _rideRepository.AddRideAsync(ride);
-        await _rideRepository.SaveChangesAsync(); 
+        await _rideRepository.SaveChangesAsync();
 
         if (vehicle is null)
         {
@@ -184,7 +184,7 @@ public class RideService : IRideService
 
         List<Ride> rides = await _rideRepository.GetAllRidesAsync(userId);
         List<RideResponseDto> response = new List<RideResponseDto>();
-        foreach(var item in rides)
+        foreach (var item in rides)
         {
             RideResponseDto newRecord = new RideResponseDto()
             {
@@ -263,7 +263,7 @@ public class RideService : IRideService
         {
             throw new InvalidOperationException("Vehicle with that id is not found");
         }
-        
+
         ride.RideStatus = RideStatus.InProgress;
         ride.Vehicle = vehicle;
         vehicle.VehicleStatus = VehicleStatus.InRide;

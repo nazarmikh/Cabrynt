@@ -6,7 +6,7 @@ public interface IPassengerRepository
     public Task<User?> GetUserByEmailAsync(string email);
     public Task<User?> GetUserByIdAsync(int userId);
     public Task AddUserAsync(User user);
-    public Task<PassengerProfile?>GetPassengerByIdAsync (int userId);
+    public Task<PassengerProfile?> GetPassengerByIdAsync(int userId);
     public Task AddPassengerAsync(PassengerProfile passenger);
     public Task UpdatePassengerLoyaltyPointsByIdAsync(int userId, int newLoyaltyPoints);
 }
@@ -33,7 +33,7 @@ public class PassengerRepository : IPassengerRepository
     {
         return await _appDbContext.Users.FirstOrDefaultAsync(i => i.Id == userId);
     }
-    
+
     public async Task<PassengerProfile?> GetPassengerByIdAsync(int userId)
     {
         return await _appDbContext.PassengerProfiles.Include(u => u.User).FirstOrDefaultAsync(id => id.UserId == userId);

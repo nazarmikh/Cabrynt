@@ -5,7 +5,7 @@ namespace Project.Models;
 public class PassengerProfile
 {
 
-    public int UserId {get;set;}
+    public int UserId { get; set; }
     private string _name = null!;
     public required string Name
     {
@@ -19,7 +19,7 @@ public class PassengerProfile
         }
     }
 
-    private string _homeAddress =null!;
+    private string _homeAddress = null!;
     public string HomeAddress
     {
         get
@@ -30,7 +30,7 @@ public class PassengerProfile
         {
             _homeAddress = value;
         }
-    
+
     }
 
     private int _points = 0;
@@ -53,7 +53,7 @@ public class PassengerProfile
     private PaymentMethod _preferredPaymentMethod = PaymentMethod.Card;
     public PaymentMethod PreferredPaymentMethod
     {
-        get 
+        get
         {
             return _preferredPaymentMethod;
         }
@@ -62,8 +62,8 @@ public class PassengerProfile
             _preferredPaymentMethod = value;
         }
     }
-    public User User {get;set;} = null!;
-    public ICollection<Ticket> Tickets {get;set;} = new List<Ticket>();
-    public ICollection<Ride> Rides {get;set;} = new List<Ride>();
+    public User User { get; set; } = null!;
+    public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
+    public ICollection<Ride> Rides { get; set; } = new List<Ride>();
 }
 

@@ -28,7 +28,7 @@ public class TelemetryMongoContext
             Builders<SensorDiagnostic>.IndexKeys
             .Ascending(x => x.VehicleId)
             .Descending(x => x.TimeStamp),
-            new CreateIndexOptions {Name = "ix_sensor_diagnostic_timestamp"}
+            new CreateIndexOptions { Name = "ix_sensor_diagnostic_timestamp" }
         );
 
         await SensorDiagnostics.Indexes.CreateOneAsync(sensorDiagnosticIdx);

@@ -16,5 +16,5 @@ public class LoginRequestDtoValidator : AbstractValidator<LoginRequestDto>
         .MinimumLength(8)
         .NotEmpty();
     }
-    
+
 }

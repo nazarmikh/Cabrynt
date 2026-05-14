@@ -7,13 +7,13 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
-    public DbSet<PassengerProfile> PassengerProfiles {get;set;}
-    public DbSet<Maintenance> Maintenances {get;set;}
-    public DbSet<Payment> Payments {get;set;}
-    public DbSet<Ride> Rides {get;set;}
-    public DbSet<Vehicle> Vehicles {get;set;}
-    public DbSet<Ticket> Tickets {get;set;}
-    public DbSet<DiscountCode> DiscountCodes {get;set;}
+    public DbSet<PassengerProfile> PassengerProfiles { get; set; }
+    public DbSet<Maintenance> Maintenances { get; set; }
+    public DbSet<Payment> Payments { get; set; }
+    public DbSet<Ride> Rides { get; set; }
+    public DbSet<Vehicle> Vehicles { get; set; }
+    public DbSet<Ticket> Tickets { get; set; }
+    public DbSet<DiscountCode> DiscountCodes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -26,8 +26,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Payment>().HasIndex(n => n.TransactionReference).IsUnique();
         modelBuilder.Entity<Vehicle>().HasIndex(n => n.UserId).IsUnique();
         modelBuilder.Entity<DiscountCode>().HasIndex(n => n.Code).IsUnique();
-       
-        
+
+
 
         // Length and requirement
         modelBuilder.Entity<User>().Property(e => e.Email).HasMaxLength(254).IsRequired();

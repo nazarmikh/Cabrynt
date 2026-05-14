@@ -33,8 +33,8 @@ public class VehicleService : IVehicleService
 
     public async Task<RegisterVehicleResponseDto?> RegisterVehicleAsync(RegisterVehicleRequestDto registerVehicleDto)
     {
-    
-        
+
+
         User? existingVehicle = await _passengerRepository.GetUserByEmailAsync(registerVehicleDto.SystemEmail);
         if (existingVehicle != null)
         {
@@ -48,7 +48,7 @@ public class VehicleService : IVehicleService
             _logger.LogWarning("Vehicle registration rejected because VIN {Vin} or licence plate {LicencePlate} already exists", registerVehicleDto.VIN, registerVehicleDto.LicencePlate);
             throw new InvalidOperationException("A vehicle with the same VIN or licence plate already exists.");
         }
-        
+
         User user = new User
         {
             Email = registerVehicleDto.SystemEmail,

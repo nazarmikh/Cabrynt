@@ -3,7 +3,7 @@ namespace Project.Repositories;
 public interface IPaymentRepository
 {
     Task AddPaymentAsync(Payment payment);
-    Task<Payment?> GetPaymentByIdAsync (int id);
+    Task<Payment?> GetPaymentByIdAsync(int id);
     Task SaveChangesAsync();
 }
 

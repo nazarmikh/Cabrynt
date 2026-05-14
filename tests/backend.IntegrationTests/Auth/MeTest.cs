@@ -22,7 +22,7 @@ public sealed class MeTest : IClassFixture<CustomWebApplicationFactory>
         var registerRequest = await IntegrationTestData.RegisterPassengerAsync(_client);
         var accessToken = await IntegrationTestData.LoginAsync(_client, registerRequest.Email, registerRequest.Password);
 
-    
+
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         var response = await _client.GetAsync("/api/public/auth/me");
 

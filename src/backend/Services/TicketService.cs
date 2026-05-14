@@ -24,7 +24,7 @@ public class TicketService : ITicketService
         _logger = logger;
     }
 
-    public async Task<CreateTicketResponseDto?> CreateTicketAsync(ClaimsPrincipal principal,CreateTicketRequestDto ticketDto)
+    public async Task<CreateTicketResponseDto?> CreateTicketAsync(ClaimsPrincipal principal, CreateTicketRequestDto ticketDto)
     {
         var sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
           ?? principal.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -92,7 +92,7 @@ public class TicketService : ITicketService
             ReportTime = t.ReportTime,
             TicketStatus = t.TicketStatus
         });
-        
+
         return response;
     }
 

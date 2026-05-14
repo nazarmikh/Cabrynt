@@ -37,7 +37,7 @@ public class TelemetryTest : IClassFixture<CustomWebApplicationFactory>
             Longitude = random.NextDouble() * 360 - 180,
             CurrentSpeed = random.Next(0, 120),
             RemainingBatteryPercentage = random.Next(0, 101),
-            HardwareTemperature = random.Next(5,70),
+            HardwareTemperature = random.Next(5, 70),
             VehicleId = vehicle.VehicleId
         };
 

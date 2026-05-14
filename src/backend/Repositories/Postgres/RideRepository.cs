@@ -81,7 +81,7 @@ public class RideRepository : IRideRepository
                     VehicleId = g.Key,
                     Latitude = g.First().Latitude,
                     Longitude = g.First().Longitude
-                 })
+                })
             .ToListAsync();
 
         var candidateVehicleIds = latestTelemetry.Select(t => t.VehicleId).ToList();
