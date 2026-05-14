@@ -7,6 +7,6 @@ public class GetRideByIdResponseDto
     public required string DestinationLocation {get;set;}
     public RideStatus RideStatus {get;set;}
     public DateTime RequestTime {get;set;}
-    public string VehicleModel {get;set;} = null!;
+    public string? VehicleModel {get;set;}
     
 }

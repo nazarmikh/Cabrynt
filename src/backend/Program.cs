@@ -184,20 +184,22 @@ using (var scope = app.Services.CreateScope())
         User? adminUser = await db.Users.FirstOrDefaultAsync(x => x.Role == Role.Admin);
         if (adminUser == null)
         {
-            if (string.IsNullOrEmpty(builder.Configuration["Admin:Email"]) || string.IsNullOrEmpty(builder.Configuration["Admin:Password"]))
+            string? adminEmail = builder.Configuration["Admin:Email"];
+            string? adminPassword = builder.Configuration["Admin:Password"];
+            if (string.IsNullOrEmpty(adminEmail) || string.IsNullOrEmpty(adminPassword))
             {
                 throw new ArgumentException("Admin email and password are required in .env");
             }
             User newAdmin = new User()
             {
                 Role = Role.Admin,
-                Email = builder.Configuration["Admin:Email"],
+                Email = adminEmail,
                 PasswordHash = string.Empty,
                 LastLogin = DateTime.UtcNow,
                 AccountCreated = DateTime.UtcNow
             };
 
-            newAdmin.PasswordHash = authService.HashPassword(builder.Configuration["Admin:Password"], newAdmin);
+            newAdmin.PasswordHash = authService.HashPassword(adminPassword, newAdmin);
 
             await db.Users.AddAsync(newAdmin);
             await db.SaveChangesAsync();

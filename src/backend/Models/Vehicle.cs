@@ -3,7 +3,7 @@ namespace Project.Models;
 public class Vehicle
 {
     public int Id {get;set;}
-    private string _vin;
+    private string _vin = null!;
     public required string VIN
     {
         get
@@ -16,7 +16,7 @@ public class Vehicle
         }
     }
 
-    private string _licencePlate;
+    private string _licencePlate = null!;
     public required string LicencePlate
     {
         get
@@ -29,7 +29,7 @@ public class Vehicle
         }
     }
 
-    private string _model;
+    private string _model = null!;
     public string Model
     {
         get

@@ -8,7 +8,7 @@ public class VehicleTelemetry
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string Id {get;set;}
+    public string Id {get;set;} = null!;
     public required double Latitude {get;set;}
     public required double Longitude {get;set;}
 
