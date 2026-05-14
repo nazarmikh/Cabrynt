@@ -52,11 +52,20 @@ jobs:
       - name: Restore
         run: dotnet restore exam-project-backend-NazarMikhin.sln
 
+      - name: Check formatting
+        run: dotnet format exam-project-backend-NazarMikhin.sln --verify-no-changes --no-restore
+
       - name: Build
         run: dotnet build exam-project-backend-NazarMikhin.sln --no-restore
 
-      - name: Test
-        run: dotnet test exam-project-backend-NazarMikhin.sln --no-build
+      - name: Unit tests
+        run: dotnet test tests/backend.UnitTests/backend.UnitTests.csproj --no-build
+
+      - name: Integration tests
+        run: dotnet test tests/backend.IntegrationTests/backend.IntegrationTests.csproj --no-build
+
+      - name: Audit dependencies
+        run: dotnet list exam-project-backend-NazarMikhin.sln package --vulnerable --include-transitive
 
   docker-images:
     runs-on: ubuntu-latest
