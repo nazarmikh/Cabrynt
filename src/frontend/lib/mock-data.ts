@@ -1,4 +1,4 @@
-// Mock data for NovaDrive platform
+// Mock data for Cabrynt platform
 
 export interface User {
   id: string
@@ -106,10 +106,10 @@ export const currentUser: User = {
 export const adminUser: User = {
   id: "admin-1",
   name: "Sarah Chen",
-  email: "admin@novadrive.com",
+  email: "admin@cabrynt.com",
   role: "admin",
   loyaltyPoints: 0,
-  address: "NovaDrive HQ, San Francisco, CA",
+  address: "Cabrynt HQ, San Francisco, CA",
   paymentMethod: "Corporate",
   createdAt: "2023-06-01T08:00:00Z",
 }
@@ -120,7 +120,7 @@ export const vehicles: Vehicle[] = [
     id: "v-001",
     vin: "5YJ3E1EA1NF123456",
     licensePlate: "ND-001",
-    model: "NovaPod X1",
+    model: "Cabrynt Pod X1",
     type: "standard",
     status: "active",
     battery: 87,
@@ -133,7 +133,7 @@ export const vehicles: Vehicle[] = [
     id: "v-002",
     vin: "5YJ3E1EA2NF234567",
     licensePlate: "ND-002",
-    model: "NovaPod V2",
+    model: "Cabrynt Pod V2",
     type: "van",
     status: "active",
     battery: 92,
@@ -146,7 +146,7 @@ export const vehicles: Vehicle[] = [
     id: "v-003",
     vin: "5YJ3E1EA3NF345678",
     licensePlate: "ND-003",
-    model: "NovaPod L1",
+    model: "Cabrynt Pod L1",
     type: "luxury",
     status: "active",
     battery: 76,
@@ -159,7 +159,7 @@ export const vehicles: Vehicle[] = [
     id: "v-004",
     vin: "5YJ3E1EA4NF456789",
     licensePlate: "ND-004",
-    model: "NovaPod X1",
+    model: "Cabrynt Pod X1",
     type: "standard",
     status: "maintenance",
     battery: 34,
@@ -172,7 +172,7 @@ export const vehicles: Vehicle[] = [
     id: "v-005",
     vin: "5YJ3E1EA5NF567890",
     licensePlate: "ND-005",
-    model: "NovaPod X1",
+    model: "Cabrynt Pod X1",
     type: "standard",
     status: "active",
     battery: 95,
@@ -458,7 +458,7 @@ export function calculateRidePrice(
   
   // Code discount
   let codeDiscount = 0
-  if (discountCode === "NOVA10") {
+  if (discountCode === "CABRYNT10") {
     codeDiscount = subtotal * 0.1
   } else if (discountCode === "FIRST25") {
     codeDiscount = subtotal * 0.25

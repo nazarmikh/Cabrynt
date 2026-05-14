@@ -154,7 +154,7 @@ public class PaymentEndpointTest : IClassFixture<CustomWebApplicationFactory>
         var timestamp = new DateTime(2026, 4, 16, 12, 0, 0, DateTimeKind.Utc);
         var user = new User
         {
-            Email = $"it-payment-endpoint-{Guid.NewGuid():N}@novadrive.test",
+            Email = $"it-payment-endpoint-{Guid.NewGuid():N}@cabrynt.test",
             PasswordHash = "hashed-password",
             Role = Role.Passenger,
             LastLogin = timestamp,

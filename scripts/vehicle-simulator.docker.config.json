@@ -4,7 +4,7 @@
   "includeAnomalies": true,
   "vehicles": [
     {
-      "email": "vehicle.standard1@novadrive.test",
+      "email": "vehicle.standard1@cabrynt.test",
       "password": "StrongPass123!",
       "vehicleId": 414,
       "baseLatitude": 51.0543,
@@ -14,7 +14,7 @@
       "speedStart": 22
     },
     {
-      "email": "vehicle.standard2@novadrive.test",
+      "email": "vehicle.standard2@cabrynt.test",
       "password": "StrongPass123!",
       "vehicleId": 415,
       "baseLatitude": 51.0498,
@@ -24,7 +24,7 @@
       "speedStart": 18
     },
     {
-      "email": "vehicle.van1@novadrive.test",
+      "email": "vehicle.van1@cabrynt.test",
       "password": "StrongPass123!",
       "vehicleId": 416,
       "baseLatitude": 51.0604,
@@ -34,7 +34,7 @@
       "speedStart": 16
     },
     {
-      "email": "vehicle.luxury1@novadrive.test",
+      "email": "vehicle.luxury1@cabrynt.test",
       "password": "StrongPass123!",
       "vehicleId": 417,
       "baseLatitude": 51.0455,

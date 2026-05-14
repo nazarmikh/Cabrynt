@@ -24,10 +24,10 @@ public class EmailService : IEmailService
     public async Task SendInvoiceEmailAsync(Payment payment, string invoicePath)
     {
         var fromAddress = _configuration["Email:FromAddress"]
-            ?? "no-reply@novadrive.com";
+            ?? "no-reply@cabrynt.test";
 
         var pickupDirectory = _configuration["Email:PickupDirectory"];
-        var subject = $"Nova Drive invoice {payment.TransactionReference}";
+        var subject = $"Cabrynt invoice {payment.TransactionReference}";
         var body = BuildEmailBody(payment);
         var recipient = payment.Ride.PassengerProfile.User.Email;
 
@@ -144,13 +144,13 @@ public class EmailService : IEmailService
     {
         return $@"Hello {payment.Ride.PassengerProfile.Name},
 
-Your Nova Drive ride has been completed and your invoice is attached as a PDF.
+Your Cabrynt ride has been completed and your invoice is attached as a PDF.
 
 Transaction reference: {payment.TransactionReference}
 Amount paid: {payment.PayAmount:F2} {payment.Currency}
 Route: {payment.Ride.DepartureLocation} -> {payment.Ride.DestinationLocation}
 Payment date (UTC): {payment.PaymentDate:yyyy-MM-dd HH:mm:ss}
 
-Thank you for riding with Nova Drive.";
+Thank you for riding with Cabrynt.";
     }
 }

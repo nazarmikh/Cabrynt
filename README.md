@@ -1,6 +1,6 @@
-# NovaDrive
+# Cabrynt
 
-NovaDrive is a backend-focused .NET project for autonomous ride and fleet operations.
+Cabrynt is a backend-focused .NET project for autonomous ride and fleet operations.
 
 It models a robotaxi-style platform with passengers, vehicles, rides, pricing, payments, invoices, support tickets, maintenance records, telemetry, and diagnostics. The project began as a university assignment and is being evolved into a production-shaped portfolio project focused on C# backend engineering.
 
@@ -47,7 +47,7 @@ Infrastructure and quality:
 
 ## Domain Scope
 
-NovaDrive currently includes:
+Cabrynt currently includes:
 
 - passenger registration and login
 - passenger profile management
@@ -105,7 +105,7 @@ Recently completed:
 Known accepted warning:
 
 - `SharpCompress 0.30.1` is reported as a transitive dependency warning through `MongoDB.Driver 3.8.1`
-- NovaDrive does not currently accept or extract user-provided archive files
+- Cabrynt does not currently accept or extract user-provided archive files
 - the warning is accepted as residual dependency risk until the upstream dependency chain provides a fix
 
 ## Roadmap
@@ -179,7 +179,7 @@ dotnet test tests/backend.IntegrationTests/backend.IntegrationTests.csproj --no-
 Run all tests:
 
 ```powershell
-dotnet test
+dotnet test Cabrynt.sln
 ```
 
 ## Notes

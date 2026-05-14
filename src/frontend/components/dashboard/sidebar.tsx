@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { NovaLogo } from "@/components/nova-logo"
+import { CabryntLogo } from "@/components/cabrynt-logo"
 import { Button } from "@/components/ui/button"
 import {
   Home,
@@ -72,7 +72,7 @@ export function DashboardSidebar({ role, isCollapsed, onToggle }: SidebarProps) 
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
         {!isCollapsed && (
           <Link href={role === "admin" ? "/admin" : "/dashboard"}>
-            <NovaLogo />
+            <CabryntLogo />
           </Link>
         )}
         <Button

@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>exam_project_backend_NazarMikhin</RootNamespace>
+    <RootNamespace>Cabrynt.Backend</RootNamespace>
     <UserSecretsId>4e4d4511-cfdf-40f5-b181-71164158890c</UserSecretsId>
   </PropertyGroup>
 

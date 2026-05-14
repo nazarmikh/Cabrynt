@@ -30,7 +30,7 @@ public class InvoiceService : IInvoiceService
 
         var lines = new List<string>
         {
-            "Nova Drive Invoice",
+            "Cabrynt Invoice",
             $"Invoice Number: {payment.Id}",
             $"Transaction Reference: {payment.TransactionReference}",
             $"Payment Status: {payment.TransactionStatus}",

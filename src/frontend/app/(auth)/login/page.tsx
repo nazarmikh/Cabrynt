@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { NovaLogo } from "@/components/nova-logo"
+import { CabryntLogo } from "@/components/cabrynt-logo"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { apiRequest, ApiError } from "@/lib/api"
 import { getRoleFromToken, setAccessToken, toUiRole } from "@/lib/auth"
@@ -57,7 +57,7 @@ export default function LoginPage() {
       
       <div className="mb-8">
         <Link href="/">
-          <NovaLogo />
+          <CabryntLogo />
         </Link>
       </div>
 

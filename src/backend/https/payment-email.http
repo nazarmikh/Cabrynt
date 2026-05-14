@@ -1,5 +1,5 @@
 @host = http://localhost:5113
-@adminEmail = admin@novadrive.com
+@adminEmail = admin@cabrynt.test
 @adminPassword = AdminPassword123!
 
 # Optional legacy check for the standalone payment endpoint.

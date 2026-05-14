@@ -2,7 +2,7 @@
 
 import type { AppRole, UiRole } from "@/lib/backend-types"
 
-const AUTH_TOKEN_STORAGE_KEY = "novadrive.accessToken"
+const AUTH_TOKEN_STORAGE_KEY = "cabrynt.accessToken"
 const ROLE_CLAIM = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
 
 function decodeJwtPayload(token: string): Record<string, unknown> | null {

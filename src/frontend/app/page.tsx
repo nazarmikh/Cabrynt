@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { NovaLogo } from "@/components/nova-logo"
+import { CabryntLogo } from "@/components/cabrynt-logo"
 import {
   Car,
   MapPin,
@@ -70,7 +70,7 @@ export default function LandingPage() {
       {/* Navigation */}
       <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <NovaLogo />
+          <CabryntLogo />
           <nav className="hidden items-center gap-8 md:flex">
             <Link href="#features" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
               Features
@@ -179,7 +179,7 @@ export default function LandingPage() {
                 Built for reliability and scale
               </h2>
               <p className="mt-4 text-pretty text-lg text-muted-foreground">
-                NovaDrive provides enterprise-grade infrastructure designed to handle millions of rides with 99.9% uptime guarantee.
+                Cabrynt provides enterprise-grade infrastructure designed to handle millions of rides with 99.9% uptime guarantee.
               </p>
               <div className="mt-8 space-y-6">
                 {benefits.map((benefit) => (
@@ -241,7 +241,7 @@ export default function LandingPage() {
                 Ready to transform your fleet?
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-pretty text-primary-foreground/80">
-                Join thousands of operators already using NovaDrive to power their autonomous mobility services.
+                Join thousands of operators already using Cabrynt to power their autonomous mobility services.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Button size="lg" variant="secondary" asChild>
@@ -264,9 +264,9 @@ export default function LandingPage() {
       <footer className="border-t border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-            <NovaLogo />
+            <CabryntLogo />
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} NovaDrive. All rights reserved.
+              &copy; {new Date().getFullYear()} Cabrynt. All rights reserved.
             </p>
           </div>
         </div>

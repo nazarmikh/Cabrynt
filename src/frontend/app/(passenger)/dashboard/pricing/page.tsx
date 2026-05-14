@@ -184,7 +184,7 @@ export default function PricingPage() {
                 <span className="text-lg font-bold">10%</span>
               </div>
               <div>
-                <p className="font-mono font-semibold">NOVA10</p>
+                <p className="font-mono font-semibold">CABRYNT10</p>
                 <p className="text-sm text-muted-foreground">Example percentage discount</p>
               </div>
             </div>

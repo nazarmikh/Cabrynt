@@ -192,9 +192,9 @@ public class CompleteRideTest : IClassFixture<CustomWebApplicationFactory>
         var adminToken = await IntegrationTestData.LoginAsAdminAsync(_client);
         IntegrationTestData.Authorize(_client, adminToken);
 
-        var assignedVehicle = await IntegrationTestData.RegisterVehicleAsync(_client, $"it-queue-vehicle-{Guid.NewGuid():N}@novadrive.test");
-        var firstPassengerRegistration = await IntegrationTestData.RegisterPassengerAsync(_client, $"it-queue-passenger-one-{Guid.NewGuid():N}@novadrive.test");
-        var secondPassengerRegistration = await IntegrationTestData.RegisterPassengerAsync(_client, $"it-queue-passenger-two-{Guid.NewGuid():N}@novadrive.test");
+        var assignedVehicle = await IntegrationTestData.RegisterVehicleAsync(_client, $"it-queue-vehicle-{Guid.NewGuid():N}@cabrynt.test");
+        var firstPassengerRegistration = await IntegrationTestData.RegisterPassengerAsync(_client, $"it-queue-passenger-one-{Guid.NewGuid():N}@cabrynt.test");
+        var secondPassengerRegistration = await IntegrationTestData.RegisterPassengerAsync(_client, $"it-queue-passenger-two-{Guid.NewGuid():N}@cabrynt.test");
 
         await using var scope = _factory.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();

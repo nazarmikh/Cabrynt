@@ -27,7 +27,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "email": "admin@novadrive.com",
+  "email": "admin@cabrynt.test",
   "password": "AdminPassword123!"
 }
 

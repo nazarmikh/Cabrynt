@@ -1,6 +1,6 @@
 @host = http://localhost:5113
 @runId = teacher02
-@adminEmail = admin@novadrive.com
+@adminEmail = admin@cabrynt.test
 @adminPassword = AdminPassword123!
 
 # Paste generated tokens and ids here while running the file,
@@ -33,7 +33,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "email": "teacher-passenger-{{runId}}@novadrive.test",
+  "email": "teacher-passenger-{{runId}}@cabrynt.test",
   "password": "StrongPass123!",
   "name": "Teacher Demo Passenger",
   "homeAddress": "Demo Avenue 1, Ghent",
@@ -47,7 +47,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "email": "teacher-passenger-{{runId}}@novadrive.test",
+  "email": "teacher-passenger-{{runId}}@cabrynt.test",
   "password": "StrongPass123!"
 }
 
@@ -72,7 +72,7 @@ Accept: application/json
   "model": "Tesla Model Y",
   "vehicleType": "Standard",
   "year": 2024,
-  "systemEmail": "teacher-vehicle-{{runId}}@novadrive.test",
+  "systemEmail": "teacher-vehicle-{{runId}}@cabrynt.test",
   "systemPassword": "StrongPass123!"
 }
 
@@ -85,7 +85,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "email": "teacher-vehicle-{{runId}}@novadrive.test",
+  "email": "teacher-vehicle-{{runId}}@cabrynt.test",
   "password": "StrongPass123!"
 }
 

@@ -3,12 +3,11 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'NovaDrive - Autonomous Mobility Platform',
+  title: 'Cabrynt - Autonomous Mobility Platform',
   description: 'Scalable driverless taxi fleet system with real-time telemetry, smart pricing, and autonomous ride management',
   icons: {
-    icon: '/novadrive-favicon.svg',
-    shortcut: '/novadrive-favicon.svg',
-    apple: '/apple-icon.png',
+    icon: '/cabrynt-favicon.svg',
+    shortcut: '/cabrynt-favicon.svg',
   },
 }
 

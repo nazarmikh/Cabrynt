@@ -6,7 +6,7 @@ namespace backend.IntegrationTests.Infrastructure;
 
 internal static class IntegrationTestData
 {
-    internal const string AdminEmail = "admin@novadrive.com";
+    internal const string AdminEmail = "admin@cabrynt.test";
     internal const string AdminPassword = "AdminPassword123!";
     internal const string DefaultPassword = "StrongPass123!";
 
@@ -49,7 +49,7 @@ internal static class IntegrationTestData
     {
         return new PassengerRegistration
         {
-            Email = email ?? $"it-auth-{Guid.NewGuid():N}@novadrive.test",
+            Email = email ?? $"it-auth-{Guid.NewGuid():N}@cabrynt.test",
             Password = DefaultPassword,
             Name = "Test User",
             HomeAddress = "Main Street 1",
@@ -67,7 +67,7 @@ internal static class IntegrationTestData
             Model = "Toyota Camry",
             VehicleType = 0,
             Year = 2020,
-            SystemEmail = systemEmail ?? $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
+            SystemEmail = systemEmail ?? $"it-register-vehicle-{Guid.NewGuid():N}@cabrynt.test",
             SystemPassword = DefaultPassword
         };
 

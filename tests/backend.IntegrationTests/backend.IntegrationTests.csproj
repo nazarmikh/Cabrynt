@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\backend\exam-project-backend-NazarMikhin.csproj" />
+    <ProjectReference Include="..\..\src\backend\Cabrynt.Backend.csproj" />
   </ItemGroup>
 
 </Project>

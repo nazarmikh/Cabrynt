@@ -75,7 +75,7 @@ export function DashboardHeader({ user }: HeaderProps) {
               <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
                 <span className="font-medium">New Promotion</span>
                 <span className="text-xs text-muted-foreground">
-                  Use code NOVA10 for 10% off your next ride!
+                  Use code CABRYNT10 for 10% off your next ride!
                 </span>
               </DropdownMenuItem>
               <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">

@@ -13,13 +13,13 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_DB: NovaDrivePostgres
+          POSTGRES_DB: CabryntPostgres
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: change-me
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U postgres -d NovaDrivePostgres"
+          --health-cmd="pg_isready -U postgres -d CabryntPostgres"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -30,14 +30,14 @@ jobs:
           - 27017:27017
 
     env:
-      ConnectionStrings__Postgres: Host=localhost;Port=5432;Database=NovaDrivePostgres;Username=postgres;Password=change-me
+      ConnectionStrings__Postgres: Host=localhost;Port=5432;Database=CabryntPostgres;Username=postgres;Password=change-me
       ConnectionStrings__Mongo: mongodb://localhost:27017
-      Mongo__DatabaseName: NovaDriveMongo
+      Mongo__DatabaseName: CabryntMongo
       JwtToken: change-me-to-a-long-random-secret-for-ci
-      Jwt__Issuer: NovaDrive
-      Jwt__Audience: NovaDriveClient
+      Jwt__Issuer: Cabrynt
+      Jwt__Audience: CabryntClient
       Jwt__ExpiryMinutes: 60
-      Admin__Email: admin@novadrive.com
+      Admin__Email: admin@cabrynt.test
       Admin__Password: AdminPassword123!
 
     steps:
@@ -50,13 +50,13 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore exam-project-backend-NazarMikhin.sln
+        run: dotnet restore Cabrynt.sln
 
       - name: Check formatting
-        run: dotnet format exam-project-backend-NazarMikhin.sln --verify-no-changes --no-restore
+        run: dotnet format Cabrynt.sln --verify-no-changes --no-restore
 
       - name: Build
-        run: dotnet build exam-project-backend-NazarMikhin.sln --no-restore
+        run: dotnet build Cabrynt.sln --no-restore
 
       - name: Unit tests
         run: dotnet test tests/backend.UnitTests/backend.UnitTests.csproj --no-build
@@ -65,14 +65,14 @@ jobs:
         run: dotnet test tests/backend.IntegrationTests/backend.IntegrationTests.csproj --no-build
 
       - name: Audit dependencies
-        run: dotnet list exam-project-backend-NazarMikhin.sln package --vulnerable --include-transitive
+        run: dotnet list Cabrynt.sln package --vulnerable --include-transitive
 
   docker-images:
     runs-on: ubuntu-latest
     needs: build-test
 
     env:
-      POSTGRES_DB: NovaDrivePostgres
+      POSTGRES_DB: CabryntPostgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: change-me
       POSTGRES_PORT: 5432
@@ -83,16 +83,16 @@ jobs:
       MONGO_EXPRESS_PORT: 8081
       MONGO_EXPRESS_USERNAME: admin
       MONGO_EXPRESS_PASSWORD: change-me
-      ConnectionStrings__Postgres: Host=localhost;Port=5432;Database=NovaDrivePostgres;Username=postgres;Password=change-me
+      ConnectionStrings__Postgres: Host=localhost;Port=5432;Database=CabryntPostgres;Username=postgres;Password=change-me
       ConnectionStrings__Mongo: mongodb://localhost:27017
-      Mongo__DatabaseName: NovaDriveMongo
+      Mongo__DatabaseName: CabryntMongo
       JwtToken: change-me-to-a-long-random-secret-for-ci
-      Jwt__Issuer: NovaDrive
-      Jwt__Audience: NovaDriveClient
+      Jwt__Issuer: Cabrynt
+      Jwt__Audience: CabryntClient
       Jwt__ExpiryMinutes: 60
-      Admin__Email: admin@novadrive.com
+      Admin__Email: admin@cabrynt.test
       Admin__Password: AdminPassword123!
-      Email__FromAddress: no-reply@novadrive.com
+      Email__FromAddress: no-reply@cabrynt.test
       Email__PickupDirectory: GeneratedEmails
       Email__SmtpHost: smtp.example.com
       Email__SmtpPort: 587

@@ -2,11 +2,11 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY Directory.Packages.props ./
-COPY src/backend/exam-project-backend-NazarMikhin.csproj ./src/backend/
-RUN dotnet restore ./src/backend/exam-project-backend-NazarMikhin.csproj
+COPY src/backend/Cabrynt.Backend.csproj ./src/backend/
+RUN dotnet restore ./src/backend/Cabrynt.Backend.csproj
 
 COPY src/backend ./src/backend
-RUN dotnet publish ./src/backend/exam-project-backend-NazarMikhin.csproj -c Release -o /app/publish --no-restore /p:UseAppHost=false
+RUN dotnet publish ./src/backend/Cabrynt.Backend.csproj -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
@@ -20,4 +20,4 @@ EXPOSE 8080
 
 COPY --from=build /app/publish ./
 
-ENTRYPOINT ["dotnet", "exam-project-backend-NazarMikhin.dll"]
+ENTRYPOINT ["dotnet", "Cabrynt.Backend.dll"]

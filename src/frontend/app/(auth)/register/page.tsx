@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { NovaLogo } from "@/components/nova-logo"
+import { CabryntLogo } from "@/components/cabrynt-logo"
 import { Eye, EyeOff, Loader2, Check } from "lucide-react"
 import { apiRequest, ApiError } from "@/lib/api"
 import { setAccessToken } from "@/lib/auth"
@@ -72,7 +72,7 @@ export default function RegisterPage() {
       
       <div className="mb-8">
         <Link href="/">
-          <NovaLogo />
+          <CabryntLogo />
         </Link>
       </div>
 
@@ -80,7 +80,7 @@ export default function RegisterPage() {
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
           <CardDescription>
-            Enter your details to get started with NovaDrive
+            Enter your details to get started with Cabrynt
           </CardDescription>
         </CardHeader>
         <CardContent>

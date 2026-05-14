@@ -1,5 +1,5 @@
 @host = http://localhost:5113
-@adminEmail = admin@novadrive.com
+@adminEmail = admin@cabrynt.test
 @adminPassword = AdminPassword123!
 
 # Setup helper only. Keep this file if you want to register dedicated demo vehicles quickly.
@@ -30,7 +30,7 @@ Accept: application/json
   "model": "Tesla Model 3",
   "vehicleType": "Standard",
   "year": 2023,
-  "systemEmail": "vehicle.standard1@novadrive.test",
+  "systemEmail": "vehicle.standard1@cabrynt.test",
   "systemPassword": "StrongPass123!"
 }
 
@@ -47,7 +47,7 @@ Accept: application/json
   "model": "Hyundai Ioniq 5",
   "vehicleType": "Standard",
   "year": 2024,
-  "systemEmail": "vehicle.standard2@novadrive.test",
+  "systemEmail": "vehicle.standard2@cabrynt.test",
   "systemPassword": "StrongPass123!"
 }
 
@@ -64,7 +64,7 @@ Accept: application/json
   "model": "Mercedes EQV",
   "vehicleType": "Van",
   "year": 2023,
-  "systemEmail": "vehicle.van1@novadrive.test",
+  "systemEmail": "vehicle.van1@cabrynt.test",
   "systemPassword": "StrongPass123!"
 }
 
@@ -81,6 +81,6 @@ Accept: application/json
   "model": "BMW i7",
   "vehicleType": "Luxury",
   "year": 2024,
-  "systemEmail": "vehicle.luxury1@novadrive.test",
+  "systemEmail": "vehicle.luxury1@cabrynt.test",
   "systemPassword": "StrongPass123!"
 }

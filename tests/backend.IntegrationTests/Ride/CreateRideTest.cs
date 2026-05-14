@@ -10,7 +10,7 @@ namespace backend.IntegrationTests.CreateRide;
 
 public class CreateRideTest : IClassFixture<CustomWebApplicationFactory>
 {
-    private const string AdminEmail = "admin@novadrive.com";
+    private const string AdminEmail = "admin@cabrynt.test";
     private const string AdminPassword = "AdminPassword123!";
     private const string DefaultPassword = "StrongPass123!";
 
@@ -135,9 +135,9 @@ public class CreateRideTest : IClassFixture<CustomWebApplicationFactory>
     public async Task CreateRide_DoesNotAssignVehicle_WhenNearestVehicleIsAlreadyBusy()
     {
         var random = new Random();
-        var systemEmail = $"it-busy-vehicle-{Guid.NewGuid():N}@novadrive.test";
-        var firstPassengerEmail = $"it-busy-passenger-one-{Guid.NewGuid():N}@novadrive.test";
-        var secondPassengerEmail = $"it-busy-passenger-two-{Guid.NewGuid():N}@novadrive.test";
+        var systemEmail = $"it-busy-vehicle-{Guid.NewGuid():N}@cabrynt.test";
+        var firstPassengerEmail = $"it-busy-passenger-one-{Guid.NewGuid():N}@cabrynt.test";
+        var secondPassengerEmail = $"it-busy-passenger-two-{Guid.NewGuid():N}@cabrynt.test";
 
         var adminToken = await LoginAsync(AdminEmail, AdminPassword);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
@@ -206,8 +206,8 @@ public class CreateRideTest : IClassFixture<CustomWebApplicationFactory>
     private async Task<(HttpResponseMessage Response, Dictionary<string, JsonElement> RideBody, int RideId, RideRequestPayload RideRequest)> CreateRideScenarioAsync()
     {
         var random = new Random();
-        var systemEmail = $"it-create-ride-{Guid.NewGuid():N}@novadrive.test";
-        var passengerEmail = $"it-auth-{Guid.NewGuid():N}@novadrive.test";
+        var systemEmail = $"it-create-ride-{Guid.NewGuid():N}@cabrynt.test";
+        var passengerEmail = $"it-auth-{Guid.NewGuid():N}@cabrynt.test";
 
         var adminToken = await LoginAsync(AdminEmail, AdminPassword);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);

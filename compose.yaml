@@ -1,9 +1,11 @@
+name: cabrynt
+
 services:
   backend:
     build:
       context: .
       dockerfile: src/backend/Dockerfile
-    container_name: novadrive-backend
+    container_name: cabrynt-backend
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -41,7 +43,7 @@ services:
       args:
         NEXT_PUBLIC_API_BASE_URL: http://localhost:5113
         NEXT_PUBLIC_GRAPHQL_URL: http://localhost:5113/graphql
-    container_name: novadrive-frontend
+    container_name: cabrynt-frontend
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_API_BASE_URL: http://localhost:5113
@@ -54,7 +56,7 @@ services:
 
   telemetry-simulator:
     image: mcr.microsoft.com/powershell:7.5-ubuntu-24.04
-    container_name: novadrive-telemetry-simulator
+    container_name: cabrynt-telemetry-simulator
     restart: unless-stopped
     working_dir: /workspace
     command:
@@ -71,7 +73,7 @@ services:
 
   postgres:
     image: postgres:17
-    container_name: novadrive-postgres
+    container_name: cabrynt-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -89,7 +91,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:8
-    container_name: novadrive-pgadmin
+    container_name: cabrynt-pgadmin
     restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
@@ -102,7 +104,7 @@ services:
 
   mongo:
     image: mongo:8
-    container_name: novadrive-mongo
+    container_name: cabrynt-mongo
     restart: unless-stopped
     ports:
       - "${MONGO_PORT}:27017"
@@ -116,7 +118,7 @@ services:
 
   mongo-express:
     image: mongo-express:1.0.2
-    container_name: novadrive-mongo-express
+    container_name: cabrynt-mongo-express
     restart: unless-stopped
     environment:
       ME_CONFIG_MONGODB_SERVER: mongo

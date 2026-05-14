@@ -32,7 +32,7 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task RegisterVehicle_ReturnedUnauthorized_WhenNotAdmin()
     {
-        var passenger = await IntegrationTestData.RegisterPassengerAsync(_client, $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test");
+        var passenger = await IntegrationTestData.RegisterPassengerAsync(_client, $"it-register-vehicle-{Guid.NewGuid():N}@cabrynt.test");
         var accessToken = await IntegrationTestData.LoginAsync(_client, passenger.Email, passenger.Password);
         IntegrationTestData.Authorize(_client, accessToken);
 
@@ -44,7 +44,7 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
             Model = "Toyota Camry",
             VehicleType = 0,
             Year = 2020,
-            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
+            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@cabrynt.test",
             SystemPassword = IntegrationTestData.DefaultPassword
         });
 
@@ -67,7 +67,7 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
             Model = "Toyota Camry",
             VehicleType = 0,
             Year = 2020,
-            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
+            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@cabrynt.test",
             SystemPassword = IntegrationTestData.DefaultPassword
         });
 
@@ -78,7 +78,7 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
             Model = "Toyota Camry",
             VehicleType = 0,
             Year = 2020,
-            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
+            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@cabrynt.test",
             SystemPassword = IntegrationTestData.DefaultPassword
         });
 
@@ -102,7 +102,7 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
             Model = "Toyota Camry",
             VehicleType = 0,
             Year = 2020,
-            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
+            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@cabrynt.test",
             SystemPassword = IntegrationTestData.DefaultPassword
         });
 
@@ -113,7 +113,7 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
             Model = "Toyota Camry",
             VehicleType = 0,
             Year = 2020,
-            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@novadrive.test",
+            SystemEmail = $"it-register-vehicle-{Guid.NewGuid():N}@cabrynt.test",
             SystemPassword = IntegrationTestData.DefaultPassword
         });
 

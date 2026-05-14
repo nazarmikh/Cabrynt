@@ -100,9 +100,9 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "NovaDrive API",
+        Title = "Cabrynt API",
         Version = "v1",
-        Description = "REST endpoints for the NovaDrive assignment demo."
+        Description = "REST endpoints for the Cabrynt autonomous mobility platform."
     });
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
