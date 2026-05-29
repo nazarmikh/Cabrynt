@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { apiRequest } from "@/lib/api"
-import { getAccessToken, getRoleFromToken, toUiRole } from "@/lib/auth"
+import { toUiRole } from "@/lib/auth"
 import type { CurrentUser, MeResponse } from "@/lib/backend-types"
 
 export function useCurrentUser() {
@@ -11,21 +11,6 @@ export function useCurrentUser() {
   const [error, setError] = useState<string | null>(null)
 
   const loadUser = useCallback(async () => {
-    const token = getAccessToken()
-    if (!token) {
-      setUser(null)
-      setIsLoading(false)
-      return
-    }
-
-    const role = getRoleFromToken(token)
-    if (!role) {
-      setUser(null)
-      setError("Invalid session token.")
-      setIsLoading(false)
-      return
-    }
-
     try {
       setIsLoading(true)
       setError(null)
@@ -35,7 +20,7 @@ export function useCurrentUser() {
       setUser({
         name: me.name,
         email: me.email,
-        role: toUiRole(role),
+        role: toUiRole(me.role),
         homeAddress: me.homeAddress,
         points: me.points ?? 0,
         preferredPaymentMethod: me.preferredPaymentMethod,

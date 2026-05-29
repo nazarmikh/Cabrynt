@@ -1,5 +1,3 @@
-import { getAccessToken } from "@/lib/auth"
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000"
 const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL ?? `${API_BASE_URL}/graphql`
 
@@ -41,16 +39,10 @@ export async function apiRequest<T>(
     headers.set("Accept", "application/json")
   }
 
-  if (authenticated) {
-    const token = getAccessToken()
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`)
-    }
-  }
-
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers,
+    credentials: "include",
   })
 
   const data = await parseResponse(response)
@@ -71,19 +63,15 @@ export async function graphqlRequest<T>(
   query: string,
   variables?: Record<string, unknown>
 ): Promise<T> {
-  const token = getAccessToken()
   const headers = new Headers({
     "Content-Type": "application/json",
     Accept: "application/json",
   })
 
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`)
-  }
-
   const response = await fetch(GRAPHQL_URL, {
     method: "POST",
     headers,
+    credentials: "include",
     body: JSON.stringify({ query, variables }),
   })
 

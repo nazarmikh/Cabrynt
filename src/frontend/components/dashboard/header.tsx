@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { clearAccessToken } from "@/lib/auth"
+import { apiRequest } from "@/lib/api"
 
 interface HeaderProps {
   user: {
@@ -32,8 +32,8 @@ export function DashboardHeader({ user }: HeaderProps) {
     .join("")
     .toUpperCase()
 
-  const handleLogout = () => {
-    clearAccessToken()
+  const handleLogout = async () => {
+    await apiRequest("/api/public/auth/logout", { method: "POST" }, true)
     router.push("/login")
   }
 

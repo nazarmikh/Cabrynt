@@ -1,18 +1,13 @@
-using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Project.GraphQL;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Project.Services;
-using ZstdSharp.Unsafe;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using MongoDB.Driver;
 using Project.Endpoints;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,10 +49,6 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
 });
 
-// Token provider for passengers
-
-builder.Services.AddSingleton<ITokenProvider, TokenProvider>();
-
 
 // Postgres
 
@@ -91,7 +82,8 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins("http://localhost:3000", "http://localhost:3001")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -104,55 +96,38 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "REST endpoints for the Cabrynt autonomous mobility platform."
     });
-
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Enter only the JWT access token. Swagger will send it as 'Bearer {token}'."
-    });
-
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
 });
 
-// Jwt key 
-
-var jwtKey = builder.Configuration["JwtToken"]
-    ?? throw new InvalidOperationException("Missing JwtToken");
+// Cookie
 
 builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
+        options.Cookie.Name = "Cabrynt.Auth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
+
+        options.LoginPath = "/api/public/auth/login";
+        options.LogoutPath = "/api/public/auth/logout";
+        options.AccessDeniedPath = "/api/public/auth/forbidden";
+
+        options.ExpireTimeSpan = TimeSpan.FromHours(2);
+        options.SlidingExpiration = true;
+
+        options.Events.OnRedirectToLogin = context =>
         {
-            ValidateIssuer = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
 
-            ValidateAudience = true,
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
         };
     });
 

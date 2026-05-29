@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace Project.Services;
@@ -26,8 +25,7 @@ public class TicketService : ITicketService
 
     public async Task<CreateTicketResponseDto?> CreateTicketAsync(ClaimsPrincipal principal, CreateTicketRequestDto ticketDto)
     {
-        var sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
-          ?? principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (!int.TryParse(sub, out var userId))
             return null;
@@ -69,8 +67,8 @@ public class TicketService : ITicketService
 
     public async Task<GetAllTicketsResponseDto?> GetAllTicketsAsync(ClaimsPrincipal principal)
     {
-        var sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
-          ?? principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+
 
         if (!int.TryParse(sub, out var userId))
             return null;
@@ -98,8 +96,8 @@ public class TicketService : ITicketService
 
     public async Task<GetTicketByIdResponseDto?> GetTicketByIdAsync(ClaimsPrincipal principal, int id)
     {
-        var sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
-          ?? principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+
 
         if (!int.TryParse(sub, out var userId))
             return null;

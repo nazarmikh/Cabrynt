@@ -23,7 +23,7 @@ import {
   ChevronLeft,
   Menu,
 } from "lucide-react"
-import { clearAccessToken } from "@/lib/auth"
+import { apiRequest } from "@/lib/api"
 
 interface SidebarProps {
   role: "passenger" | "admin"
@@ -56,8 +56,8 @@ export function DashboardSidebar({ role, isCollapsed, onToggle }: SidebarProps) 
   const router = useRouter()
   const navItems = role === "admin" ? adminNavItems : passengerNavItems
 
-  const handleLogout = () => {
-    clearAccessToken()
+  const handleLogout = async () => {
+    await apiRequest("/api/public/auth/logout", { method: "POST" }, true)
     router.push("/login")
   }
 

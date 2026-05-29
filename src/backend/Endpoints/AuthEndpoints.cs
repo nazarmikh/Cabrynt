@@ -1,6 +1,9 @@
 using System.Security.Claims;
 using FluentValidation;
 using Project.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Net;
 
 namespace Project.Endpoints;
 
@@ -62,7 +65,8 @@ public static class AuthEndpoints
         app.MapPost("/api/public/auth/login", async (
             LoginRequestDto request,
             IValidator<LoginRequestDto> validator,
-            IAuthService authService) =>
+            IAuthService authService,
+            HttpContext httpContext) =>
         {
             var validation = await validator.ValidateAsync(request);
             if (!validation.IsValid)
@@ -73,10 +77,37 @@ public static class AuthEndpoints
                         .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray()));
             }
 
-            var token = await authService.LoginAsync(request);
-            return token is null
-                ? Results.Unauthorized()
-                : Results.Ok(new { accessToken = token });
+            LoginResponseDto? loginResult = await authService.LoginAsync(request);
+            if (loginResult is null)
+            {
+                return Results.Unauthorized();
+            }
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, loginResult.Id.ToString()),
+                new(ClaimTypes.Email, loginResult.Email),
+                new(ClaimTypes.Role, loginResult.Role.ToString())
+            };
+
+            var identity = new ClaimsIdentity(
+                claims,
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var principal = new ClaimsPrincipal(identity);
+
+            await httpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal);
+
+
+            return Results.Ok(loginResult);
+        });
+
+        app.MapPost("/api/public/auth/logout", async (HttpContext httpContext) =>
+        {
+            await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return Results.NoContent();
         });
 
 

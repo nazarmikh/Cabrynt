@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
-using System.IdentityModel.Tokens.Jwt;
 
 
 namespace Project.Services;
@@ -8,7 +7,7 @@ namespace Project.Services;
 public interface IAuthService
 {
     Task<PassengerProfile> RegisterPassengerAsync(RegisterRequestDto registerRequestDto);
-    Task<string?> LoginAsync(LoginRequestDto loginRequestDto);
+    Task<LoginResponseDto?> LoginAsync(LoginRequestDto loginRequestDto);
     Task<MeResponseDto?> GetMeAsync(ClaimsPrincipal claimsPrincipal);
     Task<MeResponseDto?> UpdateMeAsync(ClaimsPrincipal claimsPrincipal, UpdateMeRequestDto request);
     string HashPassword(string password, User user);
@@ -18,14 +17,12 @@ public class AuthService : IAuthService
 {
     private readonly IPassengerRepository _passengerRepository;
     private readonly IPasswordHasher<User> _hasher;
-    private readonly ITokenProvider _tokenProvider;
     private readonly ILogger<AuthService> _logger;
 
-    public AuthService(IPassengerRepository passengerRepository, IPasswordHasher<User> hasher, ITokenProvider tokenProvider, ILogger<AuthService> logger)
+    public AuthService(IPassengerRepository passengerRepository, IPasswordHasher<User> hasher, ILogger<AuthService> logger)
     {
         _hasher = hasher;
         _passengerRepository = passengerRepository;
-        _tokenProvider = tokenProvider;
         _logger = logger;
     }
 
@@ -71,7 +68,7 @@ public class AuthService : IAuthService
 
     }
 
-    public async Task<string?> LoginAsync(LoginRequestDto loginRequestDto)
+    public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto loginRequestDto)
     {
         User? user = await _passengerRepository.GetUserByEmailAsync(loginRequestDto.Email);
         if (user == null)
@@ -91,9 +88,9 @@ public class AuthService : IAuthService
         {
             user.LastLogin = DateTime.UtcNow;
             await _passengerRepository.SaveChangesAsync();
-            string token = _tokenProvider.CreateToken(user);
             _logger.LogInformation("User {UserId} with role {Role} logged in successfully", user.Id, user.Role);
-            return token;
+            LoginResponseDto response = new LoginResponseDto(user.Id, user.Email, user.Role);
+            return response;
         }
 
         return null;
@@ -101,8 +98,7 @@ public class AuthService : IAuthService
 
     public async Task<MeResponseDto?> GetMeAsync(ClaimsPrincipal claimsPrincipal)
     {
-        var sub = claimsPrincipal.FindFirstValue(JwtRegisteredClaimNames.Sub)
-          ?? claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var sub = claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
 
         var role = claimsPrincipal.FindFirstValue(ClaimTypes.Role);
 
@@ -119,6 +115,7 @@ public class AuthService : IAuthService
             {
                 Name = passenger.Name,
                 Email = passenger.User.Email,
+                Role = passenger.User.Role,
                 HomeAddress = passenger.HomeAddress,
                 Points = passenger.Points,
                 PreferredPaymentMethod = passenger.PreferredPaymentMethod
@@ -138,6 +135,7 @@ public class AuthService : IAuthService
             {
                 Name = "Admin",
                 Email = admin.Email,
+                Role = admin.Role,
             };
             return response;
         }
@@ -146,8 +144,7 @@ public class AuthService : IAuthService
 
     public async Task<MeResponseDto?> UpdateMeAsync(ClaimsPrincipal claimsPrincipal, UpdateMeRequestDto request)
     {
-        var sub = claimsPrincipal.FindFirstValue(JwtRegisteredClaimNames.Sub)
-            ?? claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var sub = claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
 
         var role = claimsPrincipal.FindFirstValue(ClaimTypes.Role);
 
@@ -170,6 +167,7 @@ public class AuthService : IAuthService
         {
             Name = passenger.Name,
             Email = passenger.User.Email,
+            Role = passenger.User.Role,
             HomeAddress = passenger.HomeAddress,
             Points = passenger.Points,
             PreferredPaymentMethod = passenger.PreferredPaymentMethod
@@ -185,4 +183,3 @@ public class AuthService : IAuthService
 
 
 }
-
