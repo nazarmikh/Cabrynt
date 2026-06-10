@@ -1,6 +1,6 @@
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Project.DTOs;
 
 namespace backend.IntegrationTests.Infrastructure;
 
@@ -9,6 +9,8 @@ internal static class IntegrationTestData
     internal const string AdminEmail = "admin@cabrynt.test";
     internal const string AdminPassword = "AdminPassword123!";
     internal const string DefaultPassword = "StrongPass123!";
+
+    private const string AuthCookieName = "Cabrynt.Auth";
 
     internal static async Task<string> LoginAsync(HttpClient client, string email, string password)
     {
@@ -20,13 +22,16 @@ internal static class IntegrationTestData
 
         response.EnsureSuccessStatusCode();
 
-        var body = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        var body = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
 
         Assert.NotNull(body);
-        Assert.True(body!.ContainsKey("accessToken"));
-        Assert.False(string.IsNullOrWhiteSpace(body["accessToken"]));
+        Assert.True(body.Id > 0);
+        Assert.NotEmpty(body.Email);
 
-        return body["accessToken"];
+        Assert.True(response.Headers.TryGetValues("Set-Cookie", out var cookies));
+        var authCookie = Assert.Single(cookies, c => c.StartsWith($"{AuthCookieName}=", StringComparison.Ordinal));
+
+        return authCookie.Split(';', 2)[0];
     }
 
     internal static async Task<string> LoginAsAdminAsync(HttpClient client)
@@ -92,9 +97,10 @@ internal static class IntegrationTestData
         };
     }
 
-    internal static void Authorize(HttpClient client, string token)
+    internal static void Authorize(HttpClient client, string authCookie)
     {
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        client.DefaultRequestHeaders.Remove("Cookie");
+        client.DefaultRequestHeaders.Add("Cookie", authCookie);
     }
 
     internal sealed class PassengerRegistration

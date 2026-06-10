@@ -1,10 +1,10 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using backend.IntegrationTests.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Project.Data;
+using Project.DTOs;
 
 namespace backend.IntegrationTests.CreateRide;
 
@@ -140,19 +140,19 @@ public class CreateRideTest : IClassFixture<CustomWebApplicationFactory>
         var secondPassengerEmail = $"it-busy-passenger-two-{Guid.NewGuid():N}@cabrynt.test";
 
         var adminToken = await LoginAsync(AdminEmail, AdminPassword);
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+        IntegrationTestData.Authorize(_client, adminToken);
 
         var vehicleId = await RegisterVehicleAsync(systemEmail);
 
         var vehicleToken = await LoginAsync(systemEmail, DefaultPassword);
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", vehicleToken);
+        IntegrationTestData.Authorize(_client, vehicleToken);
         await AddTelemetryAsync(vehicleId, random);
 
         await RegisterPassengerAsync(firstPassengerEmail);
         await RegisterPassengerAsync(secondPassengerEmail);
 
         var firstPassengerToken = await LoginAsync(firstPassengerEmail, DefaultPassword);
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", firstPassengerToken);
+        IntegrationTestData.Authorize(_client, firstPassengerToken);
 
         var firstResponse = await _client.PostAsJsonAsync("/api/public/rides", new RideRequestPayload
         {
@@ -175,7 +175,7 @@ public class CreateRideTest : IClassFixture<CustomWebApplicationFactory>
         var firstAssignedVehicleId = firstBody["vehicleId"].GetInt32();
 
         var secondPassengerToken = await LoginAsync(secondPassengerEmail, DefaultPassword);
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", secondPassengerToken);
+        IntegrationTestData.Authorize(_client, secondPassengerToken);
 
         var secondResponse = await _client.PostAsJsonAsync("/api/public/rides", new RideRequestPayload
         {
@@ -210,18 +210,18 @@ public class CreateRideTest : IClassFixture<CustomWebApplicationFactory>
         var passengerEmail = $"it-auth-{Guid.NewGuid():N}@cabrynt.test";
 
         var adminToken = await LoginAsync(AdminEmail, AdminPassword);
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
+        IntegrationTestData.Authorize(_client, adminToken);
 
         var vehicleId = await RegisterVehicleAsync(systemEmail);
 
         var vehicleToken = await LoginAsync(systemEmail, DefaultPassword);
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", vehicleToken);
+        IntegrationTestData.Authorize(_client, vehicleToken);
         await AddTelemetryAsync(vehicleId, random);
 
         await RegisterPassengerAsync(passengerEmail);
 
         var passengerToken = await LoginAsync(passengerEmail, DefaultPassword);
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", passengerToken);
+        IntegrationTestData.Authorize(_client, passengerToken);
 
         var rideRequest = new RideRequestPayload
         {
@@ -251,11 +251,15 @@ public class CreateRideTest : IClassFixture<CustomWebApplicationFactory>
 
         response.EnsureSuccessStatusCode();
 
-        var body = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        var body = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
 
         Assert.NotNull(body);
+        Assert.True(body.Id > 0);
+        Assert.NotEmpty(body.Email);
+        Assert.True(response.Headers.TryGetValues("Set-Cookie", out var cookies));
+        var authCookie = Assert.Single(cookies, c => c.StartsWith("Cabrynt.Auth=", StringComparison.Ordinal));
 
-        return body!["accessToken"];
+        return authCookie.Split(';', 2)[0];
     }
 
     private async Task<int> RegisterVehicleAsync(string systemEmail)
