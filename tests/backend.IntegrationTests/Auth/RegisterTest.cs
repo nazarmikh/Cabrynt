@@ -11,7 +11,7 @@ public sealed class RegisterTest : IClassFixture<CustomWebApplicationFactory>
 
     public RegisterTest(CustomWebApplicationFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]

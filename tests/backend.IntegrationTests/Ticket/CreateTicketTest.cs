@@ -16,7 +16,7 @@ public class CreateTicketTest : IClassFixture<CustomWebApplicationFactory>
     public CreateTicketTest(CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]

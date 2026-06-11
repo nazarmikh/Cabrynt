@@ -9,7 +9,7 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
     private readonly HttpClient _client;
     public RegisterVehicleTest(CustomWebApplicationFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]
@@ -33,8 +33,8 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
     public async Task RegisterVehicle_ReturnedUnauthorized_WhenNotAdmin()
     {
         var passenger = await IntegrationTestData.RegisterPassengerAsync(_client, $"it-register-vehicle-{Guid.NewGuid():N}@cabrynt.test");
-        var accessToken = await IntegrationTestData.LoginAsync(_client, passenger.Email, passenger.Password);
-        IntegrationTestData.Authorize(_client, accessToken);
+        var passengerSession = await IntegrationTestData.LoginAsync(_client, passenger.Email, passenger.Password);
+        IntegrationTestData.Authorize(_client, passengerSession);
 
         var suffix = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
         var response = await _client.PostAsJsonAsync("/api/private/vehicles", new
