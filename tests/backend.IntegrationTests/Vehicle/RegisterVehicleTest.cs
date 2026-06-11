@@ -9,7 +9,7 @@ public class RegisterVehicleTest : IClassFixture<CustomWebApplicationFactory>
     private readonly HttpClient _client;
     public RegisterVehicleTest(CustomWebApplicationFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]

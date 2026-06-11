@@ -12,7 +12,7 @@ public sealed class MeTest : IClassFixture<CustomWebApplicationFactory>
 
     public MeTest(CustomWebApplicationFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]

@@ -37,7 +37,10 @@ internal static class IntegrationTestData
         Assert.True(response.Headers.TryGetValues("Set-Cookie", out var cookies));
         var authCookie = Assert.Single(cookies, c => c.StartsWith($"{AuthCookieName}=", StringComparison.Ordinal));
 
-        return authCookie.Split(';', 2)[0];
+        var sessionCookie = authCookie.Split(';', 2)[0];
+        Authorize(client, sessionCookie);
+
+        return sessionCookie;
     }
 
     internal static async Task<string> LoginAsAdminAsync(HttpClient client)

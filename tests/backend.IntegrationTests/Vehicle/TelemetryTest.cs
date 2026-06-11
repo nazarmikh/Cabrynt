@@ -16,7 +16,7 @@ public class TelemetryTest : IClassFixture<CustomWebApplicationFactory>
     public TelemetryTest(CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]

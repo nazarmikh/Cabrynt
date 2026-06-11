@@ -56,6 +56,14 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         });
     }
 
+    public HttpClient CreateClientWithoutCookies()
+    {
+        return CreateClient(new WebApplicationFactoryClientOptions
+        {
+            HandleCookies = false
+        });
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)

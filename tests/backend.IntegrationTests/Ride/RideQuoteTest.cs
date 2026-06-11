@@ -11,7 +11,7 @@ public class RideQuoteTest : IClassFixture<CustomWebApplicationFactory>
 
     public RideQuoteTest(CustomWebApplicationFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]

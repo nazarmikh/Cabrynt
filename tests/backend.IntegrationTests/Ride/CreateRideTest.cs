@@ -26,7 +26,7 @@ public class CreateRideTest : IClassFixture<CustomWebApplicationFactory>
     public CreateRideTest(CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]

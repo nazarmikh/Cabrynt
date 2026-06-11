@@ -19,7 +19,7 @@ public sealed class LoginTest : IClassFixture<CustomWebApplicationFactory>
 
     public LoginTest(CustomWebApplicationFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]
