@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using backend.IntegrationTests.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Project.Data;
@@ -13,6 +14,11 @@ public class CreateRideTest : IClassFixture<CustomWebApplicationFactory>
     private const string AdminEmail = "admin@cabrynt.test";
     private const string AdminPassword = "AdminPassword123!";
     private const string DefaultPassword = "StrongPass123!";
+
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() }
+    };
 
     private readonly HttpClient _client;
     private readonly CustomWebApplicationFactory _factory;
@@ -251,7 +257,7 @@ public class CreateRideTest : IClassFixture<CustomWebApplicationFactory>
 
         response.EnsureSuccessStatusCode();
 
-        var body = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var body = await response.Content.ReadFromJsonAsync<LoginResponseDto>(JsonOptions);
 
         Assert.NotNull(body);
         Assert.True(body.Id > 0);

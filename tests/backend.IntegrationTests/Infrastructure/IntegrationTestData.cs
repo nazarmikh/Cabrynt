@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Project.DTOs;
 
 namespace backend.IntegrationTests.Infrastructure;
@@ -12,6 +13,11 @@ internal static class IntegrationTestData
 
     private const string AuthCookieName = "Cabrynt.Auth";
 
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() }
+    };
+
     internal static async Task<string> LoginAsync(HttpClient client, string email, string password)
     {
         var response = await client.PostAsJsonAsync("/api/public/auth/login", new
@@ -22,7 +28,7 @@ internal static class IntegrationTestData
 
         response.EnsureSuccessStatusCode();
 
-        var body = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var body = await response.Content.ReadFromJsonAsync<LoginResponseDto>(JsonOptions);
 
         Assert.NotNull(body);
         Assert.True(body.Id > 0);

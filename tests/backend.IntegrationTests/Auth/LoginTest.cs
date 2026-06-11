@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using backend.IntegrationTests.Infrastructure;
 using Project.DTOs;
 using Project.Enums;
@@ -8,6 +10,11 @@ namespace backend.IntegrationTests.Auth;
 
 public sealed class LoginTest : IClassFixture<CustomWebApplicationFactory>
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() }
+    };
+
     private readonly HttpClient _client;
 
     public LoginTest(CustomWebApplicationFactory factory)
@@ -27,7 +34,7 @@ public sealed class LoginTest : IClassFixture<CustomWebApplicationFactory>
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var body = await response.Content.ReadFromJsonAsync<LoginResponseDto>(JsonOptions);
 
         Assert.NotNull(body);
         Assert.Equal(Role.Passenger, body.Role);
