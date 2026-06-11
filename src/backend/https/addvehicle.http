@@ -3,8 +3,8 @@
 @adminPassword = AdminPassword123!
 
 # Setup helper only. Keep this file if you want to register dedicated demo vehicles quickly.
-
-@adminToken =
+# Run Admin login first. The REST client stores the Cabrynt.Auth cookie
+# and sends it automatically to the protected vehicle endpoints below.
 
 ###
 # Admin login
@@ -20,7 +20,6 @@ Accept: application/json
 ###
 # Register Standard Vehicle 1
 POST {{host}}/api/private/vehicles
-Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 Accept: application/json
 
@@ -37,7 +36,6 @@ Accept: application/json
 ###
 # Register Standard Vehicle 2
 POST {{host}}/api/private/vehicles
-Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 Accept: application/json
 
@@ -54,7 +52,6 @@ Accept: application/json
 ###
 # Register Van Vehicle
 POST {{host}}/api/private/vehicles
-Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 Accept: application/json
 
@@ -71,7 +68,6 @@ Accept: application/json
 ###
 # Register Luxury Vehicle
 POST {{host}}/api/private/vehicles
-Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 Accept: application/json
 

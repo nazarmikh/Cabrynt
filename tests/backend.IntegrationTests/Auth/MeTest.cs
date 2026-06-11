@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using backend.IntegrationTests.Infrastructure;
-using System.Net.Http.Headers;
 using System.Text.Json;
 
 
@@ -13,17 +12,19 @@ public sealed class MeTest : IClassFixture<CustomWebApplicationFactory>
 
     public MeTest(CustomWebApplicationFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]
     public async Task Me_ReturnsPassengerProfile_WhenCredentialsAreValid()
     {
         var registerRequest = await IntegrationTestData.RegisterPassengerAsync(_client);
-        var accessToken = await IntegrationTestData.LoginAsync(_client, registerRequest.Email, registerRequest.Password);
 
+        await IntegrationTestData.LoginAsync(
+            _client,
+            registerRequest.Email,
+            registerRequest.Password);
 
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         var response = await _client.GetAsync("/api/public/auth/me");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

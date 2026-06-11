@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CabryntLogo } from "@/components/cabrynt-logo"
 import { Eye, EyeOff, Loader2, Check } from "lucide-react"
 import { apiRequest, ApiError } from "@/lib/api"
-import { setAccessToken } from "@/lib/auth"
 import type { LoginResponse, PaymentMethod } from "@/lib/backend-types"
 import { paymentMethodOptions } from "@/lib/payment-method"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -45,7 +44,7 @@ export default function RegisterPage() {
         body: JSON.stringify(formData),
       })
 
-      const loginResponse = await apiRequest<LoginResponse>("/api/public/auth/login", {
+      await apiRequest<LoginResponse>("/api/public/auth/login", {
         method: "POST",
         body: JSON.stringify({
           email: formData.email,
@@ -53,7 +52,6 @@ export default function RegisterPage() {
         }),
       })
 
-      setAccessToken(loginResponse.accessToken)
       router.push("/dashboard")
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {

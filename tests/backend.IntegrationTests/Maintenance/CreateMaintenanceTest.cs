@@ -16,7 +16,7 @@ public class CreateMaintenanceTest : IClassFixture<CustomWebApplicationFactory>
     public CreateMaintenanceTest(CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]

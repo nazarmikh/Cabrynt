@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using System.IdentityModel.Tokens.Jwt;
 using Project.Endpoints;
 
 
@@ -176,8 +175,7 @@ public class RideService : IRideService
 
     public async Task<List<RideResponseDto>?> GetAllRidesAsync(ClaimsPrincipal principal)
     {
-        var sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
-          ?? principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (!int.TryParse(sub, out var userId))
             return null;
@@ -209,8 +207,7 @@ public class RideService : IRideService
 
     public async Task<GetRideByIdResponseDto?> GetRideByIdAsync(ClaimsPrincipal principal, int rideId)
     {
-        var sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
-            ?? principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (!int.TryParse(sub, out var userId))
             return null;
@@ -276,8 +273,7 @@ public class RideService : IRideService
 
     public async Task<CompleteRideResponseDto?> CompleteRideAsync(ClaimsPrincipal principal, int rideId)
     {
-        var sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
-            ?? principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (!int.TryParse(sub, out var userId))
             return null;
@@ -398,8 +394,7 @@ public class RideService : IRideService
 
     private async Task<PassengerProfile?> GetPassengerAsync(ClaimsPrincipal principal)
     {
-        var sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
-            ?? principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (!int.TryParse(sub, out var userId))
             return null;

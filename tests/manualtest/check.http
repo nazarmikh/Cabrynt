@@ -3,12 +3,11 @@
 @adminEmail = admin@cabrynt.test
 @adminPassword = AdminPassword123!
 
-# Paste generated tokens and ids here while running the file,
-# otherwise some of them wont work
+# Cookie auth note:
+# The REST client stores the Cabrynt.Auth cookie from the latest login response.
+# Only one user session is active at a time for this host, so run the matching
+# Admin, Passenger, or Vehicle login before requests that require that role.
 
-@adminToken = 
-@passengerToken = 
-@vehicleToken =
 @rideId = 
 @ticketId =
 @maintenanceId =
@@ -54,15 +53,14 @@ Accept: application/json
 ###
 # 4. Passenger profile
 GET {{host}}/api/public/auth/me
-Authorization: Bearer {{passengerToken}}
 Accept: application/json
 
 ###
 # 5. Optional setup only:
+# Run Admin login again before this request if Passenger login was the latest login.
 # Register a dedicated vehicle if you want to demonstrate the admin-only vehicle endpoint.
 # Otherwise keep @vehicleId pointed at an existing seeded/simulated vehicle and skip to step 6.
 POST {{host}}/api/private/vehicles
-Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 Accept: application/json
 
@@ -78,8 +76,8 @@ Accept: application/json
 
 ###
 # 6. Optional setup only:
-# Vehicle login for the newly registered vehicle. Paste the returned accessToken into @vehicleToken
-# and the returned vehicleId into @vehicleId if you use the dedicated vehicle flow above.
+# Vehicle login for the newly registered vehicle.
+# Copy the returned vehicleId into @vehicleId if you use the dedicated vehicle flow above.
 POST {{host}}/api/public/auth/login
 Content-Type: application/json
 Accept: application/json
@@ -94,7 +92,6 @@ Accept: application/json
 # Use this if you registered a dedicated vehicle above. If the Docker simulator is already running,
 # you can skip this request because seeded vehicles will already have live telemetry.
 POST {{host}}/api/private/telemetry
-Authorization: Bearer {{vehicleToken}}
 Content-Type: application/json
 Accept: application/json
 
@@ -110,7 +107,6 @@ Accept: application/json
 ###
 # 8. Telemetry that triggers automatic diagnostics
 POST {{host}}/api/private/telemetry
-Authorization: Bearer {{vehicleToken}}
 Content-Type: application/json
 Accept: application/json
 
@@ -126,7 +122,6 @@ Accept: application/json
 ###
 # 9. Direct sensor diagnostic ingestion
 POST {{host}}/api/private/sensor-diagnostics
-Authorization: Bearer {{vehicleToken}}
 Content-Type: application/json
 Accept: application/json
 
@@ -141,9 +136,9 @@ Accept: application/json
 
 ###
 # 11. Create ride
+# Run Passenger login again before this request if Vehicle login was the latest login.
 # Copy rideId from the response into @rideId above.
 POST {{host}}/api/public/rides
-Authorization: Bearer {{passengerToken}}
 Content-Type: application/json
 Accept: application/json
 
@@ -160,20 +155,18 @@ Accept: application/json
 ###
 # 12. List rides
 GET {{host}}/api/public/rides
-Authorization: Bearer {{passengerToken}}
 Accept: application/json
 
 ###
 # 13. Get ride by id
 GET {{host}}/api/public/rides/{{rideId}}
-Authorization: Bearer {{passengerToken}}
 Accept: application/json
 
 ###
 # 14. Complete ride as admin
+# Run Admin login again before this request.
 # This now auto-creates payment, invoice PDF, and pickup email.
 POST {{host}}/api/private/rides/{{rideId}}/complete
-Authorization: Bearer {{adminToken}}
 Accept: application/json
 
 ###
@@ -184,9 +177,9 @@ Accept: application/json
 
 ###
 # 15. Create support ticket
+# Run Passenger login again before this request.
 # Copy ticketId from the response into @ticketId above.
 POST {{host}}/api/public/tickets
-Authorization: Bearer {{passengerToken}}
 Content-Type: application/json
 Accept: application/json
 
@@ -199,20 +192,18 @@ Accept: application/json
 ###
 # 16. List passenger tickets
 GET {{host}}/api/public/tickets
-Authorization: Bearer {{passengerToken}}
 Accept: application/json
 
 ###
 # 17. Get ticket by id
 GET {{host}}/api/public/tickets/{{ticketId}}
-Authorization: Bearer {{passengerToken}}
 Accept: application/json
 
 ###
 # 18. Create maintenance record
+# Run Admin login again before this request.
 # Copy maintenanceId from the response into @maintenanceId above.
 POST {{host}}/api/private/vehicles/{{vehicleId}}/maintenances
-Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 Accept: application/json
 
@@ -227,19 +218,17 @@ Accept: application/json
 ###
 # 19. List maintenance records for the vehicle
 GET {{host}}/api/private/vehicles/{{vehicleId}}/maintenances
-Authorization: Bearer {{adminToken}}
 Accept: application/json
 
 ###
 # 20. Get maintenance by id
 GET {{host}}/api/private/vehicles/{{vehicleId}}/maintenances/{{maintenanceId}}
-Authorization: Bearer {{adminToken}}
 Accept: application/json
 
 ###
 # 21. GraphQL example (admin only)
+# Run Admin login again before this request if needed.
 POST {{host}}/graphql
-Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 Accept: application/json
 

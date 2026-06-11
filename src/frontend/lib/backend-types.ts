@@ -3,12 +3,15 @@ export type UiRole = "passenger" | "admin" | "vehicle"
 export type PaymentMethod = "Cash" | "Card" | "ApplePay"
 
 export interface LoginResponse {
-  accessToken: string
+  id: number
+  email: string
+  role: AppRole
 }
 
 export interface MeResponse {
   name: string
   email: string
+  role: AppRole
   homeAddress?: string
   points?: number
   preferredPaymentMethod?: PaymentMethod

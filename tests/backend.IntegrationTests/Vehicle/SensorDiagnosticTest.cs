@@ -16,7 +16,7 @@ public class SensorDiagnosticTest : IClassFixture<CustomWebApplicationFactory>
     public SensorDiagnosticTest(CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]

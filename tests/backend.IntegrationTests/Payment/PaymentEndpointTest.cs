@@ -18,7 +18,7 @@ public class PaymentEndpointTest : IClassFixture<CustomWebApplicationFactory>
     public PaymentEndpointTest(CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]

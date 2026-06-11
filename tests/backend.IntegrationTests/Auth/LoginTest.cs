@@ -1,16 +1,25 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using backend.IntegrationTests.Infrastructure;
+using Project.DTOs;
+using Project.Enums;
 
 namespace backend.IntegrationTests.Auth;
 
 public sealed class LoginTest : IClassFixture<CustomWebApplicationFactory>
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() }
+    };
+
     private readonly HttpClient _client;
 
     public LoginTest(CustomWebApplicationFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.CreateClientWithoutCookies();
     }
 
     [Fact]
@@ -25,11 +34,14 @@ public sealed class LoginTest : IClassFixture<CustomWebApplicationFactory>
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var body = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        var body = await response.Content.ReadFromJsonAsync<LoginResponseDto>(JsonOptions);
 
         Assert.NotNull(body);
-        Assert.True(body!.ContainsKey("accessToken"));
-        Assert.False(string.IsNullOrWhiteSpace(body["accessToken"]));
+        Assert.Equal(Role.Passenger, body.Role);
+        Assert.True(body.Id > 0);
+
+        Assert.True(response.Headers.TryGetValues("Set-Cookie", out var cookies));
+        Assert.Contains(cookies, c => c.Contains("Cabrynt.Auth"));
     }
 
     [Fact]

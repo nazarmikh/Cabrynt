@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CabryntLogo } from "@/components/cabrynt-logo"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { apiRequest, ApiError } from "@/lib/api"
-import { getRoleFromToken, setAccessToken, toUiRole } from "@/lib/auth"
+import { toUiRole } from "@/lib/auth"
 import type { LoginResponse } from "@/lib/backend-types"
 
 export default function LoginPage() {
@@ -34,10 +34,7 @@ export default function LoginPage() {
         body: JSON.stringify(formData),
       })
 
-      setAccessToken(response.accessToken)
-
-      const role = getRoleFromToken(response.accessToken)
-      const uiRole = role ? toUiRole(role) : null
+      const uiRole = toUiRole(response.role)
 
       router.push(uiRole === "admin" ? "/admin" : "/dashboard")
     } catch (err) {
