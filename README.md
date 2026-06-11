@@ -29,7 +29,7 @@ Backend:
 - PostgreSQL
 - MongoDB
 - FluentValidation
-- JWT authentication
+- Cookie-based authentication
 - Hot Chocolate GraphQL
 - Swagger / OpenAPI
 
@@ -44,6 +44,7 @@ Infrastructure and quality:
 - Docker Compose
 - GitHub Actions
 - xUnit unit and integration tests
+- Centralized NuGet package version management
 
 ## Domain Scope
 
@@ -99,8 +100,11 @@ Recently completed:
 - reviewed dependency vulnerability warnings
 - upgraded packages to remove a critical Hot Chocolate dependency vulnerability
 - upgraded MongoDB-related dependencies enough to remove the previous Snappier warning
+- centralized NuGet package versions with `Directory.Packages.props`
 - aligned EF Core package versions across backend and test projects
-- verified the backend integration test suite passes after dependency updates
+- replaced JWT bearer authentication with ASP.NET Core cookie authentication for the browser app
+- updated frontend requests and integration tests to use cookie sessions
+- added GitHub Actions checks for formatting, build, tests, dependency audit, and Docker image builds
 
 Known accepted warning:
 
@@ -112,9 +116,6 @@ Known accepted warning:
 
 Planned backend improvements:
 
-- central package version management
-- stricter build quality rules
-- cookie-based BFF authentication
 - OpenID Connect login
 - improved vehicle/system authentication
 - gRPC telemetry streaming
@@ -141,6 +142,12 @@ docs/
 
 ## Running Locally
 
+Prerequisites:
+
+- .NET 10 SDK
+- Docker Desktop
+- Node.js for frontend-only development
+
 Copy the example environment file:
 
 ```powershell
@@ -162,6 +169,16 @@ Swagger:  http://localhost:5113/swagger
 GraphQL:  http://localhost:5113/graphql
 ```
 
+The Docker Compose flow reads values from `.env`. For direct `dotnet run`, configure the same backend values through user-secrets or environment variables:
+
+```text
+ConnectionStrings:Postgres
+ConnectionStrings:Mongo
+Mongo:DatabaseName
+Admin:Email
+Admin:Password
+```
+
 ## Tests
 
 Run unit tests:
@@ -174,6 +191,12 @@ Run integration tests:
 
 ```powershell
 dotnet test tests/backend.IntegrationTests/backend.IntegrationTests.csproj --no-restore
+```
+
+Integration tests require PostgreSQL and MongoDB to be available. In CI they are provided by GitHub Actions service containers. Locally, start the database services first:
+
+```powershell
+docker compose up -d postgres mongo
 ```
 
 Run all tests:
