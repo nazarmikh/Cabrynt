@@ -42,3 +42,14 @@ src/backend/GeneratedEmails/
 src/backend/GeneratedInvoices/
 
 backend.sln
+
+# Machine learning workspace
+ml/**/data/
+ml/**/.venv/
+ml/**/__pycache__/
+ml/**/*.py[cod]
+ml/**/.pytest_cache/
+ml/**/.mypy_cache/
+ml/**/.ruff_cache/
+ml/**/.ipynb_checkpoints/
+ml/**/artifacts/
