@@ -36,6 +36,14 @@ To audit the complete archive without loading it into memory at once:
 python scripts/audit_quality.py
 ```
 
+To build the local model-ready datasets:
+
+```powershell
+python scripts/build_dataset.py
+```
+
+This creates ignored Parquet files in `artifacts/prepared-data/`: a clean full dataset and chronological `train`, `validation`, and `test` splits.
+
 ## Current Experiment
 
 The first implementation:
@@ -44,11 +52,15 @@ The first implementation:
 - derives duration from the 15-second GPS sampling interval;
 - excludes malformed or empty traces, traces with fewer than two points, coordinates outside the Porto area, trips above four hours, and GPS jumps above 150 km/h;
 - reports `MISSING_DATA`, repeated coordinates and near-zero endpoint distance as diagnostics rather than automatically deleting them;
-- creates a chronological train, validation and test split;
+- builds clean full-data Parquet files and chronological train, validation and test splits;
 - compares simple baselines with a gradient-boosting model;
 - examines where validation errors are largest.
 
-The full-data audit reports duplicate trip IDs. They will be removed when the next pipeline step creates a reproducible clean dataset. The test split and official challenge holdout are reserved for final evaluation.
+The builder removes duplicate trip IDs while keeping the first occurrence. The test split and official challenge holdout are reserved for final evaluation.
+
+## Latest Local Build
+
+The latest build processed 1,710,670 input rows and retained 1,498,634 rows. It produced 1,049,044 training rows, 224,795 validation rows, and 224,795 test rows. Generated data is local and is not committed.
 
 ## Structure
 
