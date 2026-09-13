@@ -52,6 +52,17 @@ python scripts/evaluate_baselines.py
 
 This reads only `train.parquet` and `validation.parquet`. It writes ignored metrics to `artifacts/baseline-metrics.json` and leaves `test.parquet` untouched.
 
+## Data Enrichment
+
+The model-ready data is enriched only with information that would be available when a quote is requested: Porto-local calendar fields, Portuguese public holidays, and hourly historical weather. Download the local weather cache, then build enriched train and validation data:
+
+```powershell
+python scripts/download_weather.py
+python scripts/build_enriched_datasets.py
+```
+
+Weather is retrieved from the [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) and cached locally. The enriched build also adds smoothed historical congestion profiles fitted only on earlier training trips. It does not read or transform the reserved test split.
+
 ## Local OSRM Baseline
 
 OSRM is run locally so the project does not send thousands of routing requests to a public demo service. It estimates a driving route using the Portugal OpenStreetMap road network.
@@ -82,6 +93,8 @@ The first implementation:
 - excludes malformed or empty traces, traces with fewer than two points, coordinates outside the Porto area, trips above four hours, and GPS jumps above 150 km/h;
 - reports `MISSING_DATA`, repeated coordinates and near-zero endpoint distance as diagnostics rather than automatically deleting them;
 - builds clean full-data Parquet files and chronological train, validation and test splits;
+- uses Porto-local time for calendar features, with hourly weather and public-holiday enrichment;
+- builds leakage-safe historical congestion profiles for train and validation data;
 - evaluates median, fixed-speed, and linear-regression baselines on validation data;
 - adds a local OSRM road-routing benchmark on a fixed validation sample;
 - examines where validation errors are largest.
@@ -92,6 +105,10 @@ The builder removes duplicate trip IDs while keeping the first occurrence. The t
 
 The latest build processed 1,710,670 input rows and retained 1,498,634 rows. It produced 1,049,044 training rows, 224,795 validation rows, and 224,795 test rows. Generated data is local and is not committed.
 
+## Latest Enrichment Build
+
+The local weather cache contains 8,760 hourly Porto observations from 2013-07-01 through 2014-06-30. Enriched train and validation datasets contain all weather and calendar fields. The first chronological 209,247 training rows have no historical-congestion profile because no earlier trips are available; this is explicitly marked rather than filled with future target data.
+
 ## Latest Validation Baselines
 
 The first validation run uses 1,049,044 training rows and 224,795 validation rows. The reserved test split was not read.
@@ -100,7 +117,7 @@ The first validation run uses 1,049,044 training rows and 224,795 validation row
 | --- | ---: | ---: | ---: |
 | Training median | 5.138 | 9.138 | 9.750 |
 | Fixed 30 km/h | 5.930 | 10.064 | 11.423 |
-| Linear regression | 4.358 | 8.265 | 7.400 |
+| Linear regression | 4.348 | 8.255 | 7.405 |
 
 These full-validation values are reference points for later experiments, not final test results. The OSRM benchmark below uses a separate fixed validation cohort, so its values should only be compared within that table.
 
@@ -112,7 +129,7 @@ The local Portugal OSRM graph was evaluated on a deterministic 5,000-row validat
 | --- | ---: | ---: | ---: |
 | Training median | 5.143 | 8.776 | 10.000 |
 | Fixed 30 km/h | 5.937 | 9.611 | 11.765 |
-| Linear regression | 4.343 | 7.758 | 7.549 |
+| Linear regression | 4.342 | 7.754 | 7.558 |
 | OSRM driving route | 5.438 | 9.398 | 11.330 |
 
 Direct OSRM is weaker than the simple linear model on this historical dataset. Its default car profile has no access to the actual taxi route or historical traffic, but its road-network distance and duration remain useful candidates for a later ML correction model.

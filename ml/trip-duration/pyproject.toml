@@ -9,6 +9,8 @@ description = "Trip duration prediction pipeline for Cabrynt"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "certifi>=2025.0.0",
+    "holidays>=0.80",
     "numpy>=2.0",
     "pandas>=2.2",
     "pyarrow>=18.0",

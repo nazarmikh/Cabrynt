@@ -25,6 +25,18 @@ def test_prepare_trip_derives_only_quote_time_features() -> None:
     assert "observed_distance_km" not in row
 
 
+def test_prepare_trip_uses_porto_local_time_features() -> None:
+    row, reason = prepare_trip(
+        "trip-1",
+        1_372_636_800,
+        json.dumps([[-8.61, 41.15], [-8.611, 41.151]]),
+    )
+
+    assert reason is None
+    assert row is not None
+    assert row["hour"] == 1
+
+
 def test_prepare_trip_rejects_an_invalid_timestamp() -> None:
     row, reason = prepare_trip("trip-1", "not-a-time", "[[-8.61, 41.15], [-8.62, 41.16]]")
 

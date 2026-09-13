@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Iterable
-from datetime import UTC, datetime
 import math
 from numbers import Real
 
 import pandas as pd
 
+from cabrynt_trip_duration.calendar_features import porto_datetime
 from cabrynt_trip_duration.preprocessing import (
     duration_minutes,
     haversine_km,
@@ -50,7 +50,7 @@ def prepare_trip(
     if reason is not None:
         return None, reason
 
-    started_at = datetime.fromtimestamp(int(timestamp), tz=UTC)
+    started_at = porto_datetime(int(timestamp))
     pickup_longitude, pickup_latitude = points[0]
     destination_longitude, destination_latitude = points[-1]
 
