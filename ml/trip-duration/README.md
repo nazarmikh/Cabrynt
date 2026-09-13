@@ -52,6 +52,27 @@ python scripts/evaluate_baselines.py
 
 This reads only `train.parquet` and `validation.parquet`. It writes ignored metrics to `artifacts/baseline-metrics.json` and leaves `test.parquet` untouched.
 
+## Local OSRM Baseline
+
+OSRM is run locally so the project does not send thousands of routing requests to a public demo service. It estimates a driving route using the Portugal OpenStreetMap road network.
+
+With Docker Desktop running, prepare the local routing graph. The download is about 400 MB and preprocessing can take several minutes:
+
+```powershell
+.\scripts\setup_osrm.ps1
+docker compose -f compose.osrm.yaml up -d
+```
+
+Then compare OSRM against every existing baseline on the same deterministic 5,000-row validation sample:
+
+```powershell
+python scripts/evaluate_osrm_baseline.py
+```
+
+The command reads `train.parquet` and `validation.parquet`, never `test.parquet`. It caches local route results in `artifacts/osrm/route-cache.sqlite3`, so a rerun does not request routes that were already evaluated. OSRM `NoRoute` cases are recorded, and all metrics use the same routable subset for every baseline. Use `--sample-size` and `--sample-seed` only when deliberately creating a new benchmark sample.
+
+To rebuild the routing graph from a newer map extract, run `setup_osrm.ps1 -ForceDownload`. This replaces both the downloaded extract and its derived graph.
+
 ## Current Experiment
 
 The first implementation:
@@ -62,6 +83,7 @@ The first implementation:
 - reports `MISSING_DATA`, repeated coordinates and near-zero endpoint distance as diagnostics rather than automatically deleting them;
 - builds clean full-data Parquet files and chronological train, validation and test splits;
 - evaluates median, fixed-speed, and linear-regression baselines on validation data;
+- adds a local OSRM road-routing benchmark on a fixed validation sample;
 - examines where validation errors are largest.
 
 The builder removes duplicate trip IDs while keeping the first occurrence. The test split and official challenge holdout are reserved for final evaluation.
@@ -80,13 +102,26 @@ The first validation run uses 1,049,044 training rows and 224,795 validation row
 | Fixed 30 km/h | 5.930 | 10.064 | 11.423 |
 | Linear regression | 4.358 | 8.265 | 7.400 |
 
-These are reference values for later OSRM and ML experiments, not final test results.
+These full-validation values are reference points for later experiments, not final test results. The OSRM benchmark below uses a separate fixed validation cohort, so its values should only be compared within that table.
+
+## OSRM Validation Benchmark
+
+The local Portugal OSRM graph was evaluated on a deterministic 5,000-row validation sample. It routed 4,999 rows; one row had no route, so every baseline below uses the same 4,999-row routable cohort.
+
+| Baseline | MAE (minutes) | RMSE (minutes) | P90 absolute error (minutes) |
+| --- | ---: | ---: | ---: |
+| Training median | 5.143 | 8.776 | 10.000 |
+| Fixed 30 km/h | 5.937 | 9.611 | 11.765 |
+| Linear regression | 4.343 | 7.758 | 7.549 |
+| OSRM driving route | 5.438 | 9.398 | 11.330 |
+
+Direct OSRM is weaker than the simple linear model on this historical dataset. Its default car profile has no access to the actual taxi route or historical traffic, but its road-network distance and duration remain useful candidates for a later ML correction model.
 
 ## Structure
 
 - `notebooks/` contains exploration and early experiments.
-- `scripts/` contains full-data audit tools.
-- `src/` contains reusable preprocessing functions.
-- `tests/` verifies preprocessing behaviour.
+- `scripts/` contains full-data preparation and evaluation tools.
+- `src/` contains reusable data, evaluation, and routing code.
+- `tests/` verifies data preparation, evaluation, and routing behaviour.
 
 Raw data, virtual environments, caches and generated model files are not committed.

@@ -73,13 +73,20 @@ def evaluate_baselines(
     validation_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """Evaluate the initial duration baselines on a validation split."""
-    actual = validation_data[TARGET_COLUMN]
     prediction_sets = {
         "training_median": training_median_predictions(train_data, validation_data),
         "fixed_30_kmh": fixed_speed_predictions(validation_data),
         "linear_regression": linear_regression_predictions(train_data, validation_data),
     }
 
+    return evaluate_prediction_sets(validation_data[TARGET_COLUMN], prediction_sets)
+
+
+def evaluate_prediction_sets(
+    actual: pd.Series,
+    prediction_sets: dict[str, np.ndarray],
+) -> pd.DataFrame:
+    """Calculate the same metrics for named prediction arrays."""
     return pd.DataFrame.from_dict(
         {
             name: regression_metrics(actual, predictions)
