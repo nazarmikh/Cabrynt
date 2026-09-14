@@ -270,6 +270,24 @@ The locked 4,999-trip confirmation cohort was evaluated once after all model, pa
 
 The route-speed variant improved MAE by only `0.007` minutes against the tuned residual baseline, and its paired 95% interval (`-0.017` to `0.004`) includes zero. The final model therefore keeps the simpler 23-feature OSRM-aware input contract and the tuned residual parameters: absolute-error loss, `0.06` learning rate, 200 iterations, and 63 leaves. It improves direct OSRM by `2.105` MAE minutes and the full route-free model by `0.361` minutes on this final cohort.
 
+## Training-Data Learning Curve
+
+Before routing a substantially larger training cohort, the selected model is evaluated on fixed nested 25,000-, 50,000-, and 100,000-row samples. Each sample is drawn deterministically from the training part of both existing expanding chronological folds; every validation row is later than every training row. The locked test and confirmation cohorts are not read.
+
+```powershell
+python scripts/evaluate_learning_curve.py --run
+```
+
+The result is written locally to `artifacts/osrm/learning-curve-metrics.json`. The experiment answers whether the observed gains are still material as route-ready training data grows. It does not select another model or reuse the confirmation cohort.
+
+| Training rows | Mean chronological MAE (minutes) | Worst-fold MAE (minutes) |
+| ---: | ---: | ---: |
+| 25,000 | 3.556 | 3.594 |
+| 50,000 | 3.529 | 3.569 |
+| 100,000 | 3.502 | 3.544 |
+
+Accuracy continues to improve over the sampled range: the 100,000-row model reduces mean MAE by `0.053` minutes versus 25,000 rows. The earlier full-fold result, using 119,987 rows in the early fold and 159,999 in the late fold, reached `3.486` mean MAE. The remaining gain is small, so routing the approximately 849,000 non-routed cleaned trips is deferred until a future product need justifies the processing cost.
+
 ## Local OSRM Baseline
 
 OSRM is run locally so the project does not send thousands of routing requests to a public demo service. It estimates a driving route using the Portugal OpenStreetMap road network.
