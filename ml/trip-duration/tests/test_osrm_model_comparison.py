@@ -1,7 +1,10 @@
 import pandas as pd
 import pytest
 
-from cabrynt_trip_duration.route_features import attach_route_estimates
+from cabrynt_trip_duration.route_features import (
+    add_derived_route_features,
+    attach_route_estimates,
+)
 
 
 def test_routable_cohort_keeps_only_osrm_estimated_validation_rows() -> None:
@@ -51,3 +54,34 @@ def test_routable_cohort_rejects_unknown_or_duplicate_route_ids() -> None:
         attach_route_estimates(validation_data, unknown_route)
     with pytest.raises(ValueError, match="duplicate"):
         attach_route_estimates(validation_data, duplicate_route)
+
+
+def test_derived_route_features_use_osrm_and_endpoint_distance() -> None:
+    route_data = pd.DataFrame(
+        {
+            "straight_line_km": [2.0, 0.0],
+            "osrm_distance_km": [3.0, 1.0],
+            "osrm_duration_minutes": [6.0, 2.0],
+        }
+    )
+
+    enriched = add_derived_route_features(route_data)
+
+    assert enriched["osrm_average_speed_kmh"].tolist() == [30.0, 30.0]
+    assert enriched["osrm_distance_gap_km"].tolist() == [1.0, 1.0]
+    assert enriched.loc[0, "osrm_detour_ratio"] == 1.5
+    assert pd.isna(enriched.loc[1, "osrm_detour_ratio"])
+
+
+def test_derived_route_features_keep_zero_duration_speed_missing() -> None:
+    route_data = pd.DataFrame(
+        {
+            "straight_line_km": [0.0],
+            "osrm_distance_km": [0.0],
+            "osrm_duration_minutes": [0.0],
+        }
+    )
+
+    enriched = add_derived_route_features(route_data)
+
+    assert pd.isna(enriched.loc[0, "osrm_average_speed_kmh"])

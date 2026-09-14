@@ -5,6 +5,8 @@ import pytest
 from scripts.evaluate_enriched_models import _experiment_metadata, _prediction_sets
 from cabrynt_trip_duration.modeling import (
     CALENDAR_WEATHER_FEATURE_COLUMNS,
+    FINAL_RESIDUAL_FEATURE_COLUMNS,
+    FINAL_RESIDUAL_PARAMETERS,
     FULL_ENRICHED_FEATURE_COLUMNS,
     OSRM_AWARE_FEATURE_COLUMNS,
     enriched_linear_regression_predictions,
@@ -52,6 +54,11 @@ def test_warm_start_model_requires_available_validation_profiles() -> None:
 def test_full_feature_set_contains_calendar_weather_and_profiles() -> None:
     assert set(CALENDAR_WEATHER_FEATURE_COLUMNS) < set(FULL_ENRICHED_FEATURE_COLUMNS)
     assert "historical_pickup_duration_minutes" in FULL_ENRICHED_FEATURE_COLUMNS
+
+
+def test_final_residual_contract_uses_tuned_osrm_aware_model() -> None:
+    assert FINAL_RESIDUAL_FEATURE_COLUMNS == OSRM_AWARE_FEATURE_COLUMNS
+    assert FINAL_RESIDUAL_PARAMETERS["loss"] == "absolute_error"
 
 
 def test_osrm_residual_model_returns_non_negative_predictions() -> None:

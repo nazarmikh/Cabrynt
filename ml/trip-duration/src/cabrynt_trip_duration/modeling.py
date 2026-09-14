@@ -14,7 +14,10 @@ from cabrynt_trip_duration.enrichment import (
     ENRICHED_FEATURE_COLUMNS,
 )
 from cabrynt_trip_duration.evaluation import BASE_FEATURE_COLUMNS, TARGET_COLUMN
-from cabrynt_trip_duration.route_features import OSRM_FEATURE_COLUMNS
+from cabrynt_trip_duration.route_features import (
+    DERIVED_ROUTE_FEATURE_COLUMNS,
+    OSRM_FEATURE_COLUMNS,
+)
 from cabrynt_trip_duration.weather import WEATHER_FEATURE_COLUMNS
 
 CALENDAR_WEATHER_FEATURE_COLUMNS = [
@@ -24,6 +27,8 @@ CALENDAR_WEATHER_FEATURE_COLUMNS = [
 ]
 FULL_ENRICHED_FEATURE_COLUMNS = [*BASE_FEATURE_COLUMNS, *ENRICHED_FEATURE_COLUMNS]
 OSRM_AWARE_FEATURE_COLUMNS = [*CALENDAR_WEATHER_FEATURE_COLUMNS, *OSRM_FEATURE_COLUMNS]
+ROUTE_ENHANCED_FEATURE_COLUMNS = [*OSRM_AWARE_FEATURE_COLUMNS, *DERIVED_ROUTE_FEATURE_COLUMNS]
+SELECTED_ROUTE_FEATURE_COLUMNS = [*OSRM_AWARE_FEATURE_COLUMNS, "osrm_average_speed_kmh"]
 GRADIENT_BOOSTING_PARAMETERS = {
     "loss": "squared_error",
     "learning_rate": 0.08,
@@ -40,6 +45,8 @@ TUNED_RESIDUAL_PARAMETERS = {
     "max_iter": 200,
     "max_leaf_nodes": 63,
 }
+FINAL_RESIDUAL_FEATURE_COLUMNS = OSRM_AWARE_FEATURE_COLUMNS
+FINAL_RESIDUAL_PARAMETERS = TUNED_RESIDUAL_PARAMETERS
 
 
 def enriched_linear_regression_predictions(
@@ -72,14 +79,16 @@ def osrm_residual_gradient_boosting_predictions(
     train_data: pd.DataFrame,
     validation_data: pd.DataFrame,
     model_parameters: dict[str, object] | None = None,
+    feature_columns: list[str] | None = None,
 ) -> np.ndarray:
     """Learn a non-linear correction to direct OSRM duration estimates."""
-    _validate_model_input(train_data, validation_data, OSRM_AWARE_FEATURE_COLUMNS)
+    selected_features = feature_columns or OSRM_AWARE_FEATURE_COLUMNS
+    _validate_model_input(train_data, validation_data, selected_features)
 
     model = HistGradientBoostingRegressor(**_gradient_boosting_parameters(model_parameters))
     residual_target = train_data[TARGET_COLUMN] - train_data["osrm_duration_minutes"]
-    model.fit(train_data[OSRM_AWARE_FEATURE_COLUMNS], residual_target)
-    corrections = model.predict(validation_data[OSRM_AWARE_FEATURE_COLUMNS])
+    model.fit(train_data[selected_features], residual_target)
+    corrections = model.predict(validation_data[selected_features])
     return _non_negative_predictions(
         validation_data["osrm_duration_minutes"].to_numpy(dtype=float) + corrections
     )

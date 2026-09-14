@@ -210,7 +210,7 @@ A second deterministic 5,000-trip cohort is reserved for final confirmation afte
 python scripts/build_osrm_confirmation_cohort.py
 ```
 
-The builder reads only `trip_id` and route coordinates from `test.parquet`, not `duration_minutes`. It writes ignored route estimates and metadata, refuses to overwrite them, and must not be followed by a metric evaluation until the tuning workflow has selected one final configuration.
+The builder reads only `trip_id` and route coordinates from `test.parquet`, not `duration_minutes`. It writes ignored route estimates and metadata, refuses to overwrite them, and was evaluated only after the development workflow selected a final configuration.
 
 ## Chronological Parameter Tuning
 
@@ -243,6 +243,32 @@ python scripts/benchmark_lightgbm_residual.py --run
 | LightGBM | 3.532 | 3.440 |
 
 The observed differences are negligible. LightGBM minus HistGradientBoosting MAE is `0.002` in the early fold (95% CI `-0.002` to `0.006`) and `-0.003` in the late fold (95% CI `-0.007` to `0.001`). Since neither interval establishes an improvement, the tuned scikit-learn model remains selected and LightGBM is not tuned further.
+
+## Route Feature Ablation
+
+Three route features were derived without new data: OSRM average route speed, OSRM distance minus straight-line distance, and OSRM distance divided by straight-line distance. They use only OSRM output and request coordinates, so they are available at quote time.
+
+| Feature configuration | Mean chronological MAE |
+| --- | ---: |
+| Tuned residual baseline | 3.486 |
+| Route geometry features | 3.482 |
+| Route speed | **3.480** |
+| All derived route features | 3.483 |
+
+Route speed was the development-fold winner, improving MAE by `0.005` minutes early and `0.007` minutes late. The small but negative paired intervals justified including it in the locked confirmation comparison. Zero-duration OSRM routes have undefined average speed, so that derived value is represented as missing rather than dropping valid trips.
+
+## Final Confirmation Evaluation
+
+The locked 4,999-trip confirmation cohort was evaluated once after all model, parameter, and feature decisions were frozen.
+
+| Model | Confirmation MAE (minutes) | P90 absolute error (minutes) |
+| --- | ---: | ---: |
+| Direct OSRM | 5.488 | 10.817 |
+| Full calendar/weather gradient boosting | 3.744 | 7.051 |
+| Tuned OSRM residual gradient boosting | **3.383** | **6.702** |
+| Route-speed residual gradient boosting | 3.377 | 6.602 |
+
+The route-speed variant improved MAE by only `0.007` minutes against the tuned residual baseline, and its paired 95% interval (`-0.017` to `0.004`) includes zero. The final model therefore keeps the simpler 23-feature OSRM-aware input contract and the tuned residual parameters: absolute-error loss, `0.06` learning rate, 200 iterations, and 63 leaves. It improves direct OSRM by `2.105` MAE minutes and the full route-free model by `0.361` minutes on this final cohort.
 
 ## Local OSRM Baseline
 
