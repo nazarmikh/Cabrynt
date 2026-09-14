@@ -1,4 +1,4 @@
-"""Prediction sets for the one-time final route-aware test evaluation."""
+"""Prediction sets for the initial held-out route-aware test evaluation."""
 
 from __future__ import annotations
 
@@ -17,12 +17,12 @@ from cabrynt_trip_duration.modeling import (
 )
 
 
-def final_prediction_sets(
+def initial_prediction_sets(
     enriched_train_data: pd.DataFrame,
     route_train_data: pd.DataFrame,
     route_test_data: pd.DataFrame,
 ) -> dict[str, np.ndarray]:
-    """Evaluate the frozen candidate against fixed baselines on unseen test rows."""
+    """Evaluate the frozen candidate against fixed baselines on held-out test rows."""
     return {
         "training_median": training_median_predictions(enriched_train_data, route_test_data),
         "fixed_30_kmh": fixed_speed_predictions(route_test_data),

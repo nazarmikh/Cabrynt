@@ -199,15 +199,20 @@ def select_route_sample(
     data: pd.DataFrame,
     sample_size: int,
     random_state: int,
+    excluded_trip_ids: set[str] | None = None,
 ) -> pd.DataFrame:
     """Return a stable sample for an affordable local OSRM benchmark."""
     if sample_size <= 0:
         raise ValueError("sample_size must be positive")
-    if sample_size > len(data):
-        raise ValueError("sample_size cannot exceed the available row count")
+
+    eligible_data = data
+    if excluded_trip_ids:
+        eligible_data = data.loc[~data["trip_id"].astype(str).isin(excluded_trip_ids)]
+    if sample_size > len(eligible_data):
+        raise ValueError("sample_size cannot exceed the eligible row count")
 
     return (
-        data.sample(n=sample_size, random_state=random_state)
+        eligible_data.sample(n=sample_size, random_state=random_state)
         .sort_values("trip_id", kind="stable")
         .reset_index(drop=True)
     )

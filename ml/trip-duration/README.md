@@ -178,17 +178,17 @@ The script creates two expanding folds from the route-ready training cohort: an 
 
 The residual improvement is stable in both chronological folds. Together with its lower MAE on the fixed OSRM validation cohort, this justifies freezing the residual approach and evaluating it once on unseen test data.
 
-## Final Test Evaluation
+## Initial Held-Out Test Evaluation
 
 The final evaluation uses a deterministic 5,000-trip sample from the reserved chronological test split, with seed `44`. The sample was routed once with local OSRM; all 5,000 trips were routable. It remains a Porto-specific test cohort, not a claim about every city or taxi provider.
 
 ```powershell
 docker compose -f compose.osrm.yaml up -d
-python scripts/build_osrm_test_cohort.py
-python scripts/evaluate_final_test.py
+python scripts/build_osrm_initial_test_cohort.py
+python scripts/evaluate_initial_test.py
 ```
 
-`build_osrm_test_cohort.py` refuses to overwrite its output. The evaluation script trains the previously frozen configurations only: no feature changes, hyperparameter tuning, or model selection occurs after seeing these results.
+`build_osrm_initial_test_cohort.py` refuses to overwrite its output. This benchmark was produced before further tuning was planned, so it must not be reused to select parameters or features.
 
 | Model | Test cohort MAE (minutes) | Test cohort P90 absolute error (minutes) |
 | --- | ---: | ---: |
@@ -200,7 +200,17 @@ python scripts/evaluate_final_test.py
 | Route-cohort calendar/weather gradient boosting | 3.752 | 7.016 |
 | OSRM residual gradient boosting | **3.665** | **6.964** |
 
-The OSRM residual model improves the full-data calendar/weather model by `0.053` MAE minutes. A paired bootstrap interval for residual minus full calendar/weather MAE is `-0.090` to `-0.014`, supporting a small but consistent improvement on this fixed unseen cohort. Direct OSRM remains best for trips under five minutes, so a hybrid short-trip rule is a possible future experiment, not part of the selected model.
+The OSRM residual model improves the full-data calendar/weather model by `0.053` MAE minutes. A paired bootstrap interval for residual minus full calendar/weather MAE is `-0.090` to `-0.014`, supporting a small but consistent improvement on this fixed unseen cohort. Direct OSRM remains best for trips under five minutes, so a hybrid short-trip rule is a possible future experiment, not part of the current model. A separate locked confirmation cohort is reserved for final evaluation after tuning.
+
+## Locked Confirmation Cohort
+
+A second deterministic 5,000-trip cohort is reserved for final confirmation after chronological tuning and model selection. It uses seed `45`, excludes every trip ID from the initial held-out cohort, and contains 4,999 routable trips; one sampled trip returned OSRM `NoRoute`.
+
+```powershell
+python scripts/build_osrm_confirmation_cohort.py
+```
+
+The builder reads only `trip_id` and route coordinates from `test.parquet`, not `duration_minutes`. It writes ignored route estimates and metadata, refuses to overwrite them, and must not be followed by a metric evaluation until the tuning workflow has selected one final configuration.
 
 ## Local OSRM Baseline
 
@@ -239,7 +249,8 @@ The first implementation:
 - compares fixed enriched linear and gradient-boosting models on validation data;
 - prepares a deterministic local-OSRM training cohort for route-aware modeling;
 - adds a local OSRM road-routing benchmark on a fixed validation sample;
-- evaluates the frozen route-aware candidate once on a separate fixed test cohort;
+- evaluates the frozen route-aware candidate on an initial held-out cohort;
+- locks a disjoint confirmation cohort for the later final evaluation;
 - examines where validation errors are largest.
 
 The builder removes duplicate trip IDs while keeping the first occurrence. The official challenge holdout remains unused; the project test split is used only through the fixed final 5,000-row cohort documented above.

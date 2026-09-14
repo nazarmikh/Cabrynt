@@ -1,4 +1,4 @@
-"""Evaluate the frozen route-aware candidate once on the untouched test cohort."""
+"""Evaluate the frozen route-aware candidate on the initial held-out test cohort."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from cabrynt_trip_duration.evaluation import (
     duration_segment_metrics,
     evaluate_prediction_sets,
 )
-from cabrynt_trip_duration.final_evaluation import final_prediction_sets
+from cabrynt_trip_duration.initial_evaluation import initial_prediction_sets
 from cabrynt_trip_duration.route_features import attach_route_estimates
 from cabrynt_trip_duration.weather import add_weather_features
 
@@ -24,13 +24,13 @@ ENRICHED_DIRECTORY = PROJECT_ROOT / "artifacts" / "enriched-data"
 OSRM_DIRECTORY = PROJECT_ROOT / "artifacts" / "osrm"
 WEATHER_PATH = PROJECT_ROOT / "data" / "weather" / "porto-hourly.parquet"
 TRAINING_ROUTE_ESTIMATES_PATH = OSRM_DIRECTORY / "training-route-estimates.parquet"
-TEST_ROUTE_ESTIMATES_PATH = OSRM_DIRECTORY / "test-route-estimates.parquet"
-RESULT_PATH = OSRM_DIRECTORY / "final-test-metrics.json"
+TEST_ROUTE_ESTIMATES_PATH = OSRM_DIRECTORY / "initial-test-route-estimates.parquet"
+RESULT_PATH = OSRM_DIRECTORY / "initial-test-metrics.json"
 
 
 def main() -> None:
     enriched_train_data, route_train_data, route_test_data = _load_evaluation_data()
-    predictions = final_prediction_sets(
+    predictions = initial_prediction_sets(
         enriched_train_data,
         route_train_data,
         route_test_data,
@@ -42,7 +42,7 @@ def main() -> None:
     RESULT_PATH.write_text(
         json.dumps(
             {
-                "evaluation": "final_untouched_test_cohort",
+                "evaluation": "initial_held_out_test_cohort",
                 "full_training_rows": len(enriched_train_data),
                 "route_aware_training_rows": len(route_train_data),
                 "routable_test_cohort_rows": len(route_test_data),
@@ -55,7 +55,7 @@ def main() -> None:
         encoding="utf-8",
     )
 
-    print("Final unseen test cohort metrics (minutes)")
+    print("Initial held-out test cohort metrics (minutes)")
     print(metrics.to_string())
     print("\nResidual-model MAE differences (95% bootstrap CI)")
     for name, comparison in candidate_comparisons.items():

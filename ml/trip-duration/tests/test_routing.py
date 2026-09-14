@@ -109,8 +109,26 @@ def test_select_route_sample_is_stable_and_ordered() -> None:
 def test_select_route_sample_rejects_an_invalid_size() -> None:
     validation_data = pd.DataFrame({"trip_id": ["trip-a"]})
 
-    with pytest.raises(ValueError, match="cannot exceed"):
+    with pytest.raises(ValueError, match="eligible"):
         select_route_sample(validation_data, sample_size=2, random_state=42)
+
+
+def test_select_route_sample_excludes_existing_trip_ids() -> None:
+    test_data = pd.DataFrame(
+        {
+            "trip_id": ["trip-a", "trip-b", "trip-c", "trip-d"],
+            "duration_minutes": [1.0, 2.0, 3.0, 4.0],
+        }
+    )
+
+    sample = select_route_sample(
+        test_data,
+        sample_size=2,
+        random_state=45,
+        excluded_trip_ids={"trip-a", "trip-c"},
+    )
+
+    assert set(sample["trip_id"]) == {"trip-b", "trip-d"}
 
 
 def test_fetch_route_estimates_reuses_cached_routes(

@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
 
-from cabrynt_trip_duration.final_evaluation import final_prediction_sets
+from cabrynt_trip_duration.initial_evaluation import initial_prediction_sets
 
 
-def test_final_evaluation_includes_frozen_candidate_and_baselines() -> None:
+def test_initial_evaluation_includes_frozen_candidate_and_baselines() -> None:
     train_data = _sample_data(60)
     route_train_data = train_data.assign(
         osrm_distance_km=lambda data: data["straight_line_km"] * 1.2,
@@ -15,7 +15,7 @@ def test_final_evaluation_includes_frozen_candidate_and_baselines() -> None:
         osrm_duration_minutes=lambda data: data["duration_minutes"] - 0.5,
     )
 
-    predictions = final_prediction_sets(train_data, route_train_data, route_test_data)
+    predictions = initial_prediction_sets(train_data, route_train_data, route_test_data)
 
     assert set(predictions) == {
         "training_median",
