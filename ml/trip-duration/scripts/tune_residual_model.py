@@ -13,7 +13,10 @@ from cabrynt_trip_duration.backtesting import (
     two_fold_expanding_backtest,
 )
 from cabrynt_trip_duration.evaluation import TARGET_COLUMN, regression_metrics
-from cabrynt_trip_duration.modeling import osrm_residual_gradient_boosting_predictions
+from cabrynt_trip_duration.modeling import (
+    TUNED_RESIDUAL_PARAMETERS,
+    osrm_residual_gradient_boosting_predictions,
+)
 from cabrynt_trip_duration.route_features import attach_route_estimates
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -51,12 +54,7 @@ TUNING_CONFIGURATIONS: tuple[tuple[str, dict[str, object]], ...] = (
     ("absolute_error", {"loss": "absolute_error", "learning_rate": 0.06, "max_iter": 200}),
     (
         "absolute_error_more_leaves",
-        {
-            "loss": "absolute_error",
-            "learning_rate": 0.06,
-            "max_iter": 200,
-            "max_leaf_nodes": 63,
-        },
+        TUNED_RESIDUAL_PARAMETERS,
     ),
     (
         "absolute_error_regularized",

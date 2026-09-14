@@ -229,6 +229,21 @@ The fixed 12-configuration search varies loss, learning rate, iterations, tree l
 
 The selected configuration uses `loss="absolute_error"`, `learning_rate=0.06`, `max_iter=200`, and `max_leaf_nodes=63`; its remaining parameters stay at the existing fixed values. Its MAE improvement over the previous residual baseline is `0.292` minutes in the early fold and `0.341` minutes in the late fold. Both paired 95% bootstrap intervals remain below zero. This is a development result only: the confirmation cohort has not been evaluated.
 
+## LightGBM Benchmark
+
+One fixed LightGBM residual model was compared with the tuned `HistGradientBoostingRegressor` using the same OSRM-residual target, quote-time features, and chronological folds.
+
+```powershell
+python scripts/benchmark_lightgbm_residual.py --run
+```
+
+| Model | Early MAE | Late MAE |
+| --- | ---: | ---: |
+| Tuned HistGradientBoosting | 3.530 | 3.443 |
+| LightGBM | 3.532 | 3.440 |
+
+The observed differences are negligible. LightGBM minus HistGradientBoosting MAE is `0.002` in the early fold (95% CI `-0.002` to `0.006`) and `-0.003` in the late fold (95% CI `-0.007` to `0.001`). Since neither interval establishes an improvement, the tuned scikit-learn model remains selected and LightGBM is not tuned further.
+
 ## Local OSRM Baseline
 
 OSRM is run locally so the project does not send thousands of routing requests to a public demo service. It estimates a driving route using the Portugal OpenStreetMap road network.

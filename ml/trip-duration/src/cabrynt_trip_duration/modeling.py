@@ -34,6 +34,12 @@ GRADIENT_BOOSTING_PARAMETERS = {
     "early_stopping": False,
     "random_state": 42,
 }
+TUNED_RESIDUAL_PARAMETERS = {
+    "loss": "absolute_error",
+    "learning_rate": 0.06,
+    "max_iter": 200,
+    "max_leaf_nodes": 63,
+}
 
 
 def enriched_linear_regression_predictions(
