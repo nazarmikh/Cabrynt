@@ -17,10 +17,8 @@ from cabrynt_trip_duration.evaluation import (
     training_median_predictions,
 )
 from cabrynt_trip_duration.routing import (
-    OsrmClient,
-    OsrmNoRouteError,
-    RouteCache,
-    select_validation_sample,
+    fetch_route_estimates,
+    select_route_sample,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -57,14 +55,18 @@ def main() -> None:
     train_data = pd.read_parquet(train_path)
     validation_columns = ["trip_id", TARGET_COLUMN, *QUOTE_TIME_FEATURES]
     validation_data = pd.read_parquet(validation_path, columns=validation_columns)
-    sample = select_validation_sample(
+    sample = select_route_sample(
         validation_data,
         sample_size=arguments.sample_size,
         random_state=arguments.sample_seed,
     )
 
     OSRM_DIRECTORY.mkdir(parents=True, exist_ok=True)
-    route_estimates, no_route_trip_ids = fetch_osrm_estimates(sample, arguments.base_url)
+    route_estimates, no_route_trip_ids = fetch_route_estimates(
+        sample,
+        cache_path=ROUTE_CACHE_PATH,
+        base_url=arguments.base_url,
+    )
     route_estimates.to_parquet(ROUTE_ESTIMATES_PATH, index=False)
 
     predictions = {
@@ -100,46 +102,6 @@ def main() -> None:
     )
     print(f"\nWrote route estimates to {ROUTE_ESTIMATES_PATH}")
     print(f"Wrote metrics to {METRICS_PATH}")
-
-
-def fetch_osrm_estimates(
-    sample: pd.DataFrame,
-    base_url: str,
-) -> tuple[pd.DataFrame, list[str]]:
-    """Return the routable sample rows and explicitly record OSRM no-route cases."""
-    client = OsrmClient(base_url=base_url)
-    routed_rows: list[dict[str, object]] = []
-    no_route_trip_ids: list[str] = []
-
-    with RouteCache(ROUTE_CACHE_PATH) as cache:
-        for index, row in sample.iterrows():
-            coordinates = (
-                row["pickup_longitude"],
-                row["pickup_latitude"],
-                row["destination_longitude"],
-                row["destination_latitude"],
-            )
-            estimate = cache.get(*coordinates)
-            if estimate is None:
-                try:
-                    estimate = client.route(*coordinates)
-                except OsrmNoRouteError:
-                    no_route_trip_ids.append(str(row["trip_id"]))
-                    continue
-                cache.put(*coordinates, estimate)
-
-            routed_row = row.to_dict()
-            routed_row["osrm_distance_km"] = estimate.distance_km
-            routed_row["osrm_duration_minutes"] = estimate.duration_minutes
-            routed_rows.append(routed_row)
-
-            if (index + 1) % 500 == 0:
-                print(f"Processed {index + 1}/{len(sample)} validation trips")
-
-    if not routed_rows:
-        raise RuntimeError("OSRM did not return a route for any sampled trip.")
-
-    return pd.DataFrame(routed_rows), no_route_trip_ids
 
 
 if __name__ == "__main__":

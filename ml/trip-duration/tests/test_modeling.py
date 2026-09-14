@@ -6,8 +6,10 @@ from scripts.evaluate_enriched_models import _experiment_metadata, _prediction_s
 from cabrynt_trip_duration.modeling import (
     CALENDAR_WEATHER_FEATURE_COLUMNS,
     FULL_ENRICHED_FEATURE_COLUMNS,
+    OSRM_AWARE_FEATURE_COLUMNS,
     enriched_linear_regression_predictions,
     gradient_boosting_predictions,
+    osrm_residual_gradient_boosting_predictions,
     warm_start_gradient_boosting_predictions,
 )
 
@@ -50,6 +52,23 @@ def test_warm_start_model_requires_available_validation_profiles() -> None:
 def test_full_feature_set_contains_calendar_weather_and_profiles() -> None:
     assert set(CALENDAR_WEATHER_FEATURE_COLUMNS) < set(FULL_ENRICHED_FEATURE_COLUMNS)
     assert "historical_pickup_duration_minutes" in FULL_ENRICHED_FEATURE_COLUMNS
+
+
+def test_osrm_residual_model_returns_non_negative_predictions() -> None:
+    train_data = _sample_data(60).assign(
+        osrm_distance_km=lambda data: data["straight_line_km"] * 1.2,
+        osrm_duration_minutes=lambda data: data["duration_minutes"] - 0.5,
+    )
+    validation_data = _sample_data(6).assign(
+        osrm_distance_km=lambda data: data["straight_line_km"] * 1.2,
+        osrm_duration_minutes=lambda data: data["duration_minutes"] - 0.5,
+    )
+
+    predictions = osrm_residual_gradient_boosting_predictions(train_data, validation_data)
+
+    assert len(predictions) == len(validation_data)
+    assert (predictions >= 0).all()
+    assert "osrm_duration_minutes" in OSRM_AWARE_FEATURE_COLUMNS
 
 
 def test_evaluation_script_builds_predictions_and_metadata() -> None:

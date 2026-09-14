@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from scripts.compare_model_with_osrm import _build_routable_cohort
+from cabrynt_trip_duration.route_features import attach_route_estimates
 
 
 def test_routable_cohort_keeps_only_osrm_estimated_validation_rows() -> None:
@@ -19,7 +19,7 @@ def test_routable_cohort_keeps_only_osrm_estimated_validation_rows() -> None:
         }
     )
 
-    cohort = _build_routable_cohort(validation_data, route_estimates)
+    cohort = attach_route_estimates(validation_data, route_estimates)
 
     assert cohort["trip_id"].tolist() == ["trip-1", "trip-3"]
     assert cohort["osrm_duration_minutes"].tolist() == [4.0, 8.0]
@@ -48,6 +48,6 @@ def test_routable_cohort_rejects_unknown_or_duplicate_route_ids() -> None:
     )
 
     with pytest.raises(ValueError, match="do not belong"):
-        _build_routable_cohort(validation_data, unknown_route)
+        attach_route_estimates(validation_data, unknown_route)
     with pytest.raises(ValueError, match="duplicate"):
-        _build_routable_cohort(validation_data, duplicate_route)
+        attach_route_estimates(validation_data, duplicate_route)

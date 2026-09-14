@@ -14,6 +14,7 @@ from cabrynt_trip_duration.enrichment import (
     ENRICHED_FEATURE_COLUMNS,
 )
 from cabrynt_trip_duration.evaluation import BASE_FEATURE_COLUMNS, TARGET_COLUMN
+from cabrynt_trip_duration.route_features import OSRM_FEATURE_COLUMNS
 from cabrynt_trip_duration.weather import WEATHER_FEATURE_COLUMNS
 
 CALENDAR_WEATHER_FEATURE_COLUMNS = [
@@ -22,6 +23,7 @@ CALENDAR_WEATHER_FEATURE_COLUMNS = [
     *WEATHER_FEATURE_COLUMNS,
 ]
 FULL_ENRICHED_FEATURE_COLUMNS = [*BASE_FEATURE_COLUMNS, *ENRICHED_FEATURE_COLUMNS]
+OSRM_AWARE_FEATURE_COLUMNS = [*CALENDAR_WEATHER_FEATURE_COLUMNS, *OSRM_FEATURE_COLUMNS]
 GRADIENT_BOOSTING_PARAMETERS = {
     "learning_rate": 0.08,
     "max_iter": 150,
@@ -56,6 +58,22 @@ def gradient_boosting_predictions(
     model = HistGradientBoostingRegressor(**GRADIENT_BOOSTING_PARAMETERS)
     model.fit(train_data[feature_columns], train_data[TARGET_COLUMN])
     return _non_negative_predictions(model.predict(validation_data[feature_columns]))
+
+
+def osrm_residual_gradient_boosting_predictions(
+    train_data: pd.DataFrame,
+    validation_data: pd.DataFrame,
+) -> np.ndarray:
+    """Learn a non-linear correction to direct OSRM duration estimates."""
+    _validate_model_input(train_data, validation_data, OSRM_AWARE_FEATURE_COLUMNS)
+
+    model = HistGradientBoostingRegressor(**GRADIENT_BOOSTING_PARAMETERS)
+    residual_target = train_data[TARGET_COLUMN] - train_data["osrm_duration_minutes"]
+    model.fit(train_data[OSRM_AWARE_FEATURE_COLUMNS], residual_target)
+    corrections = model.predict(validation_data[OSRM_AWARE_FEATURE_COLUMNS])
+    return _non_negative_predictions(
+        validation_data["osrm_duration_minutes"].to_numpy(dtype=float) + corrections
+    )
 
 
 def warm_start_gradient_boosting_predictions(

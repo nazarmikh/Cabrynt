@@ -10,6 +10,14 @@ from urllib import error, parse, request
 
 import pandas as pd
 
+ROUTE_INPUT_COLUMNS = [
+    "trip_id",
+    "pickup_longitude",
+    "pickup_latitude",
+    "destination_longitude",
+    "destination_latitude",
+]
+
 
 class OsrmRequestError(RuntimeError):
     """Raised when the local OSRM service cannot return a driving route."""
@@ -187,22 +195,67 @@ class OsrmClient:
             raise OsrmRequestError("OSRM response did not contain a valid route estimate.") from exception
 
 
-def select_validation_sample(
-    validation_data: pd.DataFrame,
+def select_route_sample(
+    data: pd.DataFrame,
     sample_size: int,
     random_state: int,
 ) -> pd.DataFrame:
-    """Return a stable validation sample for an affordable OSRM benchmark."""
+    """Return a stable sample for an affordable local OSRM benchmark."""
     if sample_size <= 0:
         raise ValueError("sample_size must be positive")
-    if sample_size > len(validation_data):
-        raise ValueError("sample_size cannot exceed the validation row count")
+    if sample_size > len(data):
+        raise ValueError("sample_size cannot exceed the available row count")
 
     return (
-        validation_data.sample(n=sample_size, random_state=random_state)
+        data.sample(n=sample_size, random_state=random_state)
         .sort_values("trip_id", kind="stable")
         .reset_index(drop=True)
     )
+
+
+def fetch_route_estimates(
+    sample: pd.DataFrame,
+    cache_path: Path,
+    base_url: str,
+) -> tuple[pd.DataFrame, list[str]]:
+    """Route a sample locally, reusing cached estimates and recording no-route IDs."""
+    missing_columns = set(ROUTE_INPUT_COLUMNS) - set(sample)
+    if missing_columns:
+        raise ValueError(f"route sample is missing columns: {sorted(missing_columns)}")
+
+    client = OsrmClient(base_url=base_url)
+    routed_rows: list[dict[str, object]] = []
+    no_route_trip_ids: list[str] = []
+
+    with RouteCache(cache_path) as cache:
+        for index, row in sample.iterrows():
+            coordinates = (
+                row["pickup_longitude"],
+                row["pickup_latitude"],
+                row["destination_longitude"],
+                row["destination_latitude"],
+            )
+            estimate = cache.get(*coordinates)
+            if estimate is None:
+                try:
+                    estimate = client.route(*coordinates)
+                except OsrmNoRouteError:
+                    no_route_trip_ids.append(str(row["trip_id"]))
+                    continue
+                cache.put(*coordinates, estimate)
+
+            routed_row = row.to_dict()
+            routed_row["osrm_distance_km"] = estimate.distance_km
+            routed_row["osrm_duration_minutes"] = estimate.duration_minutes
+            routed_rows.append(routed_row)
+
+            if (index + 1) % 500 == 0:
+                print(f"Processed {index + 1}/{len(sample)} route requests")
+
+    if not routed_rows:
+        raise RuntimeError("OSRM did not return a route for any sampled trip.")
+
+    return pd.DataFrame(routed_rows), no_route_trip_ids
 
 
 def _coordinate_key(

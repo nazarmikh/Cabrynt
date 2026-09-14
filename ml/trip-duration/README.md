@@ -127,7 +127,39 @@ The script reads the enriched training and validation data plus the cached OSRM 
 | Direct OSRM | 5.438 | 11.330 |
 | Calendar/weather gradient boosting | **3.660** | **7.042** |
 
-The selected model beats direct OSRM by 1.778 MAE minutes on the same 4,999 routable validation trips. This is not a claim that OSRM is useless: OSRM has lower MAE for the 610 trips below five minutes, while the model is better for every longer duration group. The reserved test split remains untouched.
+The selected model beats direct OSRM by 1.778 MAE minutes on the same 4,999 routable validation trips. This is not a claim that OSRM is useless: OSRM has lower MAE for the 610 trips lasting up to five minutes, while the model is better for every longer duration group. The reserved test split remains untouched.
+
+## Route-Aware Training Cohort
+
+The next experiment needs OSRM distance and duration during training, not only validation. With local OSRM running, build a deterministic 50,000-row sample from the chronological training split:
+
+```powershell
+docker compose -f compose.osrm.yaml up -d
+python scripts/build_osrm_training_cohort.py
+```
+
+The script stores ignored route estimates and metadata in `artifacts/osrm/`. It reuses `route-cache.sqlite3`, so rerunning with `--force` does not request routes already cached. The cohort contains only `trip_id`, OSRM distance, and OSRM duration; the later model experiment will join those values to the enriched training features.
+
+The 50,000-row sample is for an initial route-aware ablation, not a final claim that a model trained on that subset is better than the full-data candidate. The future comparison will train calendar/weather-only and OSRM-aware models on this same cohort, then evaluate both on the fixed OSRM validation cohort.
+
+## Route-Aware Model Experiment
+
+Evaluate direct and residual OSRM-aware models after the training cohort has been built:
+
+```powershell
+python scripts/evaluate_route_aware_models.py
+```
+
+The script trains every learned model on the same 49,998-route training cohort and evaluates them on the fixed 4,999-trip OSRM validation cohort. It makes no routing requests and writes ignored results to `artifacts/osrm/route-aware-model-metrics.json`.
+
+| Model | Cohort MAE (minutes) | Cohort P90 absolute error (minutes) |
+| --- | ---: | ---: |
+| Direct OSRM | 5.438 | 11.330 |
+| Calendar/weather gradient boosting | 3.777 | 7.356 |
+| OSRM-aware gradient boosting | 3.714 | 7.159 |
+| OSRM residual gradient boosting | **3.690** | **7.073** |
+
+The residual model predicts a correction to OSRM duration, rather than duration from scratch. It improves the same-cohort calendar/weather model, but does not beat the existing full-data calendar/weather candidate (`3.660` MAE). Direct OSRM remains best for trips lasting up to five minutes. The full-data calendar/weather model therefore remains the current candidate.
 
 ## Local OSRM Baseline
 
@@ -164,6 +196,7 @@ The first implementation:
 - audits candidate features for missing values, distribution shifts, and redundancy;
 - evaluates median, fixed-speed, and linear-regression baselines on validation data;
 - compares fixed enriched linear and gradient-boosting models on validation data;
+- prepares a deterministic local-OSRM training cohort for the next route-aware experiment;
 - adds a local OSRM road-routing benchmark on a fixed validation sample;
 - examines where validation errors are largest.
 

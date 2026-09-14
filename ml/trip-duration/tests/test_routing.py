@@ -12,7 +12,8 @@ from cabrynt_trip_duration.routing import (
     OsrmNoRouteError,
     RouteCache,
     RouteEstimate,
-    select_validation_sample,
+    fetch_route_estimates,
+    select_route_sample,
 )
 
 
@@ -90,7 +91,7 @@ def test_route_cache_uses_normalized_coordinate_keys(tmp_path) -> None:
     assert cached == estimate
 
 
-def test_select_validation_sample_is_stable_and_ordered() -> None:
+def test_select_route_sample_is_stable_and_ordered() -> None:
     validation_data = pd.DataFrame(
         {
             "trip_id": ["trip-c", "trip-a", "trip-b", "trip-d"],
@@ -98,15 +99,71 @@ def test_select_validation_sample_is_stable_and_ordered() -> None:
         }
     )
 
-    first = select_validation_sample(validation_data, sample_size=3, random_state=42)
-    second = select_validation_sample(validation_data, sample_size=3, random_state=42)
+    first = select_route_sample(validation_data, sample_size=3, random_state=42)
+    second = select_route_sample(validation_data, sample_size=3, random_state=42)
 
     assert first.equals(second)
     assert first["trip_id"].tolist() == sorted(first["trip_id"])
 
 
-def test_select_validation_sample_rejects_an_invalid_size() -> None:
+def test_select_route_sample_rejects_an_invalid_size() -> None:
     validation_data = pd.DataFrame({"trip_id": ["trip-a"]})
 
     with pytest.raises(ValueError, match="cannot exceed"):
-        select_validation_sample(validation_data, sample_size=2, random_state=42)
+        select_route_sample(validation_data, sample_size=2, random_state=42)
+
+
+def test_fetch_route_estimates_reuses_cached_routes(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    calls: list[tuple[float, float, float, float]] = []
+
+    class FakeOsrmClient:
+        def __init__(self, base_url: str) -> None:
+            assert base_url == "http://example.test"
+
+        def route(
+            self,
+            pickup_longitude: float,
+            pickup_latitude: float,
+            destination_longitude: float,
+            destination_latitude: float,
+        ) -> RouteEstimate:
+            calls.append(
+                (
+                    pickup_longitude,
+                    pickup_latitude,
+                    destination_longitude,
+                    destination_latitude,
+                )
+            )
+            return RouteEstimate(distance_km=2.5, duration_minutes=8.0)
+
+    monkeypatch.setattr("cabrynt_trip_duration.routing.OsrmClient", FakeOsrmClient)
+    sample = pd.DataFrame(
+        {
+            "trip_id": ["trip-1"],
+            "pickup_longitude": [-8.61],
+            "pickup_latitude": [41.15],
+            "destination_longitude": [-8.60],
+            "destination_latitude": [41.16],
+        }
+    )
+
+    first, first_no_routes = fetch_route_estimates(
+        sample,
+        cache_path=tmp_path / "routes.sqlite3",
+        base_url="http://example.test",
+    )
+    second, second_no_routes = fetch_route_estimates(
+        sample,
+        cache_path=tmp_path / "routes.sqlite3",
+        base_url="http://example.test",
+    )
+
+    assert calls == [(-8.61, 41.15, -8.60, 41.16)]
+    assert first["osrm_duration_minutes"].tolist() == [8.0]
+    assert second["osrm_distance_km"].tolist() == [2.5]
+    assert first_no_routes == []
+    assert second_no_routes == []
