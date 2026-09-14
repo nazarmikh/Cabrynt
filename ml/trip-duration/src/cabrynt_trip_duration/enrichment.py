@@ -17,6 +17,8 @@ CALENDAR_FEATURE_COLUMNS = [
     "hour_cos",
     "weekday_sin",
     "weekday_cos",
+    "month_sin",
+    "month_cos",
 ]
 ENRICHED_FEATURE_COLUMNS = [
     *CALENDAR_FEATURE_COLUMNS,

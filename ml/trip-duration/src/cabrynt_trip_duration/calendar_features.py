@@ -37,5 +37,7 @@ def add_calendar_features(data: pd.DataFrame) -> pd.DataFrame:
     result["hour_cos"] = np.cos(2 * np.pi * result["hour"] / 24)
     result["weekday_sin"] = np.sin(2 * np.pi * result["weekday"] / 7)
     result["weekday_cos"] = np.cos(2 * np.pi * result["weekday"] / 7)
+    result["month_sin"] = np.sin(2 * np.pi * result["month"] / 12)
+    result["month_cos"] = np.cos(2 * np.pi * result["month"] / 12)
 
     return result

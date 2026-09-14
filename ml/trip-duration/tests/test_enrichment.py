@@ -39,6 +39,8 @@ def _enriched_data() -> pd.DataFrame:
             "hour_cos": [-0.5],
             "weekday_sin": [0.78],
             "weekday_cos": [0.62],
+            "month_sin": [-0.5],
+            "month_cos": [-0.87],
             "temperature_c": [20.0],
             "precipitation_mm": [0.0],
             "cloud_cover_percent": [25],

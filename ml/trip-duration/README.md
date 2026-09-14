@@ -63,6 +63,18 @@ python scripts/build_enriched_datasets.py
 
 Weather is retrieved from the [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) and cached locally. The enriched build also adds smoothed historical congestion profiles fitted only on earlier training trips. It does not read or transform the reserved test split.
 
+## Feature Audit
+
+Before training a new model, inspect the enriched candidate features with:
+
+```powershell
+python scripts/audit_features.py
+```
+
+The command reads only the enriched training and validation files and writes an ignored JSON report to `artifacts/feature-audit/summary.json`. It checks missing values, constant fields, large train-to-validation mean shifts, and highly correlated feature pairs. It does not fit a model or read the reserved test split.
+
+The latest audit found no constant fields, no missing validation features, and no feature pairs with an absolute correlation of 0.80 or higher. Historical profile fields are missing for the training cold-start rows by design. The chronological split shifts the month distribution in raw and cyclical forms because training ends before validation's April-to-June period. The cyclical encodings still represent December-to-January continuity correctly. No feature is removed automatically: future ablation experiments will decide which fields improve validation performance.
+
 ## Local OSRM Baseline
 
 OSRM is run locally so the project does not send thousands of routing requests to a public demo service. It estimates a driving route using the Portugal OpenStreetMap road network.
@@ -95,6 +107,7 @@ The first implementation:
 - builds clean full-data Parquet files and chronological train, validation and test splits;
 - uses Porto-local time for calendar features, with hourly weather and public-holiday enrichment;
 - builds leakage-safe historical congestion profiles for train and validation data;
+- audits candidate features for missing values, distribution shifts, and redundancy;
 - evaluates median, fixed-speed, and linear-regression baselines on validation data;
 - adds a local OSRM road-routing benchmark on a fixed validation sample;
 - examines where validation errors are largest.
@@ -138,7 +151,7 @@ Direct OSRM is weaker than the simple linear model on this historical dataset. I
 
 - `notebooks/` contains exploration and early experiments.
 - `scripts/` contains full-data preparation and evaluation tools.
-- `src/` contains reusable data, evaluation, and routing code.
+- `src/` contains reusable data preparation, enrichment, audit, evaluation, and routing code.
 - `tests/` verifies data preparation, evaluation, and routing behaviour.
 
 Raw data, virtual environments, caches and generated model files are not committed.

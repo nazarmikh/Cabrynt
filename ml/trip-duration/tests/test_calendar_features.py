@@ -31,3 +31,5 @@ def test_calendar_features_are_cyclical() -> None:
     assert result["hour_cos"].between(-1, 1).all()
     assert result["weekday_sin"].between(-1, 1).all()
     assert result["weekday_cos"].between(-1, 1).all()
+    assert result["month_sin"].between(-1, 1).all()
+    assert result["month_cos"].between(-1, 1).all()
