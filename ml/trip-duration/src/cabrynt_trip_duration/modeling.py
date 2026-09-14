@@ -25,6 +25,7 @@ CALENDAR_WEATHER_FEATURE_COLUMNS = [
 FULL_ENRICHED_FEATURE_COLUMNS = [*BASE_FEATURE_COLUMNS, *ENRICHED_FEATURE_COLUMNS]
 OSRM_AWARE_FEATURE_COLUMNS = [*CALENDAR_WEATHER_FEATURE_COLUMNS, *OSRM_FEATURE_COLUMNS]
 GRADIENT_BOOSTING_PARAMETERS = {
+    "loss": "squared_error",
     "learning_rate": 0.08,
     "max_iter": 150,
     "max_leaf_nodes": 31,
@@ -51,11 +52,12 @@ def gradient_boosting_predictions(
     train_data: pd.DataFrame,
     validation_data: pd.DataFrame,
     feature_columns: list[str],
+    model_parameters: dict[str, object] | None = None,
 ) -> np.ndarray:
-    """Fit a fixed, non-linear tabular model without validation-set tuning."""
+    """Fit a non-linear tabular model and return non-negative predictions."""
     _validate_model_input(train_data, validation_data, feature_columns)
 
-    model = HistGradientBoostingRegressor(**GRADIENT_BOOSTING_PARAMETERS)
+    model = HistGradientBoostingRegressor(**_gradient_boosting_parameters(model_parameters))
     model.fit(train_data[feature_columns], train_data[TARGET_COLUMN])
     return _non_negative_predictions(model.predict(validation_data[feature_columns]))
 
@@ -63,11 +65,12 @@ def gradient_boosting_predictions(
 def osrm_residual_gradient_boosting_predictions(
     train_data: pd.DataFrame,
     validation_data: pd.DataFrame,
+    model_parameters: dict[str, object] | None = None,
 ) -> np.ndarray:
     """Learn a non-linear correction to direct OSRM duration estimates."""
     _validate_model_input(train_data, validation_data, OSRM_AWARE_FEATURE_COLUMNS)
 
-    model = HistGradientBoostingRegressor(**GRADIENT_BOOSTING_PARAMETERS)
+    model = HistGradientBoostingRegressor(**_gradient_boosting_parameters(model_parameters))
     residual_target = train_data[TARGET_COLUMN] - train_data["osrm_duration_minutes"]
     model.fit(train_data[OSRM_AWARE_FEATURE_COLUMNS], residual_target)
     corrections = model.predict(validation_data[OSRM_AWARE_FEATURE_COLUMNS])
@@ -108,6 +111,19 @@ def _validate_model_input(
         missing_columns = required_columns - set(data)
         if missing_columns:
             raise ValueError(f"{name} data is missing columns: {sorted(missing_columns)}")
+
+
+def _gradient_boosting_parameters(
+    model_parameters: dict[str, object] | None,
+) -> dict[str, object]:
+    if model_parameters is None:
+        return GRADIENT_BOOSTING_PARAMETERS
+
+    unknown_parameters = set(model_parameters) - set(GRADIENT_BOOSTING_PARAMETERS)
+    if unknown_parameters:
+        raise ValueError(f"unsupported model parameters: {sorted(unknown_parameters)}")
+
+    return {**GRADIENT_BOOSTING_PARAMETERS, **model_parameters}
 
 
 def _non_negative_predictions(predictions: np.ndarray) -> np.ndarray:

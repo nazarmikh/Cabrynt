@@ -180,7 +180,7 @@ The residual improvement is stable in both chronological folds. Together with it
 
 ## Initial Held-Out Test Evaluation
 
-The final evaluation uses a deterministic 5,000-trip sample from the reserved chronological test split, with seed `44`. The sample was routed once with local OSRM; all 5,000 trips were routable. It remains a Porto-specific test cohort, not a claim about every city or taxi provider.
+The initial held-out evaluation uses a deterministic 5,000-trip sample from the reserved chronological test split, with seed `44`. The sample was routed once with local OSRM; all 5,000 trips were routable. It remains a Porto-specific test cohort, not a claim about every city or taxi provider.
 
 ```powershell
 docker compose -f compose.osrm.yaml up -d
@@ -211,6 +211,23 @@ python scripts/build_osrm_confirmation_cohort.py
 ```
 
 The builder reads only `trip_id` and route coordinates from `test.parquet`, not `duration_minutes`. It writes ignored route estimates and metadata, refuses to overwrite them, and must not be followed by a metric evaluation until the tuning workflow has selected one final configuration.
+
+## Chronological Parameter Tuning
+
+The residual model is tuned only on the 199,994-row route-aware training cohort. It uses the same two expanding chronological folds as the earlier backtest and does not read validation or test data.
+
+```powershell
+python scripts/tune_residual_model.py --run
+```
+
+The fixed 12-configuration search varies loss, learning rate, iterations, tree leaves, minimum leaf size, and L2 regularization. A non-baseline configuration can win only when it does not regress on either chronological fold; the stable winner is then ranked by mean MAE.
+
+| Configuration | Early MAE | Late MAE | Mean MAE |
+| --- | ---: | ---: | ---: |
+| Previous residual baseline | 3.822 | 3.783 | 3.803 |
+| Tuned residual gradient boosting | **3.530** | **3.443** | **3.486** |
+
+The selected configuration uses `loss="absolute_error"`, `learning_rate=0.06`, `max_iter=200`, and `max_leaf_nodes=63`; its remaining parameters stay at the existing fixed values. Its MAE improvement over the previous residual baseline is `0.292` minutes in the early fold and `0.341` minutes in the late fold. Both paired 95% bootstrap intervals remain below zero. This is a development result only: the confirmation cohort has not been evaluated.
 
 ## Local OSRM Baseline
 
