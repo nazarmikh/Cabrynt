@@ -7,15 +7,8 @@ import math
 import pandas as pd
 
 from cabrynt_trip_duration.enrichment import ENRICHED_FEATURE_COLUMNS
+from cabrynt_trip_duration.evaluation import BASE_FEATURE_COLUMNS, TARGET_COLUMN
 
-TARGET_COLUMN = "duration_minutes"
-BASE_FEATURE_COLUMNS = [
-    "pickup_longitude",
-    "pickup_latitude",
-    "destination_longitude",
-    "destination_latitude",
-    "straight_line_km",
-]
 MODEL_FEATURE_COLUMNS = [*BASE_FEATURE_COLUMNS, *ENRICHED_FEATURE_COLUMNS]
 HIGH_CORRELATION_THRESHOLD = 0.80
 LARGE_MEAN_SHIFT_THRESHOLD = 0.50

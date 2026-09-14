@@ -8,12 +8,15 @@ from sklearn.linear_model import LinearRegression
 
 TARGET_COLUMN = "duration_minutes"
 FIXED_SPEED_KMH = 30.0
-QUOTE_TIME_FEATURES = [
+BASE_FEATURE_COLUMNS = [
     "pickup_longitude",
     "pickup_latitude",
     "destination_longitude",
     "destination_latitude",
     "straight_line_km",
+]
+QUOTE_TIME_FEATURES = [
+    *BASE_FEATURE_COLUMNS,
     "hour",
     "weekday",
 ]

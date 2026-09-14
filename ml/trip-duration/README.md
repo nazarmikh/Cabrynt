@@ -75,6 +75,42 @@ The command reads only the enriched training and validation files and writes an 
 
 The latest audit found no constant fields, no missing validation features, and no feature pairs with an absolute correlation of 0.80 or higher. Historical profile fields are missing for the training cold-start rows by design. The chronological split shifts the month distribution in raw and cyclical forms because training ends before validation's April-to-June period. The cyclical encodings still represent December-to-January continuity correctly. No feature is removed automatically: future ablation experiments will decide which fields improve validation performance.
 
+## Selected Feature Contract
+
+The current candidate model predicts trip duration from information available at quote time:
+
+| Group | Inputs |
+| --- | --- |
+| Route endpoints | Pickup and destination longitude/latitude, plus straight-line distance |
+| Calendar | Porto-local hour, weekday, month, weekend flag, Portuguese public-holiday flag, and cyclic hour/weekday/month encodings |
+| Weather | Temperature, precipitation, cloud cover, wind speed, and a precipitation flag |
+
+It does not use completed-trip GPS points, observed travel distance, realised route shape, or actual duration. Those values are known only after a trip and would leak the answer into training.
+
+The experiment also evaluated historical travel-time profile features based only on earlier trips. They did not improve validation MAE, so they are not part of the selected candidate. Historical weather is valid for this offline evaluation; a deployed quote endpoint will need current observations or a forecast provider that supplies the same weather contract.
+
+## First Enriched Model Experiment
+
+Run the first fixed model comparison with:
+
+```powershell
+python scripts/evaluate_enriched_models.py
+```
+
+The script reads only enriched training and validation data. It writes ignored metrics and duration-segment results to `artifacts/model-metrics/enriched-models.json`; it does not train on or read the reserved test split.
+
+The comparison includes the existing baselines, an enriched linear regression, and three fixed `HistGradientBoostingRegressor` configurations. The calendar/weather model intentionally excludes target-derived historical profiles. The full model uses native missing-value handling for cold-start profile fields, while the warm-start model trains only on rows where profiles were available.
+
+| Model | Validation MAE (minutes) |
+| --- | ---: |
+| Linear regression baseline | 4.348 |
+| Enriched linear regression | 4.292 |
+| Calendar/weather gradient boosting | 3.686 |
+| Full enriched gradient boosting | 3.793 |
+| Warm-start gradient boosting | 3.812 |
+
+Calendar/weather gradient boosting is the best initial model. The historical-profile variants do not improve it, so they are not selected for the next experiment. These are validation results, not final test results, and are not directly comparable with the separate 5,000-row OSRM benchmark.
+
 ## Local OSRM Baseline
 
 OSRM is run locally so the project does not send thousands of routing requests to a public demo service. It estimates a driving route using the Portugal OpenStreetMap road network.
@@ -109,6 +145,7 @@ The first implementation:
 - builds leakage-safe historical congestion profiles for train and validation data;
 - audits candidate features for missing values, distribution shifts, and redundancy;
 - evaluates median, fixed-speed, and linear-regression baselines on validation data;
+- compares fixed enriched linear and gradient-boosting models on validation data;
 - adds a local OSRM road-routing benchmark on a fixed validation sample;
 - examines where validation errors are largest.
 
