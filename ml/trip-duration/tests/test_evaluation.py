@@ -4,6 +4,7 @@ import pytest
 
 from cabrynt_trip_duration.evaluation import (
     QUOTE_TIME_FEATURES,
+    duration_segment_metrics,
     evaluate_baselines,
     evaluate_prediction_sets,
     fixed_speed_predictions,
@@ -77,6 +78,17 @@ def test_evaluate_prediction_sets_supports_a_routing_baseline() -> None:
     )
 
     assert results.loc["osrm", "mae_minutes"] == 3.0
+
+
+def test_duration_segment_metrics_groups_errors_by_actual_duration() -> None:
+    results = duration_segment_metrics(
+        pd.Series([4.0, 7.0, 15.0, 25.0, 35.0]),
+        {"model": np.array([3.0, 9.0, 12.0, 30.0, 30.0])},
+    )
+
+    assert results["rows"].tolist() == [1, 1, 1, 1, 1]
+    assert results.loc["0-5", "model_mae_minutes"] == 1.0
+    assert results.loc["30+", "model_mae_minutes"] == 5.0
 
 
 def _sample_data(durations: list[float]) -> pd.DataFrame:

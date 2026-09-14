@@ -5,11 +5,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from cabrynt_trip_duration.evaluation import (
     TARGET_COLUMN,
+    duration_segment_metrics,
     evaluate_prediction_sets,
     fixed_speed_predictions,
     linear_regression_predictions,
@@ -27,8 +27,6 @@ from cabrynt_trip_duration.modeling import (
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIRECTORY = PROJECT_ROOT / "artifacts" / "enriched-data"
 RESULT_PATH = PROJECT_ROOT / "artifacts" / "model-metrics" / "enriched-models.json"
-DURATION_BINS = [0, 5, 10, 20, 30, np.inf]
-DURATION_LABELS = ["0-5", "5-10", "10-20", "20-30", "30+"]
 
 
 def main() -> None:
@@ -38,7 +36,7 @@ def main() -> None:
         validation_data[TARGET_COLUMN],
         prediction_sets,
     ).round(3)
-    segment_metrics = _duration_segment_metrics(
+    segment_metrics = duration_segment_metrics(
         validation_data[TARGET_COLUMN],
         prediction_sets,
     ).round(3)
@@ -150,32 +148,6 @@ def _baseline_prediction_sets(
         "fixed_30_kmh": fixed_speed_predictions(validation_data),
         "linear_regression": linear_regression_predictions(train_data, validation_data),
     }
-
-
-def _duration_segment_metrics(
-    actual: pd.Series,
-    prediction_sets: dict[str, np.ndarray],
-) -> pd.DataFrame:
-    segments = pd.cut(
-        actual,
-        bins=DURATION_BINS,
-        labels=DURATION_LABELS,
-        include_lowest=True,
-    )
-    rows: list[dict[str, float | int | str]] = []
-
-    for segment in DURATION_LABELS:
-        mask = segments.eq(segment).to_numpy()
-        row: dict[str, float | int | str] = {
-            "actual_duration_minutes": segment,
-            "rows": int(mask.sum()),
-        }
-        for name, predictions in prediction_sets.items():
-            errors = np.abs(predictions[mask] - actual.to_numpy(dtype=float)[mask])
-            row[f"{name}_mae_minutes"] = float(errors.mean())
-        rows.append(row)
-
-    return pd.DataFrame(rows).set_index("actual_duration_minutes")
 
 
 if __name__ == "__main__":

@@ -8,6 +8,8 @@ from sklearn.linear_model import LinearRegression
 
 TARGET_COLUMN = "duration_minutes"
 FIXED_SPEED_KMH = 30.0
+DURATION_BINS = [0, 5, 10, 20, 30, np.inf]
+DURATION_LABELS = ["0-5", "5-10", "10-20", "20-30", "30+"]
 BASE_FEATURE_COLUMNS = [
     "pickup_longitude",
     "pickup_latitude",
@@ -97,3 +99,31 @@ def evaluate_prediction_sets(
         },
         orient="index",
     )
+
+
+def duration_segment_metrics(
+    actual: pd.Series,
+    prediction_sets: dict[str, np.ndarray],
+) -> pd.DataFrame:
+    """Calculate MAE for fixed actual-duration groups."""
+    actual_values = actual.to_numpy(dtype=float)
+    segments = pd.cut(
+        actual,
+        bins=DURATION_BINS,
+        labels=DURATION_LABELS,
+        include_lowest=True,
+    )
+    rows: list[dict[str, float | int | str]] = []
+
+    for segment in DURATION_LABELS:
+        mask = segments.eq(segment).to_numpy()
+        row: dict[str, float | int | str] = {
+            "actual_duration_minutes": segment,
+            "rows": int(mask.sum()),
+        }
+        for name, predictions in prediction_sets.items():
+            errors = np.abs(predictions[mask] - actual_values[mask])
+            row[f"{name}_mae_minutes"] = float(errors.mean())
+        rows.append(row)
+
+    return pd.DataFrame(rows).set_index("actual_duration_minutes")

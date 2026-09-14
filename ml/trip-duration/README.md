@@ -111,6 +111,24 @@ The comparison includes the existing baselines, an enriched linear regression, a
 
 Calendar/weather gradient boosting is the best initial model. The historical-profile variants do not improve it, so they are not selected for the next experiment. These are validation results, not final test results, and are not directly comparable with the separate 5,000-row OSRM benchmark.
 
+## OSRM Model Comparison
+
+Compare the selected model against direct OSRM on the exact cached routable cohort:
+
+```powershell
+python scripts/compare_model_with_osrm.py
+```
+
+The script reads the enriched training and validation data plus the cached OSRM route estimates. It does not make routing requests, so Docker is not required once `validation-route-estimates.parquet` exists. To rebuild or extend that route cohort, start local OSRM and run `evaluate_osrm_baseline.py` first.
+
+| Model | Cohort MAE (minutes) | Cohort P90 absolute error (minutes) |
+| --- | ---: | ---: |
+| Linear regression | 4.342 | 7.558 |
+| Direct OSRM | 5.438 | 11.330 |
+| Calendar/weather gradient boosting | **3.660** | **7.042** |
+
+The selected model beats direct OSRM by 1.778 MAE minutes on the same 4,999 routable validation trips. This is not a claim that OSRM is useless: OSRM has lower MAE for the 610 trips below five minutes, while the model is better for every longer duration group. The reserved test split remains untouched.
+
 ## Local OSRM Baseline
 
 OSRM is run locally so the project does not send thousands of routing requests to a public demo service. It estimates a driving route using the Portugal OpenStreetMap road network.
