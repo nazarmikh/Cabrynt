@@ -161,6 +161,23 @@ The script trains every learned model on the same 49,998-route training cohort a
 
 The residual model predicts a correction to OSRM duration, rather than duration from scratch. It improves the same-cohort calendar/weather model, but does not beat the existing full-data calendar/weather candidate (`3.660` MAE). Direct OSRM remains best for trips lasting up to five minutes. The full-data calendar/weather model therefore remains the current candidate.
 
+## Route-Aware Chronological Backtest
+
+Check whether the residual model's improvement is stable across earlier time periods:
+
+```powershell
+python scripts/backtest_route_aware_models.py
+```
+
+The script creates two expanding folds from the route-ready training cohort: an early 60%/20% train-validation split and a later 80%/20% split. It also reports paired bootstrap confidence intervals for residual-model MAE minus route-free-model MAE. No Docker, routing requests, project validation rows, or test rows are used.
+
+| Fold | Calendar/weather MAE | OSRM residual MAE | Residual minus route-free MAE (95% CI) |
+| --- | ---: | ---: | --- |
+| Early | 4.290 | 4.202 | -0.088 (-0.118 to -0.058) |
+| Late | 4.043 | 3.898 | -0.145 (-0.176 to -0.117) |
+
+The residual improvement is stable in both chronological folds. That justifies expanding the OSRM training cohort before deciding whether a route-aware model can beat the full-data calendar/weather candidate.
+
 ## Local OSRM Baseline
 
 OSRM is run locally so the project does not send thousands of routing requests to a public demo service. It estimates a driving route using the Portugal OpenStreetMap road network.
