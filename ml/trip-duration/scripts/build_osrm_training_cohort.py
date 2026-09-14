@@ -20,7 +20,7 @@ OSRM_DIRECTORY = PROJECT_ROOT / "artifacts" / "osrm"
 ROUTE_CACHE_PATH = OSRM_DIRECTORY / "route-cache.sqlite3"
 ROUTE_ESTIMATES_PATH = OSRM_DIRECTORY / "training-route-estimates.parquet"
 METADATA_PATH = OSRM_DIRECTORY / "training-route-metadata.json"
-DEFAULT_SAMPLE_SIZE = 50_000
+DEFAULT_SAMPLE_SIZE = 200_000
 DEFAULT_SAMPLE_SEED = 43
 
 

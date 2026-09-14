@@ -131,7 +131,7 @@ The selected model beats direct OSRM by 1.778 MAE minutes on the same 4,999 rout
 
 ## Route-Aware Training Cohort
 
-The next experiment needs OSRM distance and duration during training, not only validation. With local OSRM running, build a deterministic 50,000-row sample from the chronological training split:
+The route-aware experiment needs OSRM distance and duration during training, not only validation. With local OSRM running, build a deterministic 200,000-row sample from the chronological training split:
 
 ```powershell
 docker compose -f compose.osrm.yaml up -d
@@ -140,7 +140,7 @@ python scripts/build_osrm_training_cohort.py
 
 The script stores ignored route estimates and metadata in `artifacts/osrm/`. It reuses `route-cache.sqlite3`, so rerunning with `--force` does not request routes already cached. The cohort contains only `trip_id`, OSRM distance, and OSRM duration; the later model experiment will join those values to the enriched training features.
 
-The 50,000-row sample is for an initial route-aware ablation, not a final claim that a model trained on that subset is better than the full-data candidate. The future comparison will train calendar/weather-only and OSRM-aware models on this same cohort, then evaluate both on the fixed OSRM validation cohort.
+The current cohort contains 199,994 routable trips; six sampled trips had no OSRM route. It is a deterministic route-aware training subset, not the full 1.05-million-row training split. Every route-aware comparison trains the route-free and OSRM-aware models on exactly this same cohort, then evaluates both on the fixed OSRM validation cohort.
 
 ## Route-Aware Model Experiment
 
@@ -150,16 +150,16 @@ Evaluate direct and residual OSRM-aware models after the training cohort has bee
 python scripts/evaluate_route_aware_models.py
 ```
 
-The script trains every learned model on the same 49,998-route training cohort and evaluates them on the fixed 4,999-trip OSRM validation cohort. It makes no routing requests and writes ignored results to `artifacts/osrm/route-aware-model-metrics.json`.
+The script trains every learned model on the same 199,994-route training cohort and evaluates them on the fixed 4,999-trip OSRM validation cohort. It makes no routing requests and writes ignored results to `artifacts/osrm/route-aware-model-metrics.json`.
 
 | Model | Cohort MAE (minutes) | Cohort P90 absolute error (minutes) |
 | --- | ---: | ---: |
 | Direct OSRM | 5.438 | 11.330 |
-| Calendar/weather gradient boosting | 3.777 | 7.356 |
-| OSRM-aware gradient boosting | 3.714 | 7.159 |
-| OSRM residual gradient boosting | **3.690** | **7.073** |
+| Calendar/weather gradient boosting | 3.687 | 7.148 |
+| OSRM-aware gradient boosting | 3.616 | 7.140 |
+| OSRM residual gradient boosting | **3.607** | **7.024** |
 
-The residual model predicts a correction to OSRM duration, rather than duration from scratch. It improves the same-cohort calendar/weather model, but does not beat the existing full-data calendar/weather candidate (`3.660` MAE). Direct OSRM remains best for trips lasting up to five minutes. The full-data calendar/weather model therefore remains the current candidate.
+The residual model predicts a correction to OSRM duration, rather than duration from scratch. It improves the same-cohort calendar/weather model and the full-data calendar/weather candidate (`3.660` MAE) on the same OSRM validation cohort. It is the provisional candidate for the final unseen test. Direct OSRM remains best for trips lasting up to five minutes.
 
 ## Route-Aware Chronological Backtest
 
@@ -173,10 +173,10 @@ The script creates two expanding folds from the route-ready training cohort: an 
 
 | Fold | Calendar/weather MAE | OSRM residual MAE | Residual minus route-free MAE (95% CI) |
 | --- | ---: | ---: | --- |
-| Early | 4.290 | 4.202 | -0.088 (-0.118 to -0.058) |
-| Late | 4.043 | 3.898 | -0.145 (-0.176 to -0.117) |
+| Early | 3.939 | 3.822 | -0.117 (-0.130 to -0.104) |
+| Late | 3.895 | 3.783 | -0.111 (-0.123 to -0.098) |
 
-The residual improvement is stable in both chronological folds. That justifies expanding the OSRM training cohort before deciding whether a route-aware model can beat the full-data calendar/weather candidate.
+The residual improvement is stable in both chronological folds. Together with its lower MAE on the fixed OSRM validation cohort, this justifies freezing the residual approach and evaluating it once on unseen test data.
 
 ## Local OSRM Baseline
 
