@@ -127,7 +127,7 @@ The script reads the enriched training and validation data plus the cached OSRM 
 | Direct OSRM | 5.438 | 11.330 |
 | Calendar/weather gradient boosting | **3.660** | **7.042** |
 
-The selected model beats direct OSRM by 1.778 MAE minutes on the same 4,999 routable validation trips. This is not a claim that OSRM is useless: OSRM has lower MAE for the 610 trips lasting up to five minutes, while the model is better for every longer duration group. The reserved test split remains untouched.
+The selected model beats direct OSRM by 1.778 MAE minutes on the same 4,999 routable validation trips. This is not a claim that OSRM is useless: OSRM has lower MAE for the 610 trips lasting up to five minutes, while the model is better for every longer duration group. At this validation stage, the test split remained untouched.
 
 ## Route-Aware Training Cohort
 
@@ -178,6 +178,30 @@ The script creates two expanding folds from the route-ready training cohort: an 
 
 The residual improvement is stable in both chronological folds. Together with its lower MAE on the fixed OSRM validation cohort, this justifies freezing the residual approach and evaluating it once on unseen test data.
 
+## Final Test Evaluation
+
+The final evaluation uses a deterministic 5,000-trip sample from the reserved chronological test split, with seed `44`. The sample was routed once with local OSRM; all 5,000 trips were routable. It remains a Porto-specific test cohort, not a claim about every city or taxi provider.
+
+```powershell
+docker compose -f compose.osrm.yaml up -d
+python scripts/build_osrm_test_cohort.py
+python scripts/evaluate_final_test.py
+```
+
+`build_osrm_test_cohort.py` refuses to overwrite its output. The evaluation script trains the previously frozen configurations only: no feature changes, hyperparameter tuning, or model selection occurs after seeing these results.
+
+| Model | Test cohort MAE (minutes) | Test cohort P90 absolute error (minutes) |
+| --- | ---: | ---: |
+| Training median | 5.159 | 9.500 |
+| Fixed 30 km/h | 6.035 | 11.258 |
+| Linear regression | 4.396 | 7.356 |
+| Direct OSRM | 5.483 | 10.674 |
+| Full calendar/weather gradient boosting | 3.718 | 7.051 |
+| Route-cohort calendar/weather gradient boosting | 3.752 | 7.016 |
+| OSRM residual gradient boosting | **3.665** | **6.964** |
+
+The OSRM residual model improves the full-data calendar/weather model by `0.053` MAE minutes. A paired bootstrap interval for residual minus full calendar/weather MAE is `-0.090` to `-0.014`, supporting a small but consistent improvement on this fixed unseen cohort. Direct OSRM remains best for trips under five minutes, so a hybrid short-trip rule is a possible future experiment, not part of the selected model.
+
 ## Local OSRM Baseline
 
 OSRM is run locally so the project does not send thousands of routing requests to a public demo service. It estimates a driving route using the Portugal OpenStreetMap road network.
@@ -213,11 +237,12 @@ The first implementation:
 - audits candidate features for missing values, distribution shifts, and redundancy;
 - evaluates median, fixed-speed, and linear-regression baselines on validation data;
 - compares fixed enriched linear and gradient-boosting models on validation data;
-- prepares a deterministic local-OSRM training cohort for the next route-aware experiment;
+- prepares a deterministic local-OSRM training cohort for route-aware modeling;
 - adds a local OSRM road-routing benchmark on a fixed validation sample;
+- evaluates the frozen route-aware candidate once on a separate fixed test cohort;
 - examines where validation errors are largest.
 
-The builder removes duplicate trip IDs while keeping the first occurrence. The test split and official challenge holdout are reserved for final evaluation.
+The builder removes duplicate trip IDs while keeping the first occurrence. The official challenge holdout remains unused; the project test split is used only through the fixed final 5,000-row cohort documented above.
 
 ## Latest Local Build
 
