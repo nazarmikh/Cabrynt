@@ -30,6 +30,11 @@ services:
       Routing__RequestTimeoutSeconds: ${Routing__RequestTimeoutSeconds:-3}
       TripDurationModel__Enabled: ${TripDurationModel__Enabled:-false}
       TripDurationModel__ModelPath: ${TripDurationModel__ModelPath:-}
+      TripDurationModel__ModelArtifactUrl: ${TripDurationModel__ModelArtifactUrl:-}
+      TripDurationModel__MetadataUrl: ${TripDurationModel__MetadataUrl:-}
+      TripDurationModel__ExpectedVersion: ${TripDurationModel__ExpectedVersion:-1.0.0}
+      TripDurationModel__CacheDirectory: ${TripDurationModel__CacheDirectory:-/app/App_Data/models}
+      TripDurationModel__DownloadTimeoutSeconds: ${TripDurationModel__DownloadTimeoutSeconds:-15}
       Weather__Enabled: ${Weather__Enabled:-false}
       Weather__BaseUrl: ${Weather__BaseUrl:-https://api.open-meteo.com/}
       Weather__RequestTimeoutSeconds: ${Weather__RequestTimeoutSeconds:-3}
@@ -39,6 +44,7 @@ services:
     volumes:
       - ./src/backend/GeneratedEmails:/app/GeneratedEmails
       - ./src/backend/GeneratedInvoices:/app/GeneratedInvoices
+      - trip_duration_models:/app/App_Data/models
     depends_on:
       postgres:
         condition: service_healthy
@@ -142,3 +148,4 @@ services:
 volumes:
   postgres_data:
   mongo_data:
+  trip_duration_models:

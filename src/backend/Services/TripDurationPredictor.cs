@@ -17,6 +17,11 @@ public sealed class TripDurationModelOptions
 
     public bool Enabled { get; set; }
     public string ModelPath { get; set; } = string.Empty;
+    public string ModelArtifactUrl { get; set; } = string.Empty;
+    public string MetadataUrl { get; set; } = string.Empty;
+    public string ExpectedVersion { get; set; } = string.Empty;
+    public string CacheDirectory { get; set; } = "App_Data/models";
+    public int DownloadTimeoutSeconds { get; set; } = 15;
 }
 
 public static class TripDurationModelContract
