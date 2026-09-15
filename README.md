@@ -1,166 +1,98 @@
 # Cabrynt
 
-Cabrynt is a backend-focused .NET project for autonomous ride and fleet operations.
+Cabrynt is a ride and fleet operations platform built with ASP.NET Core. It supports passenger, vehicle, ride, payment, maintenance, and telemetry workflows, and includes a separate, reproducible trip-duration machine-learning experiment for Porto.
 
-It models a robotaxi-style platform with passengers, vehicles, rides, pricing, payments, invoices, support tickets, maintenance records, telemetry, and diagnostics. The project began as a university assignment and is being evolved into a production-shaped portfolio project focused on C# backend engineering.
+The application is actively evolving as a portfolio project focused on backend engineering, data-intensive workflows, and production-oriented development practices.
 
-## Current Focus
+## Highlights
 
-The main goal is to improve the backend beyond assignment scope by strengthening:
+- Cookie-based browser authentication with role-based authorization.
+- Passenger, vehicle, ride quote, payment, invoice, support, maintenance, and diagnostic workflows.
+- PostgreSQL for transactional data and MongoDB for telemetry and sensor events.
+- REST APIs, GraphQL dashboard reads, OpenAPI documentation, FluentValidation, and automated tests.
+- Docker Compose development environment with PostgreSQL, MongoDB, administration tools, and a vehicle telemetry simulator.
+- GitHub Actions checks for formatting, build, unit tests, integration tests, ML tests, dependency auditing, and Docker image builds.
+- A route-aware trip-duration model exported to ONNX and verified against its scikit-learn source model.
 
-- dependency and build health
-- authentication and authorization
-- test reliability
-- background processing
-- telemetry ingestion
-- observability
-- API design
-- production readiness
+## Trip Duration ML Experiment
 
-The frontend exists to support the backend workflows. The primary learning and improvement focus is backend engineering with C# and ASP.NET Core.
+[`ml/trip-duration`](ml/trip-duration) is an independently reproducible experiment that predicts taxi travel time from point A to point B in Porto. It combines quote-time calendar and weather features with local OSRM route distance and travel-time estimates.
 
-## Tech Stack
+The selected model is a HistGradientBoosting residual model: OSRM provides a road-network duration estimate, and the model predicts a correction. The application will calculate `max(OSRM duration + model correction, 0)`.
 
-Backend:
+On a locked 4,999-trip confirmation cohort, the selected model produced the following result:
 
-- .NET 10
-- ASP.NET Core Minimal APIs
-- Entity Framework Core
-- PostgreSQL
-- MongoDB
-- FluentValidation
-- Cookie-based authentication
-- Hot Chocolate GraphQL
-- Swagger / OpenAPI
+| Model | MAE | P90 absolute error |
+| --- | ---: | ---: |
+| Direct OSRM | 5.488 min | 10.817 min |
+| Selected OSRM-residual model | 3.383 min | 6.702 min |
 
-Frontend:
+The model has a versioned 23-feature float32 ONNX contract. Its ONNX predictions were verified against the scikit-learn model with a maximum difference of `0.000001752` minutes.
 
-- Next.js
-- React
-- TypeScript
-
-Infrastructure and quality:
-
-- Docker Compose
-- GitHub Actions
-- xUnit unit and integration tests
-- Centralized NuGet package version management
-
-## Domain Scope
-
-Cabrynt currently includes:
-
-- passenger registration and login
-- passenger profile management
-- vehicle registration and fleet state
-- ride quotes and ride creation
-- dynamic pricing
-- ride completion
-- payment records
-- invoice generation
-- local or SMTP email delivery
-- support tickets
-- maintenance records
-- vehicle telemetry
-- sensor diagnostics
-- admin dashboard reads through GraphQL
+The model is currently an experiment artifact, not a live API feature. The next integration step is to add OSRM and ONNX Runtime behind the ride-quote flow. Generated data, route caches, and model binaries are intentionally excluded from Git. See the [ML README](ml/trip-duration/README.md) for methodology, data preparation, benchmarks, and local setup.
 
 ## Architecture
 
-The backend is organized around:
+The .NET backend uses a pragmatic layered structure:
 
-- endpoints
-- services
-- repositories
-- DTOs
-- validators
+- **Endpoints** expose Minimal API routes.
+- **Services** contain application and business workflows.
+- **Repositories** isolate PostgreSQL and MongoDB access.
+- **DTOs and validators** define and validate API boundaries.
 
-PostgreSQL stores transactional business data:
+PostgreSQL stores users, passenger profiles, vehicles, rides, payments, tickets, maintenance, discount codes, and other transactional records. MongoDB stores high-volume vehicle telemetry and sensor diagnostics.
 
-- users
-- passenger profiles
-- vehicles
-- rides
-- payments
-- tickets
-- maintenance records
-- discount codes
+The frontend is a Next.js application that consumes the backend API. GraphQL is used primarily for admin dashboard reads.
 
-MongoDB stores high-volume vehicle data:
+## Technology Stack
 
-- telemetry events
-- sensor diagnostic events
-
-## Project Status
-
-This repository is actively being converted from an assignment-style project into a portfolio-grade backend system.
-
-Recently completed:
-
-- reviewed dependency vulnerability warnings
-- upgraded packages to remove a critical Hot Chocolate dependency vulnerability
-- upgraded MongoDB-related dependencies enough to remove the previous Snappier warning
-- centralized NuGet package versions with `Directory.Packages.props`
-- aligned EF Core package versions across backend and test projects
-- replaced JWT bearer authentication with ASP.NET Core cookie authentication for the browser app
-- updated frontend requests and integration tests to use cookie sessions
-- added GitHub Actions checks for formatting, build, tests, dependency audit, and Docker image builds
-
-Known accepted warning:
-
-- `SharpCompress 0.30.1` is reported as a transitive dependency warning through `MongoDB.Driver 3.8.1`
-- Cabrynt does not currently accept or extract user-provided archive files
-- the warning is accepted as residual dependency risk until the upstream dependency chain provides a fix
-
-## Roadmap
-
-Planned backend improvements:
-
-- OpenID Connect login
-- improved vehicle/system authentication
-- gRPC telemetry streaming
-- background processing with an outbox pattern
-- OpenTelemetry tracing and metrics
-- improved integration test infrastructure
-- API versioning and response consistency
-- improved dispatch and concurrency handling
+| Area | Technologies |
+| --- | --- |
+| Backend | .NET 10, ASP.NET Core Minimal APIs, Entity Framework Core, FluentValidation |
+| Data | PostgreSQL, MongoDB |
+| API | REST, OpenAPI/Swagger, Hot Chocolate GraphQL |
+| Authentication | ASP.NET Core cookie authentication, role-based authorization |
+| ML | Python, pandas, scikit-learn, LightGBM experiments, ONNX, ONNX Runtime, local OSRM |
+| Frontend | Next.js, React, TypeScript |
+| Quality and delivery | xUnit, pytest, Docker Compose, GitHub Actions, centralized NuGet package management |
 
 ## Repository Structure
 
 ```text
 src/
-  backend/      ASP.NET Core backend
-  frontend/     Next.js frontend
+  backend/                  ASP.NET Core application
+  frontend/                 Next.js application
 tests/
-  backend.UnitTests/
-  backend.IntegrationTests/
-scripts/
-  simulate-telemetry.ps1
-docs/
-  project notes and future documentation
+  backend.UnitTests/        Backend unit tests
+  backend.IntegrationTests/ Backend integration tests
+ml/
+  trip-duration/           Reproducible Porto trip-duration experiment
+scripts/                    Telemetry simulator and local utility scripts
+docs/                       Engineering notes
+compose.yaml                Local multi-container environment
 ```
 
-## Running Locally
+## Run Locally
 
 Prerequisites:
 
 - .NET 10 SDK
 - Docker Desktop
-- Node.js for frontend-only development
+- Node.js only for frontend-only development
 
-Copy the example environment file:
+Create local configuration from the tracked template:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Start the full application:
+Start the full environment:
 
 ```powershell
 docker compose up --build
 ```
 
-Main local URLs:
+Local endpoints:
 
 ```text
 Frontend: http://localhost:3000
@@ -169,45 +101,42 @@ Swagger:  http://localhost:5113/swagger
 GraphQL:  http://localhost:5113/graphql
 ```
 
-The Docker Compose flow reads values from `.env`. For direct `dotnet run`, configure the same backend values through user-secrets or environment variables:
+`docker compose` reads values from `.env`. For direct `dotnet run`, configure the corresponding database, admin, and email settings through environment variables or .NET user secrets. See [`.env.example`](.env.example) for the required keys.
 
-```text
-ConnectionStrings:Postgres
-ConnectionStrings:Mongo
-Mongo:DatabaseName
-Admin:Email
-Admin:Password
-```
+## Verification
 
-## Tests
-
-Run unit tests:
-
-```powershell
-dotnet test tests/backend.UnitTests/backend.UnitTests.csproj --no-restore
-```
-
-Run integration tests:
-
-```powershell
-dotnet test tests/backend.IntegrationTests/backend.IntegrationTests.csproj --no-restore
-```
-
-Integration tests require PostgreSQL and MongoDB to be available. In CI they are provided by GitHub Actions service containers. Locally, start the database services first:
-
-```powershell
-docker compose up -d postgres mongo
-```
-
-Run all tests:
+Run backend tests:
 
 ```powershell
 dotnet test Cabrynt.sln
 ```
 
+Integration tests need PostgreSQL and MongoDB. Start them locally when they are not already running:
+
+```powershell
+docker compose up -d postgres mongo
+```
+
+Run ML tests:
+
+```powershell
+Set-Location ml/trip-duration
+.\.venv\Scripts\python.exe -m pytest tests -q
+```
+
+The ML environment and data preparation instructions are documented in the [ML README](ml/trip-duration/README.md).
+
+## Roadmap
+
+- Integrate local OSRM and ONNX Runtime into the ride-quote flow.
+- Add OpenID Connect login and strengthen vehicle-to-system authentication.
+- Introduce gRPC for high-frequency telemetry ingestion where it provides a real benefit.
+- Add background processing and an outbox pattern for reliable side effects.
+- Add OpenTelemetry traces, metrics, and production deployment configuration.
+- Improve dispatch, concurrency handling, API consistency, and integration-test infrastructure.
+
 ## Notes
 
-- Distance is currently calculated from straight-line coordinates, not real road routing.
-- GraphQL is mainly used for admin dashboard reads.
-- Vehicle actions are primarily demonstrated through API calls and the telemetry simulator.
-- The project is intentionally evolving; deeper design documents will be added as the backend architecture stabilizes.
+- Ride distance in the running application is currently based on straight-line coordinates. Road-routing and model-based duration prediction are pending backend integration.
+- The ML model is scoped to Porto and must not be presented as a general ETA model for arbitrary cities.
+- [Engineering notes](docs/project-notes.md) record dependency and quality decisions that are not central to the project overview.
