@@ -17,9 +17,20 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
     private readonly string _postgresConnectionString;
     private readonly string _mongoConnectionString;
     private readonly Dictionary<string, string?> _previousEnvironmentValues = new();
+    private readonly IReadOnlyDictionary<string, string?> _configurationOverrides;
+    private readonly Action<IServiceCollection>? _configureTestServices;
 
     public CustomWebApplicationFactory()
+        : this(new Dictionary<string, string?>(), null)
     {
+    }
+
+    internal CustomWebApplicationFactory(
+        IReadOnlyDictionary<string, string?> configurationOverrides,
+        Action<IServiceCollection>? configureTestServices)
+    {
+        _configurationOverrides = configurationOverrides;
+        _configureTestServices = configureTestServices;
         ConfigureTestEnvironment();
 
         _postgresConnectionString = BuildPostgresConnectionString(_postgresDatabaseName);
@@ -31,7 +42,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
     {
         builder.ConfigureAppConfiguration((_, configBuilder) =>
         {
-            configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+            var configuration = new Dictionary<string, string?>
             {
                 ["ConnectionStrings:Postgres"] = _postgresConnectionString,
                 ["ConnectionStrings__Postgres"] = _postgresConnectionString,
@@ -45,8 +56,20 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 ["Admin__Password"] = IntegrationTestData.AdminPassword,
                 ["Email:FromAddress"] = "no-reply@cabrynt.test",
                 ["Email:PickupDirectory"] = "GeneratedEmails"
-            });
+            };
+
+            foreach (var (key, value) in _configurationOverrides)
+            {
+                configuration[key] = value;
+            }
+
+            configBuilder.AddInMemoryCollection(configuration);
         });
+
+        if (_configureTestServices is not null)
+        {
+            builder.ConfigureServices(_configureTestServices);
+        }
 
         builder.ConfigureLogging(logging =>
         {
