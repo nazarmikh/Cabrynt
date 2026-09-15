@@ -52,6 +52,19 @@ builder.Services.AddHttpClient<IRouteEstimator, OsrmRouteEstimator>((serviceProv
     client.Timeout = TimeSpan.FromSeconds(Math.Clamp(routingOptions.RequestTimeoutSeconds, 1, 30));
 });
 
+builder.Services.AddMemoryCache();
+builder.Services.Configure<WeatherOptions>(
+    builder.Configuration.GetSection(WeatherOptions.SectionName));
+builder.Services.AddHttpClient<IQuoteWeatherProvider, OpenMeteoWeatherProvider>((serviceProvider, client) =>
+{
+    var weatherOptions = serviceProvider
+        .GetRequiredService<IOptions<WeatherOptions>>()
+        .Value;
+    client.BaseAddress = new Uri(weatherOptions.BaseUrl, UriKind.Absolute);
+    client.Timeout = TimeSpan.FromSeconds(Math.Clamp(weatherOptions.RequestTimeoutSeconds, 1, 30));
+});
+builder.Services.AddSingleton<IPublicHolidayProvider, PortuguesePublicHolidayProvider>();
+
 builder.Services.Configure<TripDurationModelOptions>(
     builder.Configuration.GetSection(TripDurationModelOptions.SectionName));
 builder.Services.AddSingleton<ITripDurationPredictor>(serviceProvider =>
