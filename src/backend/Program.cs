@@ -7,6 +7,7 @@ using MongoDB.Driver;
 using Project.Endpoints;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Options;
 
 
 
@@ -40,6 +41,47 @@ builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
+
+builder.Services.Configure<RoutingOptions>(
+    builder.Configuration.GetSection(RoutingOptions.SectionName));
+builder.Services.AddHttpClient<IRouteEstimator, OsrmRouteEstimator>((serviceProvider, client) =>
+{
+    var routingOptions = serviceProvider
+        .GetRequiredService<IOptions<RoutingOptions>>()
+        .Value;
+    client.Timeout = TimeSpan.FromSeconds(Math.Clamp(routingOptions.RequestTimeoutSeconds, 1, 30));
+    client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", routingOptions.UserAgent);
+});
+
+builder.Services.AddMemoryCache();
+builder.Services.Configure<WeatherOptions>(
+    builder.Configuration.GetSection(WeatherOptions.SectionName));
+builder.Services.AddHttpClient<IQuoteWeatherProvider, OpenMeteoWeatherProvider>((serviceProvider, client) =>
+{
+    var weatherOptions = serviceProvider
+        .GetRequiredService<IOptions<WeatherOptions>>()
+        .Value;
+    client.BaseAddress = new Uri(weatherOptions.BaseUrl, UriKind.Absolute);
+    client.Timeout = TimeSpan.FromSeconds(Math.Clamp(weatherOptions.RequestTimeoutSeconds, 1, 30));
+});
+builder.Services.AddSingleton<IPublicHolidayProvider, PortuguesePublicHolidayProvider>();
+
+builder.Services.Configure<TripDurationModelOptions>(
+    builder.Configuration.GetSection(TripDurationModelOptions.SectionName));
+builder.Services.AddSingleton<ITripDurationFeatureBuilder, TripDurationFeatureBuilder>();
+builder.Services.AddSingleton<ITripDurationPredictor>(serviceProvider =>
+{
+    var options = serviceProvider
+        .GetRequiredService<IOptions<TripDurationModelOptions>>()
+        .Value;
+
+    return options.Enabled
+        ? new OnnxTripDurationPredictor(
+            serviceProvider.GetRequiredService<IOptions<TripDurationModelOptions>>(),
+            serviceProvider.GetRequiredService<ILogger<OnnxTripDurationPredictor>>())
+        : new DisabledTripDurationPredictor();
+});
+builder.Services.AddScoped<ITripDurationEstimator, TripDurationEstimator>();
 
 
 // Enums as a string not index
@@ -140,6 +182,8 @@ builder.Services.AddAuthorization(o => o.AddPolicy("AdminOrVehicle", p => p.Requ
     ctx.User.IsInRole("Admin") || ctx.User.IsInRole("Vehicle"))));
 
 var app = builder.Build();
+
+_ = app.Services.GetRequiredService<ITripDurationPredictor>();
 
 app.UseSwagger();
 app.UseSwaggerUI();

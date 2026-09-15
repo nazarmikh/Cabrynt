@@ -25,6 +25,15 @@ services:
       Email__SmtpUsername: ${Email__SmtpUsername}
       Email__SmtpPassword: ${Email__SmtpPassword}
       Email__UseSsl: ${Email__UseSsl}
+      Routing__OsrmBaseUrl: ${Routing__OsrmBaseUrl:-}
+      Routing__UserAgent: ${Routing__UserAgent:-Cabrynt/1.0 (+https://github.com/nazarmikh/Cabrynt)}
+      Routing__RequestTimeoutSeconds: ${Routing__RequestTimeoutSeconds:-3}
+      TripDurationModel__Enabled: ${TripDurationModel__Enabled:-false}
+      TripDurationModel__ModelPath: ${TripDurationModel__ModelPath:-}
+      Weather__Enabled: ${Weather__Enabled:-false}
+      Weather__BaseUrl: ${Weather__BaseUrl:-https://api.open-meteo.com/}
+      Weather__RequestTimeoutSeconds: ${Weather__RequestTimeoutSeconds:-3}
+      Weather__CacheDurationMinutes: ${Weather__CacheDurationMinutes:-10}
     ports:
       - "5113:8080"
     volumes:

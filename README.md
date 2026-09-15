@@ -12,13 +12,13 @@ The application is actively evolving as a portfolio project focused on backend e
 - REST APIs, GraphQL dashboard reads, OpenAPI documentation, FluentValidation, and automated tests.
 - Docker Compose development environment with PostgreSQL, MongoDB, administration tools, and a vehicle telemetry simulator.
 - GitHub Actions checks for formatting, build, unit tests, integration tests, ML tests, dependency auditing, and Docker image builds.
-- A route-aware trip-duration model exported to ONNX and verified against its scikit-learn source model.
+- An OSRM-aware, ONNX-exported trip-duration model with guarded .NET quote inference and explicit fallback sources.
 
 ## Trip Duration ML Experiment
 
-[`ml/trip-duration`](ml/trip-duration) is an independently reproducible experiment that predicts taxi travel time from point A to point B in Porto. It combines quote-time calendar and weather features with local OSRM route distance and travel-time estimates.
+[`ml/trip-duration`](ml/trip-duration) is an independently reproducible experiment that predicts taxi travel time from point A to point B in Porto. It combines quote-time calendar and weather features with OSRM route distance and travel-time estimates.
 
-The selected model is a HistGradientBoosting residual model: OSRM provides a road-network duration estimate, and the model predicts a correction. The application will calculate `max(OSRM duration + model correction, 0)`.
+The selected model is a HistGradientBoosting residual model: OSRM provides a road-network duration estimate, and the model predicts a correction. When the model, current weather, an OSRM route, and Porto-scoped coordinates are available, the application calculates `max(OSRM duration + model correction, 0)`. Otherwise, it returns the OSRM estimate or the existing straight-line fallback and identifies the source in the quote response.
 
 On a locked 4,999-trip confirmation cohort, the selected model produced the following result:
 
@@ -29,7 +29,7 @@ On a locked 4,999-trip confirmation cohort, the selected model produced the foll
 
 The model has a versioned 23-feature float32 ONNX contract. Its ONNX predictions were verified against the scikit-learn model with a maximum difference of `0.000001752` minutes.
 
-The model is currently an experiment artifact, not a live API feature. The next integration step is to add OSRM and ONNX Runtime behind the ride-quote flow. Generated data, route caches, and model binaries are intentionally excluded from Git. See the [ML README](ml/trip-duration/README.md) for methodology, data preparation, benchmarks, and local setup.
+Generated data, route caches, and production model binaries are intentionally excluded from Git. The backend contains the optional ONNX Runtime integration, but enabling it in a deployment requires supplying the model artifact through a secure deployment mechanism. See the [ML README](ml/trip-duration/README.md) for methodology, data preparation, benchmarks, and local setup.
 
 ## Architecture
 
@@ -52,7 +52,7 @@ The frontend is a Next.js application that consumes the backend API. GraphQL is 
 | Data | PostgreSQL, MongoDB |
 | API | REST, OpenAPI/Swagger, Hot Chocolate GraphQL |
 | Authentication | ASP.NET Core cookie authentication, role-based authorization |
-| ML | Python, pandas, scikit-learn, LightGBM experiments, ONNX, ONNX Runtime, local OSRM |
+| ML | Python, pandas, scikit-learn, LightGBM experiments, ONNX, ONNX Runtime, OSRM |
 | Frontend | Next.js, React, TypeScript |
 | Quality and delivery | xUnit, pytest, Docker Compose, GitHub Actions, centralized NuGet package management |
 
@@ -128,7 +128,7 @@ The ML environment and data preparation instructions are documented in the [ML R
 
 ## Roadmap
 
-- Integrate local OSRM and ONNX Runtime into the ride-quote flow.
+- Add deployment-safe model artifact distribution and configure a production routing provider.
 - Add OpenID Connect login and strengthen vehicle-to-system authentication.
 - Introduce gRPC for high-frequency telemetry ingestion where it provides a real benefit.
 - Add background processing and an outbox pattern for reliable side effects.
@@ -137,6 +137,6 @@ The ML environment and data preparation instructions are documented in the [ML R
 
 ## Notes
 
-- Ride distance in the running application is currently based on straight-line coordinates. Road-routing and model-based duration prediction are pending backend integration.
+- Routing and trip-duration ML are optional runtime features. With default local configuration, the quote endpoint keeps the straight-line fallback so development and tests do not require OSRM, weather, or a model file.
 - The ML model is scoped to Porto and must not be presented as a general ETA model for arbitrary cities.
 - [Engineering notes](docs/project-notes.md) record dependency and quality decisions that are not central to the project overview.
