@@ -25,7 +25,7 @@ export default function RideHistoryPage() {
       try {
         setIsLoading(true)
         setError(null)
-        const response = await apiRequest<RideResponse[]>("/api/public/rides", { method: "GET" }, true)
+        const response = await apiRequest<RideResponse[]>("/api/public/rides", { method: "GET" })
         setRides(response.map((ride) => ({ ...ride, id: String(ride.rideId) })))
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load rides.")

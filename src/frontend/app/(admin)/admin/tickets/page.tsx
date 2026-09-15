@@ -51,7 +51,7 @@ export default function AdminTicketsPage() {
     try {
       setIsLoading(true)
       setError(null)
-      const response = await apiRequest<AdminTicketResponse[]>("/api/private/tickets", { method: "GET" }, true)
+      const response = await apiRequest<AdminTicketResponse[]>("/api/private/tickets", { method: "GET" })
       setTickets(
         response.map((ticket) => ({
           ...ticket,
@@ -80,8 +80,7 @@ export default function AdminTicketsPage() {
         {
           method: "PATCH",
           body: JSON.stringify({ ticketStatus }),
-        },
-        true
+        }
       )
 
       const normalized = {

@@ -96,8 +96,8 @@ export default function BookRidePage() {
   const [createdRide, setCreatedRide] = useState<RideResponse | null>(null)
 
   const canRequestQuote = pickup.trim().length > 0 && destination.trim().length > 0
-  const fallbackPickupCoords = useMemo(() => randomDemoCoordinates(), [pickup])
-  const fallbackDestinationCoords = useMemo(() => randomDemoCoordinates(), [destination])
+  const fallbackPickupCoords = useMemo(() => randomDemoCoordinates(), [])
+  const fallbackDestinationCoords = useMemo(() => randomDemoCoordinates(), [])
 
   useEffect(() => {
     if (!canRequestQuote) {
@@ -127,8 +127,7 @@ export default function BookRidePage() {
           {
             method: "POST",
             body: JSON.stringify(payload),
-          },
-          true
+          }
         )
         setQuote(response)
       } catch (err) {
@@ -177,8 +176,7 @@ export default function BookRidePage() {
         {
           method: "POST",
           body: JSON.stringify(payload),
-        },
-        true
+        }
       )
       setCreatedRide(response)
     } catch (err) {

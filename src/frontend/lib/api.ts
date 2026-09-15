@@ -26,8 +26,7 @@ async function parseResponse(response: Response) {
 
 export async function apiRequest<T>(
   path: string,
-  init: RequestInit = {},
-  authenticated = false
+  init: RequestInit = {}
 ): Promise<T> {
   const headers = new Headers(init.headers)
 
