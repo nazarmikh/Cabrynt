@@ -1,0 +1,374 @@
+# Cabrynt Trip Duration
+
+This workspace contains Cabrynt's trip-duration experiment. It estimates the time from pickup to destination for trips in Porto.
+
+## Prediction Contract
+
+Information available when a quote is requested:
+
+- pickup and destination coordinates;
+- request time;
+- features calculated from those values.
+
+The output is trip duration in minutes. The intermediate GPS points describe what happened during the trip, so they are used only to inspect data quality and are not model features.
+
+## Setup
+
+From this directory:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+Download the [Porto taxi trajectory dataset](https://archive.ics.uci.edu/dataset/339/taxi+service+trajectory+prediction+challenge+ecml+pkdd+2015) and place the training archive at:
+
+```text
+data/uci/train.csv.zip
+```
+
+Open `notebooks/01_dataset_inspection.ipynb` with the virtual environment as its Jupyter kernel. It uses a 10,000-row sample so exploration runs quickly.
+
+To audit the complete archive without loading it into memory at once:
+
+```powershell
+python scripts/audit_quality.py
+```
+
+To build the local model-ready datasets:
+
+```powershell
+python scripts/build_dataset.py
+```
+
+This creates ignored Parquet files in `artifacts/prepared-data/`: a clean full dataset and chronological `train`, `validation`, and `test` splits.
+
+To evaluate the first validation baselines:
+
+```powershell
+python scripts/evaluate_baselines.py
+```
+
+This reads only `train.parquet` and `validation.parquet`. It writes ignored metrics to `artifacts/baseline-metrics.json` and leaves `test.parquet` untouched.
+
+## Data Enrichment
+
+The model-ready data is enriched only with information that would be available when a quote is requested: Porto-local calendar fields, Portuguese public holidays, and hourly historical weather. Download the local weather cache, then build enriched train and validation data:
+
+```powershell
+python scripts/download_weather.py
+python scripts/build_enriched_datasets.py
+```
+
+Weather is retrieved from the [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) and cached locally. The enriched build also adds smoothed historical congestion profiles fitted only on earlier training trips. It does not read or transform the reserved test split.
+
+## Feature Audit
+
+Before training a new model, inspect the enriched candidate features with:
+
+```powershell
+python scripts/audit_features.py
+```
+
+The command reads only the enriched training and validation files and writes an ignored JSON report to `artifacts/feature-audit/summary.json`. It checks missing values, constant fields, large train-to-validation mean shifts, and highly correlated feature pairs. It does not fit a model or read the reserved test split.
+
+The latest audit found no constant fields, no missing validation features, and no feature pairs with an absolute correlation of 0.80 or higher. Historical profile fields are missing for the training cold-start rows by design. The chronological split shifts the month distribution in raw and cyclical forms because training ends before validation's April-to-June period. The cyclical encodings still represent December-to-January continuity correctly. No feature is removed automatically: future ablation experiments will decide which fields improve validation performance.
+
+## Selected Feature Contract
+
+The current candidate model predicts trip duration from information available at quote time:
+
+| Group | Inputs |
+| --- | --- |
+| Route endpoints | Pickup and destination longitude/latitude, plus straight-line distance |
+| Calendar | Porto-local hour, weekday, month, weekend flag, Portuguese public-holiday flag, and cyclic hour/weekday/month encodings |
+| Weather | Temperature, precipitation, cloud cover, wind speed, and a precipitation flag |
+
+It does not use completed-trip GPS points, observed travel distance, realised route shape, or actual duration. Those values are known only after a trip and would leak the answer into training.
+
+The experiment also evaluated historical travel-time profile features based only on earlier trips. They did not improve validation MAE, so they are not part of the selected candidate. Historical weather is valid for this offline evaluation; a deployed quote endpoint will need current observations or a forecast provider that supplies the same weather contract.
+
+## First Enriched Model Experiment
+
+Run the first fixed model comparison with:
+
+```powershell
+python scripts/evaluate_enriched_models.py
+```
+
+The script reads only enriched training and validation data. It writes ignored metrics and duration-segment results to `artifacts/model-metrics/enriched-models.json`; it does not train on or read the reserved test split.
+
+The comparison includes the existing baselines, an enriched linear regression, and three fixed `HistGradientBoostingRegressor` configurations. The calendar/weather model intentionally excludes target-derived historical profiles. The full model uses native missing-value handling for cold-start profile fields, while the warm-start model trains only on rows where profiles were available.
+
+| Model | Validation MAE (minutes) |
+| --- | ---: |
+| Linear regression baseline | 4.348 |
+| Enriched linear regression | 4.292 |
+| Calendar/weather gradient boosting | 3.686 |
+| Full enriched gradient boosting | 3.793 |
+| Warm-start gradient boosting | 3.812 |
+
+Calendar/weather gradient boosting is the best initial model. The historical-profile variants do not improve it, so they are not selected for the next experiment. These are validation results, not final test results, and are not directly comparable with the separate 5,000-row OSRM benchmark.
+
+## OSRM Model Comparison
+
+Compare the selected model against direct OSRM on the exact cached routable cohort:
+
+```powershell
+python scripts/compare_model_with_osrm.py
+```
+
+The script reads the enriched training and validation data plus the cached OSRM route estimates. It does not make routing requests, so Docker is not required once `validation-route-estimates.parquet` exists. To rebuild or extend that route cohort, start local OSRM and run `evaluate_osrm_baseline.py` first.
+
+| Model | Cohort MAE (minutes) | Cohort P90 absolute error (minutes) |
+| --- | ---: | ---: |
+| Linear regression | 4.342 | 7.558 |
+| Direct OSRM | 5.438 | 11.330 |
+| Calendar/weather gradient boosting | **3.660** | **7.042** |
+
+The selected model beats direct OSRM by 1.778 MAE minutes on the same 4,999 routable validation trips. This is not a claim that OSRM is useless: OSRM has lower MAE for the 610 trips lasting up to five minutes, while the model is better for every longer duration group. At this validation stage, the test split remained untouched.
+
+## Route-Aware Training Cohort
+
+The route-aware experiment needs OSRM distance and duration during training, not only validation. With local OSRM running, build a deterministic 200,000-row sample from the chronological training split:
+
+```powershell
+docker compose -f compose.osrm.yaml up -d
+python scripts/build_osrm_training_cohort.py
+```
+
+The script stores ignored route estimates and metadata in `artifacts/osrm/`. It reuses `route-cache.sqlite3`, so rerunning with `--force` does not request routes already cached. The cohort contains only `trip_id`, OSRM distance, and OSRM duration; the later model experiment will join those values to the enriched training features.
+
+The current cohort contains 199,994 routable trips; six sampled trips had no OSRM route. It is a deterministic route-aware training subset, not the full 1.05-million-row training split. Every route-aware comparison trains the route-free and OSRM-aware models on exactly this same cohort, then evaluates both on the fixed OSRM validation cohort.
+
+## Route-Aware Model Experiment
+
+Evaluate direct and residual OSRM-aware models after the training cohort has been built:
+
+```powershell
+python scripts/evaluate_route_aware_models.py
+```
+
+The script trains every learned model on the same 199,994-route training cohort and evaluates them on the fixed 4,999-trip OSRM validation cohort. It makes no routing requests and writes ignored results to `artifacts/osrm/route-aware-model-metrics.json`.
+
+| Model | Cohort MAE (minutes) | Cohort P90 absolute error (minutes) |
+| --- | ---: | ---: |
+| Direct OSRM | 5.438 | 11.330 |
+| Calendar/weather gradient boosting | 3.687 | 7.148 |
+| OSRM-aware gradient boosting | 3.616 | 7.140 |
+| OSRM residual gradient boosting | **3.607** | **7.024** |
+
+The residual model predicts a correction to OSRM duration, rather than duration from scratch. It improves the same-cohort calendar/weather model and the full-data calendar/weather candidate (`3.660` MAE) on the same OSRM validation cohort. It is the provisional candidate for the final unseen test. Direct OSRM remains best for trips lasting up to five minutes.
+
+## Route-Aware Chronological Backtest
+
+Check whether the residual model's improvement is stable across earlier time periods:
+
+```powershell
+python scripts/backtest_route_aware_models.py
+```
+
+The script creates two expanding folds from the route-ready training cohort: an early 60%/20% train-validation split and a later 80%/20% split. It also reports paired bootstrap confidence intervals for residual-model MAE minus route-free-model MAE. No Docker, routing requests, project validation rows, or test rows are used.
+
+| Fold | Calendar/weather MAE | OSRM residual MAE | Residual minus route-free MAE (95% CI) |
+| --- | ---: | ---: | --- |
+| Early | 3.939 | 3.822 | -0.117 (-0.130 to -0.104) |
+| Late | 3.895 | 3.783 | -0.111 (-0.123 to -0.098) |
+
+The residual improvement is stable in both chronological folds. Together with its lower MAE on the fixed OSRM validation cohort, this justifies freezing the residual approach and evaluating it once on unseen test data.
+
+## Initial Held-Out Test Evaluation
+
+The initial held-out evaluation uses a deterministic 5,000-trip sample from the reserved chronological test split, with seed `44`. The sample was routed once with local OSRM; all 5,000 trips were routable. It remains a Porto-specific test cohort, not a claim about every city or taxi provider.
+
+```powershell
+docker compose -f compose.osrm.yaml up -d
+python scripts/build_osrm_initial_test_cohort.py
+python scripts/evaluate_initial_test.py
+```
+
+`build_osrm_initial_test_cohort.py` refuses to overwrite its output. This benchmark was produced before further tuning was planned, so it must not be reused to select parameters or features.
+
+| Model | Test cohort MAE (minutes) | Test cohort P90 absolute error (minutes) |
+| --- | ---: | ---: |
+| Training median | 5.159 | 9.500 |
+| Fixed 30 km/h | 6.035 | 11.258 |
+| Linear regression | 4.396 | 7.356 |
+| Direct OSRM | 5.483 | 10.674 |
+| Full calendar/weather gradient boosting | 3.718 | 7.051 |
+| Route-cohort calendar/weather gradient boosting | 3.752 | 7.016 |
+| OSRM residual gradient boosting | **3.665** | **6.964** |
+
+The OSRM residual model improves the full-data calendar/weather model by `0.053` MAE minutes. A paired bootstrap interval for residual minus full calendar/weather MAE is `-0.090` to `-0.014`, supporting a small but consistent improvement on this fixed unseen cohort. Direct OSRM remains best for trips under five minutes, so a hybrid short-trip rule is a possible future experiment, not part of the current model. A separate locked confirmation cohort is reserved for final evaluation after tuning.
+
+## Locked Confirmation Cohort
+
+A second deterministic 5,000-trip cohort is reserved for final confirmation after chronological tuning and model selection. It uses seed `45`, excludes every trip ID from the initial held-out cohort, and contains 4,999 routable trips; one sampled trip returned OSRM `NoRoute`.
+
+```powershell
+python scripts/build_osrm_confirmation_cohort.py
+```
+
+The builder reads only `trip_id` and route coordinates from `test.parquet`, not `duration_minutes`. It writes ignored route estimates and metadata, refuses to overwrite them, and was evaluated only after the development workflow selected a final configuration.
+
+## Chronological Parameter Tuning
+
+The residual model is tuned only on the 199,994-row route-aware training cohort. It uses the same two expanding chronological folds as the earlier backtest and does not read validation or test data.
+
+```powershell
+python scripts/tune_residual_model.py --run
+```
+
+The fixed 12-configuration search varies loss, learning rate, iterations, tree leaves, minimum leaf size, and L2 regularization. A non-baseline configuration can win only when it does not regress on either chronological fold; the stable winner is then ranked by mean MAE.
+
+| Configuration | Early MAE | Late MAE | Mean MAE |
+| --- | ---: | ---: | ---: |
+| Previous residual baseline | 3.822 | 3.783 | 3.803 |
+| Tuned residual gradient boosting | **3.530** | **3.443** | **3.486** |
+
+The selected configuration uses `loss="absolute_error"`, `learning_rate=0.06`, `max_iter=200`, and `max_leaf_nodes=63`; its remaining parameters stay at the existing fixed values. Its MAE improvement over the previous residual baseline is `0.292` minutes in the early fold and `0.341` minutes in the late fold. Both paired 95% bootstrap intervals remain below zero. This is a development result only: the confirmation cohort has not been evaluated.
+
+## LightGBM Benchmark
+
+One fixed LightGBM residual model was compared with the tuned `HistGradientBoostingRegressor` using the same OSRM-residual target, quote-time features, and chronological folds.
+
+```powershell
+python scripts/benchmark_lightgbm_residual.py --run
+```
+
+| Model | Early MAE | Late MAE |
+| --- | ---: | ---: |
+| Tuned HistGradientBoosting | 3.530 | 3.443 |
+| LightGBM | 3.532 | 3.440 |
+
+The observed differences are negligible. LightGBM minus HistGradientBoosting MAE is `0.002` in the early fold (95% CI `-0.002` to `0.006`) and `-0.003` in the late fold (95% CI `-0.007` to `0.001`). Since neither interval establishes an improvement, the tuned scikit-learn model remains selected and LightGBM is not tuned further.
+
+## Route Feature Ablation
+
+Three route features were derived without new data: OSRM average route speed, OSRM distance minus straight-line distance, and OSRM distance divided by straight-line distance. They use only OSRM output and request coordinates, so they are available at quote time.
+
+| Feature configuration | Mean chronological MAE |
+| --- | ---: |
+| Tuned residual baseline | 3.486 |
+| Route geometry features | 3.482 |
+| Route speed | **3.480** |
+| All derived route features | 3.483 |
+
+Route speed was the development-fold winner, improving MAE by `0.005` minutes early and `0.007` minutes late. The small but negative paired intervals justified including it in the locked confirmation comparison. Zero-duration OSRM routes have undefined average speed, so that derived value is represented as missing rather than dropping valid trips.
+
+## Final Confirmation Evaluation
+
+The locked 4,999-trip confirmation cohort was evaluated once after all model, parameter, and feature decisions were frozen.
+
+| Model | Confirmation MAE (minutes) | P90 absolute error (minutes) |
+| --- | ---: | ---: |
+| Direct OSRM | 5.488 | 10.817 |
+| Full calendar/weather gradient boosting | 3.744 | 7.051 |
+| Tuned OSRM residual gradient boosting | **3.383** | **6.702** |
+| Route-speed residual gradient boosting | 3.377 | 6.602 |
+
+The route-speed variant improved MAE by only `0.007` minutes against the tuned residual baseline, and its paired 95% interval (`-0.017` to `0.004`) includes zero. The final model therefore keeps the simpler 23-feature OSRM-aware input contract and the tuned residual parameters: absolute-error loss, `0.06` learning rate, 200 iterations, and 63 leaves. It improves direct OSRM by `2.105` MAE minutes and the full route-free model by `0.361` minutes on this final cohort.
+
+## Training-Data Learning Curve
+
+Before routing a substantially larger training cohort, the selected model is evaluated on fixed nested 25,000-, 50,000-, and 100,000-row samples. Each sample is drawn deterministically from the training part of both existing expanding chronological folds; every validation row is later than every training row. The locked test and confirmation cohorts are not read.
+
+```powershell
+python scripts/evaluate_learning_curve.py --run
+```
+
+The result is written locally to `artifacts/osrm/learning-curve-metrics.json`. The experiment answers whether the observed gains are still material as route-ready training data grows. It does not select another model or reuse the confirmation cohort.
+
+| Training rows | Mean chronological MAE (minutes) | Worst-fold MAE (minutes) |
+| ---: | ---: | ---: |
+| 25,000 | 3.556 | 3.594 |
+| 50,000 | 3.529 | 3.569 |
+| 100,000 | 3.502 | 3.544 |
+
+Accuracy continues to improve over the sampled range: the 100,000-row model reduces mean MAE by `0.053` minutes versus 25,000 rows. The earlier full-fold result, using 119,987 rows in the early fold and 159,999 in the late fold, reached `3.486` mean MAE. The remaining gain is small, so routing the approximately 849,000 non-routed cleaned trips is deferred until a future product need justifies the processing cost.
+
+## Local OSRM Baseline
+
+OSRM is run locally so the project does not send thousands of routing requests to a public demo service. It estimates a driving route using the Portugal OpenStreetMap road network.
+
+With Docker Desktop running, prepare the local routing graph. The download is about 400 MB and preprocessing can take several minutes:
+
+```powershell
+.\scripts\setup_osrm.ps1
+docker compose -f compose.osrm.yaml up -d
+```
+
+Then compare OSRM against every existing baseline on the same deterministic 5,000-row validation sample:
+
+```powershell
+python scripts/evaluate_osrm_baseline.py
+```
+
+The command reads `train.parquet` and `validation.parquet`, never `test.parquet`. It caches local route results in `artifacts/osrm/route-cache.sqlite3`, so a rerun does not request routes that were already evaluated. OSRM `NoRoute` cases are recorded, and all metrics use the same routable subset for every baseline. Use `--sample-size` and `--sample-seed` only when deliberately creating a new benchmark sample.
+
+To rebuild the routing graph from a newer map extract, run `setup_osrm.ps1 -ForceDownload`. This replaces both the downloaded extract and its derived graph.
+
+## Current Experiment
+
+The first implementation:
+
+- inspects the dataset and trajectory format;
+- derives duration from the 15-second GPS sampling interval;
+- excludes malformed or empty traces, traces with fewer than two points, coordinates outside the Porto area, trips above four hours, and GPS jumps above 150 km/h;
+- reports `MISSING_DATA`, repeated coordinates and near-zero endpoint distance as diagnostics rather than automatically deleting them;
+- builds clean full-data Parquet files and chronological train, validation and test splits;
+- uses Porto-local time for calendar features, with hourly weather and public-holiday enrichment;
+- builds leakage-safe historical congestion profiles for train and validation data;
+- audits candidate features for missing values, distribution shifts, and redundancy;
+- evaluates median, fixed-speed, and linear-regression baselines on validation data;
+- compares fixed enriched linear and gradient-boosting models on validation data;
+- prepares a deterministic local-OSRM training cohort for route-aware modeling;
+- adds a local OSRM road-routing benchmark on a fixed validation sample;
+- evaluates the frozen route-aware candidate on an initial held-out cohort;
+- locks a disjoint confirmation cohort for the later final evaluation;
+- examines where validation errors are largest.
+
+The builder removes duplicate trip IDs while keeping the first occurrence. The official challenge holdout remains unused; the project test split is used only through the fixed final 5,000-row cohort documented above.
+
+## Latest Local Build
+
+The latest build processed 1,710,670 input rows and retained 1,498,634 rows. It produced 1,049,044 training rows, 224,795 validation rows, and 224,795 test rows. Generated data is local and is not committed.
+
+## Latest Enrichment Build
+
+The local weather cache contains 8,760 hourly Porto observations from 2013-07-01 through 2014-06-30. Enriched train and validation datasets contain all weather and calendar fields. The first chronological 209,247 training rows have no historical-congestion profile because no earlier trips are available; this is explicitly marked rather than filled with future target data.
+
+## Latest Validation Baselines
+
+The first validation run uses 1,049,044 training rows and 224,795 validation rows. The reserved test split was not read.
+
+| Baseline | MAE (minutes) | RMSE (minutes) | P90 absolute error (minutes) |
+| --- | ---: | ---: | ---: |
+| Training median | 5.138 | 9.138 | 9.750 |
+| Fixed 30 km/h | 5.930 | 10.064 | 11.423 |
+| Linear regression | 4.348 | 8.255 | 7.405 |
+
+These full-validation values are reference points for later experiments, not final test results. The OSRM benchmark below uses a separate fixed validation cohort, so its values should only be compared within that table.
+
+## OSRM Validation Benchmark
+
+The local Portugal OSRM graph was evaluated on a deterministic 5,000-row validation sample. It routed 4,999 rows; one row had no route, so every baseline below uses the same 4,999-row routable cohort.
+
+| Baseline | MAE (minutes) | RMSE (minutes) | P90 absolute error (minutes) |
+| --- | ---: | ---: | ---: |
+| Training median | 5.143 | 8.776 | 10.000 |
+| Fixed 30 km/h | 5.937 | 9.611 | 11.765 |
+| Linear regression | 4.342 | 7.754 | 7.558 |
+| OSRM driving route | 5.438 | 9.398 | 11.330 |
+
+Direct OSRM is weaker than the simple linear model on this historical dataset. Its default car profile has no access to the actual taxi route or historical traffic, but its road-network distance and duration remain useful candidates for a later ML correction model.
+
+## Structure
+
+- `notebooks/` contains exploration and early experiments.
+- `scripts/` contains full-data preparation and evaluation tools.
+- `src/` contains reusable data preparation, enrichment, audit, evaluation, and routing code.
+- `tests/` verifies data preparation, evaluation, and routing behaviour.
+
+Raw data, virtual environments, caches and generated model files are not committed.
