@@ -8,10 +8,15 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { apiRequest } from "@/lib/api"
-import type { CreateRideRequest, RideQuoteResponse, RideResponse } from "@/lib/backend-types"
+import type {
+  CreateRideRequest,
+  RideQuoteResponse,
+  RideResponse,
+  TripDurationEstimateSource,
+} from "@/lib/backend-types"
 import { randomDemoCoordinates, type Coordinates } from "@/lib/location"
 import { formatCurrency } from "@/lib/format"
-import { MapPin, Navigation, Car, Users, Crown, Check, Loader2, Tag, Star } from "lucide-react"
+import { MapPin, Navigation, Car, Users, Crown, Check, Loader2, Tag, Star, Clock3, Sparkles } from "lucide-react"
 
 const vehicleTypes = [
   {
@@ -41,6 +46,12 @@ const vehicleTypes = [
 ] as const
 
 type VehicleChoice = (typeof vehicleTypes)[number]["id"]
+
+const tripDurationSourceLabels: Record<TripDurationEstimateSource, string> = {
+  MachineLearning: "Model-informed route estimate",
+  Osrm: "Route estimate",
+  StraightLineFallback: "Distance estimate",
+}
 
 function buildRidePayload(
   pickup: string,
@@ -405,6 +416,35 @@ export default function BookRidePage() {
                 </div>
               ) : quote ? (
                 <div className="space-y-3">
+                  <div className="rounded-md border bg-muted/40 p-3">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      {quote.estimatedTripDurationSource === "MachineLearning" ? (
+                        <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
+                      ) : (
+                        <Clock3 className="h-4 w-4 text-primary" aria-hidden="true" />
+                      )}
+                      <span>Estimated trip time</span>
+                    </div>
+                    <p className="mt-1 text-2xl font-bold">
+                      {Math.round(quote.estimatedTripDuration)} min
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {tripDurationSourceLabels[quote.estimatedTripDurationSource]}
+                    </p>
+                    {quote.estimatedTripDurationSource !== "StraightLineFallback" && (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Routing data ©{" "}
+                        <a
+                          className="underline underline-offset-2 hover:text-foreground"
+                          href="https://www.openstreetmap.org/copyright"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          OpenStreetMap contributors
+                        </a>
+                      </p>
+                    )}
+                  </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Base fare</span>
                     <span>{formatCurrency(quote.baseFare)}</span>
