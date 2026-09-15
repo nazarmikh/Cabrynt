@@ -288,6 +288,18 @@ The result is written locally to `artifacts/osrm/learning-curve-metrics.json`. T
 
 Accuracy continues to improve over the sampled range: the 100,000-row model reduces mean MAE by `0.053` minutes versus 25,000 rows. The earlier full-fold result, using 119,987 rows in the early fold and 159,999 in the late fold, reached `3.486` mean MAE. The remaining gain is small, so routing the approximately 849,000 non-routed cleaned trips is deferred until a future product need justifies the processing cost.
 
+## ONNX Export Contract
+
+The selected residual model can be fitted on all 199,994 route-ready training rows and exported for backend inference:
+
+```powershell
+python scripts/export_final_model.py --run
+```
+
+The command writes ignored ONNX and metadata artifacts under `artifacts/models/`. The model accepts one float32 feature matrix with the documented 23-feature order. Its ONNX output is a residual correction in minutes; the calling application calculates `max(OSRM duration + correction, 0)` to obtain the final duration prediction. Export verifies ONNX runtime predictions against the scikit-learn model before writing metadata.
+
+`skl2onnx` is pinned to an upstream commit because its latest packaged release contains a fixed converter defect for `HistGradientBoostingRegressor`. The pin is only used while producing the model artifact; the deployed .NET application will use ONNX Runtime, not Python or the exporter.
+
 ## Local OSRM Baseline
 
 OSRM is run locally so the project does not send thousands of routing requests to a public demo service. It estimates a driving route using the Portugal OpenStreetMap road network.

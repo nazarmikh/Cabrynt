@@ -83,15 +83,30 @@ def osrm_residual_gradient_boosting_predictions(
 ) -> np.ndarray:
     """Learn a non-linear correction to direct OSRM duration estimates."""
     selected_features = feature_columns or OSRM_AWARE_FEATURE_COLUMNS
-    _validate_model_input(train_data, validation_data, selected_features)
-
-    model = HistGradientBoostingRegressor(**_gradient_boosting_parameters(model_parameters))
-    residual_target = train_data[TARGET_COLUMN] - train_data["osrm_duration_minutes"]
-    model.fit(train_data[selected_features], residual_target)
+    model = fit_osrm_residual_gradient_boosting_model(
+        train_data,
+        model_parameters=model_parameters,
+        feature_columns=selected_features,
+    )
     corrections = model.predict(validation_data[selected_features])
     return _non_negative_predictions(
         validation_data["osrm_duration_minutes"].to_numpy(dtype=float) + corrections
     )
+
+
+def fit_osrm_residual_gradient_boosting_model(
+    train_data: pd.DataFrame,
+    model_parameters: dict[str, object] | None = None,
+    feature_columns: list[str] | None = None,
+) -> HistGradientBoostingRegressor:
+    """Fit the residual model used by evaluation and ONNX export workflows."""
+    selected_features = feature_columns or OSRM_AWARE_FEATURE_COLUMNS
+    _validate_model_input(train_data, train_data, selected_features)
+
+    model = HistGradientBoostingRegressor(**_gradient_boosting_parameters(model_parameters))
+    residual_target = train_data[TARGET_COLUMN] - train_data["osrm_duration_minutes"]
+    model.fit(train_data[selected_features], residual_target)
+    return model
 
 
 def warm_start_gradient_boosting_predictions(
