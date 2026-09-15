@@ -55,5 +55,5 @@ ml/**/.ruff_cache/
 ml/**/.ipynb_checkpoints/
 ml/**/artifacts/
 
-# Private ML decision log — not for the repo
+# Private ML decision log; not committed
 ml/trip-duration/DECISIONS.md
