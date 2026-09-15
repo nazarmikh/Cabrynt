@@ -50,6 +50,7 @@ builder.Services.AddHttpClient<IRouteEstimator, OsrmRouteEstimator>((serviceProv
         .GetRequiredService<IOptions<RoutingOptions>>()
         .Value;
     client.Timeout = TimeSpan.FromSeconds(Math.Clamp(routingOptions.RequestTimeoutSeconds, 1, 30));
+    client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", routingOptions.UserAgent);
 });
 
 builder.Services.AddMemoryCache();

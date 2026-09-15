@@ -16,6 +16,7 @@ public class OsrmRouteEstimatorTest
             Assert.Equal(
                 "https://osrm.test/route/v1/driving/3.264,50.826;3.717,51.054?overview=false&alternatives=false&steps=false",
                 request.RequestUri?.ToString());
+            Assert.Contains("Cabrynt/1.0", request.Headers.UserAgent.ToString());
 
             return JsonResponse(
                 """
@@ -70,8 +71,16 @@ public class OsrmRouteEstimatorTest
         HttpMessageHandler handler,
         string osrmBaseUrl)
     {
+        var client = new HttpClient(handler)
+        {
+            Timeout = TimeSpan.FromSeconds(3)
+        };
+        client.DefaultRequestHeaders.TryAddWithoutValidation(
+            "User-Agent",
+            "Cabrynt/1.0 (+https://github.com/nazarmikh/Cabrynt)");
+
         return new OsrmRouteEstimator(
-            new HttpClient(handler),
+            client,
             Options.Create(new RoutingOptions { OsrmBaseUrl = osrmBaseUrl }),
             NullLogger<OsrmRouteEstimator>.Instance);
     }

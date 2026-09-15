@@ -17,6 +17,7 @@ public sealed class RoutingOptions
     public const string SectionName = "Routing";
 
     public string OsrmBaseUrl { get; set; } = string.Empty;
+    public string UserAgent { get; set; } = "Cabrynt/1.0 (+https://github.com/nazarmikh/Cabrynt)";
     public int RequestTimeoutSeconds { get; set; } = 3;
 }
 
