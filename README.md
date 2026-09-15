@@ -31,7 +31,13 @@ The model has a versioned 23-feature float32 ONNX contract. Its ONNX predictions
 
 When runtime ML inference is enabled, the passenger quote page shows the estimated trip time separately from the fare calculation and identifies whether it used the ML correction, OSRM routing, or the straight-line fallback. OSRM-backed results include OpenStreetMap attribution.
 
-Generated data, route caches, and production model binaries are intentionally excluded from Git. The backend contains the optional ONNX Runtime integration, but enabling it in a deployment requires supplying the model artifact through a secure deployment mechanism. See the [ML README](ml/trip-duration/README.md) for methodology, data preparation, benchmarks, and local setup.
+Generated data, route caches, and production model binaries are intentionally excluded from Git. The trained ONNX model and its metadata are published as versioned GitHub Release assets rather than committed to source control. See the [ML README](ml/trip-duration/README.md) for methodology, data preparation, benchmarks, and local setup.
+
+### Enable Model Inference
+
+The backend downloads the release model once during startup when `TripDurationModel__Enabled=true`. It verifies the model SHA-256 and the complete 23-feature contract from the companion metadata file before loading ONNX Runtime. A verified model is retained in the configured local cache; if a later release request fails, the cache is used. If neither source is valid, normal quotes continue with OSRM or the straight-line fallback.
+
+The tracked [`.env.example`](.env.example) contains the current release URLs and version. For Docker Compose, the cache is persisted in the named `trip_duration_models` volume. `TripDurationModel__ModelPath` remains available for a local manually supplied ONNX file, primarily for development and tests.
 
 ## Architecture
 

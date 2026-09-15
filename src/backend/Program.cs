@@ -68,19 +68,18 @@ builder.Services.AddSingleton<IPublicHolidayProvider, PortuguesePublicHolidayPro
 
 builder.Services.Configure<TripDurationModelOptions>(
     builder.Configuration.GetSection(TripDurationModelOptions.SectionName));
-builder.Services.AddSingleton<ITripDurationFeatureBuilder, TripDurationFeatureBuilder>();
-builder.Services.AddSingleton<ITripDurationPredictor>(serviceProvider =>
+builder.Services.AddHttpClient<TripDurationModelArtifactLoader>((serviceProvider, client) =>
 {
-    var options = serviceProvider
+    var modelOptions = serviceProvider
         .GetRequiredService<IOptions<TripDurationModelOptions>>()
         .Value;
-
-    return options.Enabled
-        ? new OnnxTripDurationPredictor(
-            serviceProvider.GetRequiredService<IOptions<TripDurationModelOptions>>(),
-            serviceProvider.GetRequiredService<ILogger<OnnxTripDurationPredictor>>())
-        : new DisabledTripDurationPredictor();
+    client.Timeout = TimeSpan.FromSeconds(Math.Clamp(modelOptions.DownloadTimeoutSeconds, 1, 60));
 });
+builder.Services.AddSingleton<ITripDurationFeatureBuilder, TripDurationFeatureBuilder>();
+builder.Services.AddSingleton<TripDurationPredictorProvider>();
+builder.Services.AddSingleton<ITripDurationPredictor>(serviceProvider =>
+    serviceProvider.GetRequiredService<TripDurationPredictorProvider>());
+builder.Services.AddHostedService<TripDurationModelInitializationService>();
 builder.Services.AddScoped<ITripDurationEstimator, TripDurationEstimator>();
 
 
@@ -182,8 +181,6 @@ builder.Services.AddAuthorization(o => o.AddPolicy("AdminOrVehicle", p => p.Requ
     ctx.User.IsInRole("Admin") || ctx.User.IsInRole("Vehicle"))));
 
 var app = builder.Build();
-
-_ = app.Services.GetRequiredService<ITripDurationPredictor>();
 
 app.UseSwagger();
 app.UseSwaggerUI();
