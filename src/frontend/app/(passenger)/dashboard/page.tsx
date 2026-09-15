@@ -27,8 +27,8 @@ export default function PassengerDashboard() {
         setError(null)
 
         const [rideResponse, ticketResponse] = await Promise.all([
-          apiRequest<RideResponse[]>("/api/public/rides", { method: "GET" }, true),
-          apiRequest<TicketsResponse>("/api/public/tickets", { method: "GET" }, true),
+          apiRequest<RideResponse[]>("/api/public/rides", { method: "GET" }),
+          apiRequest<TicketsResponse>("/api/public/tickets", { method: "GET" }),
         ])
 
         setRides(rideResponse)

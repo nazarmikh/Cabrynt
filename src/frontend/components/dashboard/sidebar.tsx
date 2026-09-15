@@ -12,12 +12,10 @@ import {
   CreditCard,
   Ticket,
   User,
-  Settings,
   LogOut,
   LayoutDashboard,
   Users,
   Gauge,
-  Activity,
   Wrench,
   AlertCircle,
   ChevronLeft,
@@ -57,7 +55,7 @@ export function DashboardSidebar({ role, isCollapsed, onToggle }: SidebarProps) 
   const navItems = role === "admin" ? adminNavItems : passengerNavItems
 
   const handleLogout = async () => {
-    await apiRequest("/api/public/auth/logout", { method: "POST" }, true)
+    await apiRequest("/api/public/auth/logout", { method: "POST" })
     router.push("/login")
   }
 

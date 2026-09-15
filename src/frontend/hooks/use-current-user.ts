@@ -15,7 +15,7 @@ export function useCurrentUser() {
       setIsLoading(true)
       setError(null)
 
-      const me = await apiRequest<MeResponse>("/api/public/auth/me", { method: "GET" }, true)
+      const me = await apiRequest<MeResponse>("/api/public/auth/me", { method: "GET" })
 
       setUser({
         name: me.name,

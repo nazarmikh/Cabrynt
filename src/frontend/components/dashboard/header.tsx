@@ -33,7 +33,7 @@ export function DashboardHeader({ user }: HeaderProps) {
     .toUpperCase()
 
   const handleLogout = async () => {
-    await apiRequest("/api/public/auth/logout", { method: "POST" }, true)
+    await apiRequest("/api/public/auth/logout", { method: "POST" })
     router.push("/login")
   }
 

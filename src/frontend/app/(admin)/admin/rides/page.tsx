@@ -71,8 +71,7 @@ export default function AdminRidesPage() {
         `/api/private/rides/${rideId}/complete`,
         {
           method: "POST",
-        },
-        true
+        }
       )
 
       setRides((currentRides) =>

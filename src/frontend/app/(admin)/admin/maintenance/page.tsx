@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -55,7 +55,7 @@ export default function MaintenancePage() {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>("")
   const [form, setForm] = useState<CreateMaintenanceRequest>(initialForm)
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -64,19 +64,19 @@ export default function MaintenancePage() {
       )
       setVehicles(result.vehicles)
       setLogs(result.maintenances.map((maintenance) => ({ ...maintenance, id: String(maintenance.id), maintenanceId: maintenance.id })))
-      if (!selectedVehicleId && result.vehicles.length > 0) {
-        setSelectedVehicleId(String(result.vehicles[0].id))
+      if (result.vehicles.length > 0) {
+        setSelectedVehicleId((current) => current || String(result.vehicles[0].id))
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load maintenance data.")
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     void loadData()
-  }, [])
+  }, [loadData])
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
@@ -162,8 +162,7 @@ export default function MaintenancePage() {
         {
           method: "POST",
           body: JSON.stringify(form),
-        },
-        true
+        }
       )
       setForm(initialForm)
       await loadData()

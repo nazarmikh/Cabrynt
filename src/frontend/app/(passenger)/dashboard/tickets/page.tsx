@@ -56,7 +56,7 @@ export default function TicketsPage() {
     try {
       setIsLoading(true)
       setError(null)
-      const response = await apiRequest<TicketsResponse>("/api/public/tickets", { method: "GET" }, true)
+      const response = await apiRequest<TicketsResponse>("/api/public/tickets", { method: "GET" })
       setTickets(
         response.tickets.map((ticket) => ({
           ...ticket,
@@ -86,8 +86,7 @@ export default function TicketsPage() {
         {
           method: "POST",
           body: JSON.stringify(newTicket),
-        },
-        true
+        }
       )
 
       setTickets((current) => [

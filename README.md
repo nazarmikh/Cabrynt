@@ -29,6 +29,8 @@ On a locked 4,999-trip confirmation cohort, the selected model produced the foll
 
 The model has a versioned 23-feature float32 ONNX contract. Its ONNX predictions were verified against the scikit-learn model with a maximum difference of `0.000001752` minutes.
 
+When runtime ML inference is enabled, the passenger quote page shows the estimated trip time separately from the fare calculation and identifies whether it used the ML correction, OSRM routing, or the straight-line fallback. OSRM-backed results include OpenStreetMap attribution.
+
 Generated data, route caches, and production model binaries are intentionally excluded from Git. The backend contains the optional ONNX Runtime integration, but enabling it in a deployment requires supplying the model artifact through a secure deployment mechanism. See the [ML README](ml/trip-duration/README.md) for methodology, data preparation, benchmarks, and local setup.
 
 ## Architecture

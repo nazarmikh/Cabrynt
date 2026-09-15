@@ -55,8 +55,7 @@ export default function ProfilePage() {
         {
           method: "PATCH",
           body: JSON.stringify(formData),
-        },
-        true
+        }
       )
       await refreshUser()
       setIsEditing(false)

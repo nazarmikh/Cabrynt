@@ -68,6 +68,8 @@ export interface UpdateMeRequest {
 export interface RideQuoteResponse {
   distance: number
   duration: number
+  estimatedTripDuration: number
+  estimatedTripDurationSource: TripDurationEstimateSource
   baseFare: number
   distanceCost: number
   durationCost: number
@@ -79,6 +81,8 @@ export interface RideQuoteResponse {
   vatAmount: number
   estimatedPrice: number
 }
+
+export type TripDurationEstimateSource = "MachineLearning" | "Osrm" | "StraightLineFallback"
 
 export type TicketPriority = "Low" | "Medium" | "High" | "Critical"
 export type TicketStatus = "Open" | "InProgress" | "Resolved"
