@@ -26,4 +26,10 @@
     <ProjectReference Include="..\..\src\backend\Cabrynt.Backend.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TestData\sum-23-features.onnx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

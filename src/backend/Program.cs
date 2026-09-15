@@ -52,6 +52,21 @@ builder.Services.AddHttpClient<IRouteEstimator, OsrmRouteEstimator>((serviceProv
     client.Timeout = TimeSpan.FromSeconds(Math.Clamp(routingOptions.RequestTimeoutSeconds, 1, 30));
 });
 
+builder.Services.Configure<TripDurationModelOptions>(
+    builder.Configuration.GetSection(TripDurationModelOptions.SectionName));
+builder.Services.AddSingleton<ITripDurationPredictor>(serviceProvider =>
+{
+    var options = serviceProvider
+        .GetRequiredService<IOptions<TripDurationModelOptions>>()
+        .Value;
+
+    return options.Enabled
+        ? new OnnxTripDurationPredictor(
+            serviceProvider.GetRequiredService<IOptions<TripDurationModelOptions>>(),
+            serviceProvider.GetRequiredService<ILogger<OnnxTripDurationPredictor>>())
+        : new DisabledTripDurationPredictor();
+});
+
 
 // Enums as a string not index
 
@@ -151,6 +166,8 @@ builder.Services.AddAuthorization(o => o.AddPolicy("AdminOrVehicle", p => p.Requ
     ctx.User.IsInRole("Admin") || ctx.User.IsInRole("Vehicle"))));
 
 var app = builder.Build();
+
+_ = app.Services.GetRequiredService<ITripDurationPredictor>();
 
 app.UseSwagger();
 app.UseSwaggerUI();

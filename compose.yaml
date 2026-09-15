@@ -27,6 +27,8 @@ services:
       Email__UseSsl: ${Email__UseSsl}
       Routing__OsrmBaseUrl: ${Routing__OsrmBaseUrl:-}
       Routing__RequestTimeoutSeconds: ${Routing__RequestTimeoutSeconds:-3}
+      TripDurationModel__Enabled: ${TripDurationModel__Enabled:-false}
+      TripDurationModel__ModelPath: ${TripDurationModel__ModelPath:-}
     ports:
       - "5113:8080"
     volumes:
