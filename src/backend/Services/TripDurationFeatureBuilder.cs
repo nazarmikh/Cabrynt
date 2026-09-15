@@ -21,14 +21,11 @@ public readonly record struct TripDurationFeatureContext(
 public sealed class TripDurationFeatureBuilder : ITripDurationFeatureBuilder
 {
     private const double EarthRadiusKm = 6_371d;
-    private static readonly TimeZoneInfo PortoTimeZone =
-        TimeZoneInfo.FindSystemTimeZoneById("Europe/Lisbon");
-
     public float[] Build(TripDurationFeatureContext context)
     {
         ValidateContext(context);
 
-        var localTime = TimeZoneInfo.ConvertTime(context.QuoteRequestedAt, PortoTimeZone);
+        var localTime = PortoTime.Convert(context.QuoteRequestedAt);
         var hour = localTime.Hour;
         var weekday = ((int)localTime.DayOfWeek + 6) % 7;
         var month = localTime.Month;

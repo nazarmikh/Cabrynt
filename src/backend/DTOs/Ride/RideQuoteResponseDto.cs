@@ -4,6 +4,8 @@ public class RideQuoteResponseDto
 {
     public decimal Distance { get; set; }
     public decimal Duration { get; set; }
+    public decimal EstimatedTripDuration { get; set; }
+    public TripDurationEstimateSource EstimatedTripDurationSource { get; set; }
     public decimal BaseFare { get; set; }
     public decimal DistanceCost { get; set; }
     public decimal DurationCost { get; set; }

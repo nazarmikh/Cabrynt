@@ -67,6 +67,7 @@ builder.Services.AddSingleton<IPublicHolidayProvider, PortuguesePublicHolidayPro
 
 builder.Services.Configure<TripDurationModelOptions>(
     builder.Configuration.GetSection(TripDurationModelOptions.SectionName));
+builder.Services.AddSingleton<ITripDurationFeatureBuilder, TripDurationFeatureBuilder>();
 builder.Services.AddSingleton<ITripDurationPredictor>(serviceProvider =>
 {
     var options = serviceProvider
@@ -79,6 +80,7 @@ builder.Services.AddSingleton<ITripDurationPredictor>(serviceProvider =>
             serviceProvider.GetRequiredService<ILogger<OnnxTripDurationPredictor>>())
         : new DisabledTripDurationPredictor();
 });
+builder.Services.AddScoped<ITripDurationEstimator, TripDurationEstimator>();
 
 
 // Enums as a string not index

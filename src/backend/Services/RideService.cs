@@ -21,6 +21,7 @@ public class RideService : IRideService
     private readonly IPriceService _priceService;
     private readonly IPaymentService _paymentService;
     private readonly IRouteEstimator _routeEstimator;
+    private readonly ITripDurationEstimator _tripDurationEstimator;
     private readonly ILogger<RideService> _logger;
 
     public RideService(
@@ -29,6 +30,7 @@ public class RideService : IRideService
         IPriceService priceService,
         IPaymentService paymentService,
         IRouteEstimator routeEstimator,
+        ITripDurationEstimator tripDurationEstimator,
         ILogger<RideService> logger)
     {
         _rideRepository = rideRepository;
@@ -36,6 +38,7 @@ public class RideService : IRideService
         _priceService = priceService;
         _paymentService = paymentService;
         _routeEstimator = routeEstimator;
+        _tripDurationEstimator = tripDurationEstimator;
         _logger = logger;
     }
 
@@ -147,12 +150,17 @@ public class RideService : IRideService
         var routeEstimate = await EstimateRouteAsync(rideRequest);
         var distance = Math.Round((decimal)routeEstimate.DistanceKm, 2);
         var duration = Math.Round((decimal)routeEstimate.DurationMinutes, 2);
+        var quoteRequestedAt = DateTimeOffset.UtcNow;
+        var tripDurationEstimate = await _tripDurationEstimator.EstimateAsync(
+            CreateRouteRequest(rideRequest),
+            routeEstimate,
+            quoteRequestedAt);
         var discountCode = await ResolveDiscountCodeAsync(rideRequest.DiscountCode);
         var breakdown = _priceService.GetEstimatedBreakdown(
             distance,
             duration,
             rideRequest.PreferredVehicleType,
-            DateTime.UtcNow,
+            quoteRequestedAt.UtcDateTime,
             passenger.Points,
             discountCode);
 
@@ -160,6 +168,8 @@ public class RideService : IRideService
         {
             Distance = breakdown.Distance,
             Duration = breakdown.Duration,
+            EstimatedTripDuration = Math.Round((decimal)tripDurationEstimate.DurationMinutes, 2),
+            EstimatedTripDurationSource = tripDurationEstimate.Source,
             BaseFare = breakdown.StartingRate,
             DistanceCost = breakdown.DistanceCost,
             DurationCost = breakdown.DurationCost,
@@ -360,11 +370,16 @@ public class RideService : IRideService
 
     private Task<RouteEstimate> EstimateRouteAsync(RideRequestDto rideRequest)
     {
-        return _routeEstimator.EstimateAsync(new RouteRequest(
+        return _routeEstimator.EstimateAsync(CreateRouteRequest(rideRequest));
+    }
+
+    private static RouteRequest CreateRouteRequest(RideRequestDto rideRequest)
+    {
+        return new RouteRequest(
             rideRequest.DepartureLatitude,
             rideRequest.DepartureLongitude,
             rideRequest.DestinationLatitude,
-            rideRequest.DestinationLongitude));
+            rideRequest.DestinationLongitude);
     }
 
     private async Task<PassengerProfile?> GetPassengerAsync(ClaimsPrincipal principal)

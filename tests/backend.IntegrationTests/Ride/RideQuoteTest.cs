@@ -39,6 +39,8 @@ public class RideQuoteTest : IClassFixture<CustomWebApplicationFactory>
         Assert.NotNull(body);
         Assert.True(body!["distance"].GetDecimal() > 0);
         Assert.True(body["duration"].GetDecimal() > 0);
+        Assert.Equal(body["duration"].GetDecimal(), body["estimatedTripDuration"].GetDecimal());
+        Assert.Equal("StraightLineFallback", body["estimatedTripDurationSource"].GetString());
         Assert.Equal(2.5m, body["baseFare"].GetDecimal());
         Assert.Equal(1m, body["vehicleMultiplier"].GetDecimal());
         Assert.True(body["estimatedPrice"].GetDecimal() > 0);
