@@ -7,6 +7,7 @@ using MongoDB.Driver;
 using Project.Endpoints;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Options;
 
 
 
@@ -40,6 +41,16 @@ builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
+
+builder.Services.Configure<RoutingOptions>(
+    builder.Configuration.GetSection(RoutingOptions.SectionName));
+builder.Services.AddHttpClient<IRouteEstimator, OsrmRouteEstimator>((serviceProvider, client) =>
+{
+    var routingOptions = serviceProvider
+        .GetRequiredService<IOptions<RoutingOptions>>()
+        .Value;
+    client.Timeout = TimeSpan.FromSeconds(Math.Clamp(routingOptions.RequestTimeoutSeconds, 1, 30));
+});
 
 
 // Enums as a string not index

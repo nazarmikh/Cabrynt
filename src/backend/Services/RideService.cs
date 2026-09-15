@@ -20,14 +20,22 @@ public class RideService : IRideService
     private readonly IPassengerRepository _passengerRepository;
     private readonly IPriceService _priceService;
     private readonly IPaymentService _paymentService;
+    private readonly IRouteEstimator _routeEstimator;
     private readonly ILogger<RideService> _logger;
 
-    public RideService(IRideRepository rideRepository, IPassengerRepository passengerRepository, IPriceService priceService, IPaymentService paymentService, ILogger<RideService> logger)
+    public RideService(
+        IRideRepository rideRepository,
+        IPassengerRepository passengerRepository,
+        IPriceService priceService,
+        IPaymentService paymentService,
+        IRouteEstimator routeEstimator,
+        ILogger<RideService> logger)
     {
         _rideRepository = rideRepository;
         _passengerRepository = passengerRepository;
         _priceService = priceService;
         _paymentService = paymentService;
+        _routeEstimator = routeEstimator;
         _logger = logger;
     }
 
@@ -50,14 +58,9 @@ public class RideService : IRideService
             vehicle = await _rideRepository.GetVehicleById(vehicleId.Value);
         }
 
-        decimal distance = CalculateDistanceKm(
-                rideRequest.DepartureLatitude,
-                rideRequest.DepartureLongitude,
-                rideRequest.DestinationLatitude,
-                rideRequest.DestinationLongitude
-        );
-
-        decimal duration = CalculateEstimatedDurationMinutes(distance);
+        var routeEstimate = await EstimateRouteAsync(rideRequest);
+        var distance = Math.Round((decimal)routeEstimate.DistanceKm, 2);
+        var duration = Math.Round((decimal)routeEstimate.DurationMinutes, 2);
         DiscountCode? discountCode = await ResolveDiscountCodeAsync(rideRequest.DiscountCode);
 
         Ride ride = new Ride()
@@ -141,12 +144,9 @@ public class RideService : IRideService
             return null;
         }
 
-        var distance = CalculateDistanceKm(
-            rideRequest.DepartureLatitude,
-            rideRequest.DepartureLongitude,
-            rideRequest.DestinationLatitude,
-            rideRequest.DestinationLongitude);
-        var duration = CalculateEstimatedDurationMinutes(distance);
+        var routeEstimate = await EstimateRouteAsync(rideRequest);
+        var distance = Math.Round((decimal)routeEstimate.DistanceKm, 2);
+        var duration = Math.Round((decimal)routeEstimate.DurationMinutes, 2);
         var discountCode = await ResolveDiscountCodeAsync(rideRequest.DiscountCode);
         var breakdown = _priceService.GetEstimatedBreakdown(
             distance,
@@ -358,38 +358,13 @@ public class RideService : IRideService
             vehicle.VehicleType);
     }
 
-    private static decimal CalculateDistanceKm(
-        double startLat,
-        double startLon,
-        double endLat,
-        double endLon)
+    private Task<RouteEstimate> EstimateRouteAsync(RideRequestDto rideRequest)
     {
-        const double earthRadiusKm = 6371.0;
-
-        static double ToRadians(double angle) => Math.PI * angle / 180.0;
-
-        var dLat = ToRadians(endLat - startLat);
-        var dLon = ToRadians(endLon - startLon);
-
-        var lat1 = ToRadians(startLat);
-        var lat2 = ToRadians(endLat);
-
-        var a =
-            Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-            Math.Cos(lat1) * Math.Cos(lat2) *
-            Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-
-        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-        var distance = earthRadiusKm * c;
-
-        return Math.Round((decimal)distance, 2);
-    }
-
-    private static decimal CalculateEstimatedDurationMinutes(decimal distanceKm)
-    {
-        const decimal averageSpeedKmPerHour = 40m;
-        var hours = distanceKm / averageSpeedKmPerHour;
-        return Math.Round(hours * 60m, 2);
+        return _routeEstimator.EstimateAsync(new RouteRequest(
+            rideRequest.DepartureLatitude,
+            rideRequest.DepartureLongitude,
+            rideRequest.DestinationLatitude,
+            rideRequest.DestinationLongitude));
     }
 
     private async Task<PassengerProfile?> GetPassengerAsync(ClaimsPrincipal principal)
