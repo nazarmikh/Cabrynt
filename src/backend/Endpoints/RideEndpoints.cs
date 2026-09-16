@@ -112,16 +112,14 @@ public static class RideEndpoints
 
             try
             {
-                GetRideByIdResponseDto? response = await rideService.GetRideByIdAsync(token, rideId);
-                if (response is null)
+                var result = await rideService.GetRideByIdAsync(token, rideId);
+                return result.Status switch
                 {
-                    return Results.Unauthorized();
-                }
-                return Results.Ok(response);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Results.Forbid();
+                    RideRequestOperationStatus.Success => Results.Ok(result.Ride),
+                    RideRequestOperationStatus.NotFound => Results.NotFound(),
+                    RideRequestOperationStatus.Forbidden => Results.Forbid(),
+                    _ => Results.Unauthorized()
+                };
             }
             catch (Exception)
             {
@@ -136,13 +134,18 @@ public static class RideEndpoints
         {
             try
             {
-                var canceled = await rideService.CancelRideAsync(token, rideId);
-                if (canceled is null)
+                var status = await rideService.CancelRideAsync(token, rideId);
+                return status switch
                 {
-                    return Results.Unauthorized();
-                }
-
-                return canceled == true ? Results.NoContent() : Results.NotFound();
+                    RideRequestOperationStatus.Success => Results.NoContent(),
+                    RideRequestOperationStatus.NotFound => Results.NotFound(),
+                    RideRequestOperationStatus.Forbidden => Results.Forbid(),
+                    RideRequestOperationStatus.Conflict => Results.Conflict(new
+                    {
+                        message = "Only requested rides can be canceled."
+                    }),
+                    _ => Results.Unauthorized()
+                };
             }
             catch (Exception)
             {
