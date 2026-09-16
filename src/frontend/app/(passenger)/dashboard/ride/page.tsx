@@ -14,9 +14,10 @@ import type {
   RideResponse,
   TripDurationEstimateSource,
 } from "@/lib/backend-types"
-import { randomDemoCoordinates, type Coordinates } from "@/lib/location"
+import { type Coordinates } from "@/lib/location"
 import { formatCurrency } from "@/lib/format"
-import { MapPin, Navigation, Car, Users, Crown, Check, Loader2, Tag, Star, Clock3, Sparkles } from "lucide-react"
+import { PortoRoutePicker, type RoutePoint } from "@/components/ride/porto-route-picker"
+import { Car, Users, Crown, Check, Loader2, Tag, Star, Clock3, Sparkles } from "lucide-react"
 
 const vehicleTypes = [
   {
@@ -56,12 +57,8 @@ const tripDurationSourceLabels: Record<TripDurationEstimateSource, string> = {
 function buildRidePayload(
   pickup: string,
   destination: string,
-  pickupLatitude: string,
-  pickupLongitude: string,
-  destinationLatitude: string,
-  destinationLongitude: string,
-  fallbackPickupCoords: Coordinates,
-  fallbackDestinationCoords: Coordinates,
+  pickupCoordinates: Coordinates,
+  destinationCoordinates: Coordinates,
   vehicleType: VehicleChoice,
   discountCode: string
 ): CreateRideRequest {
@@ -70,10 +67,10 @@ function buildRidePayload(
   return {
     departureLocation: pickup,
     destinationLocation: destination,
-    departureLatitude: Number(pickupLatitude) || fallbackPickupCoords.latitude,
-    departureLongitude: Number(pickupLongitude) || fallbackPickupCoords.longitude,
-    destinationLatitude: Number(destinationLatitude) || fallbackDestinationCoords.latitude,
-    destinationLongitude: Number(destinationLongitude) || fallbackDestinationCoords.longitude,
+    departureLatitude: pickupCoordinates.latitude,
+    departureLongitude: pickupCoordinates.longitude,
+    destinationLatitude: destinationCoordinates.latitude,
+    destinationLongitude: destinationCoordinates.longitude,
     preferredVehicleType: selectedType?.apiValue ?? "Standard",
     discountCode: discountCode.trim() ? discountCode.trim() : undefined,
   }
@@ -82,10 +79,9 @@ function buildRidePayload(
 export default function BookRidePage() {
   const [pickup, setPickup] = useState("")
   const [destination, setDestination] = useState("")
-  const [pickupLatitude, setPickupLatitude] = useState("")
-  const [pickupLongitude, setPickupLongitude] = useState("")
-  const [destinationLatitude, setDestinationLatitude] = useState("")
-  const [destinationLongitude, setDestinationLongitude] = useState("")
+  const [pickupCoordinates, setPickupCoordinates] = useState<Coordinates | null>(null)
+  const [destinationCoordinates, setDestinationCoordinates] = useState<Coordinates | null>(null)
+  const [activeRoutePoint, setActiveRoutePoint] = useState<RoutePoint>("pickup")
   const [vehicleType, setVehicleType] = useState<VehicleChoice>("standard")
   const [discountCode, setDiscountCode] = useState("")
   const [quote, setQuote] = useState<RideQuoteResponse | null>(null)
@@ -95,9 +91,7 @@ export default function BookRidePage() {
   const [bookingError, setBookingError] = useState<string | null>(null)
   const [createdRide, setCreatedRide] = useState<RideResponse | null>(null)
 
-  const canRequestQuote = pickup.trim().length > 0 && destination.trim().length > 0
-  const fallbackPickupCoords = useMemo(() => randomDemoCoordinates(), [])
-  const fallbackDestinationCoords = useMemo(() => randomDemoCoordinates(), [])
+  const canRequestQuote = pickup.trim().length > 0 && destination.trim().length > 0 && pickupCoordinates !== null && destinationCoordinates !== null
 
   useEffect(() => {
     if (!canRequestQuote) {
@@ -110,15 +104,15 @@ export default function BookRidePage() {
       try {
         setIsLoadingQuote(true)
         setQuoteError(null)
+        if (!pickupCoordinates || !destinationCoordinates) {
+          return
+        }
+
         const payload = buildRidePayload(
           pickup,
           destination,
-          pickupLatitude,
-          pickupLongitude,
-          destinationLatitude,
-          destinationLongitude,
-          fallbackPickupCoords,
-          fallbackDestinationCoords,
+          pickupCoordinates,
+          destinationCoordinates,
           vehicleType,
           discountCode
         )
@@ -142,12 +136,8 @@ export default function BookRidePage() {
   }, [
     pickup,
     destination,
-    pickupLatitude,
-    pickupLongitude,
-    destinationLatitude,
-    destinationLongitude,
-    fallbackPickupCoords,
-    fallbackDestinationCoords,
+    pickupCoordinates,
+    destinationCoordinates,
     vehicleType,
     discountCode,
     canRequestQuote,
@@ -157,17 +147,17 @@ export default function BookRidePage() {
 
   const handleBookRide = async () => {
     try {
+      if (!pickupCoordinates || !destinationCoordinates) {
+        return
+      }
+
       setIsBooking(true)
       setBookingError(null)
       const payload = buildRidePayload(
         pickup,
         destination,
-        pickupLatitude,
-        pickupLongitude,
-        destinationLatitude,
-        destinationLongitude,
-        fallbackPickupCoords,
-        fallbackDestinationCoords,
+        pickupCoordinates,
+        destinationCoordinates,
         vehicleType,
         discountCode
       )
@@ -225,10 +215,9 @@ export default function BookRidePage() {
                 setCreatedRide(null)
                 setPickup("")
                 setDestination("")
-                setPickupLatitude("")
-                setPickupLongitude("")
-                setDestinationLatitude("")
-                setDestinationLongitude("")
+                setPickupCoordinates(null)
+                setDestinationCoordinates(null)
+                setActiveRoutePoint("pickup")
                 setDiscountCode("")
                 setQuote(null)
               }}
@@ -257,81 +246,39 @@ export default function BookRidePage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="pickup">Pickup Location</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
-                  <Input
-                    id="pickup"
-                    placeholder="Enter pickup address"
-                    className="pl-10"
-                    value={pickup}
-                    onChange={(event) => setPickup(event.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="pickupLatitude">Pickup Latitude</Label>
-                  <Input
-                    id="pickupLatitude"
-                    type="number"
-                    step="any"
-                    placeholder={String(fallbackPickupCoords.latitude)}
-                    value={pickupLatitude}
-                    onChange={(event) => setPickupLatitude(event.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="pickupLongitude">Pickup Longitude</Label>
-                  <Input
-                    id="pickupLongitude"
-                    type="number"
-                    step="any"
-                    placeholder={String(fallbackPickupCoords.longitude)}
-                    value={pickupLongitude}
-                    onChange={(event) => setPickupLongitude(event.target.value)}
-                  />
-                </div>
+                <Input
+                  id="pickup"
+                  placeholder="Pickup label"
+                  value={pickup}
+                  onChange={(event) => setPickup(event.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="destination">Destination</Label>
-                <div className="relative">
-                  <Navigation className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-accent" />
-                  <Input
-                    id="destination"
-                    placeholder="Enter destination address"
-                    className="pl-10"
-                    value={destination}
-                    onChange={(event) => setDestination(event.target.value)}
-                  />
-                </div>
+                <Input
+                  id="destination"
+                  placeholder="Destination label"
+                  value={destination}
+                  onChange={(event) => setDestination(event.target.value)}
+                />
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="destinationLatitude">Destination Latitude</Label>
-                  <Input
-                    id="destinationLatitude"
-                    type="number"
-                    step="any"
-                    placeholder={String(fallbackDestinationCoords.latitude)}
-                    value={destinationLatitude}
-                    onChange={(event) => setDestinationLatitude(event.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="destinationLongitude">Destination Longitude</Label>
-                  <Input
-                    id="destinationLongitude"
-                    type="number"
-                    step="any"
-                    placeholder={String(fallbackDestinationCoords.longitude)}
-                    value={destinationLongitude}
-                    onChange={(event) => setDestinationLongitude(event.target.value)}
-                  />
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Coordinates are optional. If you leave them empty, the app uses demo coordinates for the quote and ride request.
-              </p>
+              <PortoRoutePicker
+                activePoint={activeRoutePoint}
+                pickup={pickupCoordinates}
+                destination={destinationCoordinates}
+                onActivePointChange={setActiveRoutePoint}
+                onPointSelect={(point, coordinates) => {
+                  if (point === "pickup") {
+                    setPickupCoordinates(coordinates)
+                    setPickup((value) => value.trim() ? value : "Selected pickup")
+                    setActiveRoutePoint("destination")
+                    return
+                  }
+
+                  setDestinationCoordinates(coordinates)
+                  setDestination((value) => value.trim() ? value : "Selected destination")
+                }}
+              />
             </CardContent>
           </Card>
 
