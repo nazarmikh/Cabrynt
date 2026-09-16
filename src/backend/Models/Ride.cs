@@ -15,9 +15,7 @@ public class Ride
     public decimal Duration { get; set; }
     public VehicleType PreferredVehicleType { get; set; }
     public decimal EstimatedPrice { get; set; }
-    public DiscountCode? DiscountCode { get; set; }
     public RideStatus RideStatus { get; set; }
     public DateTime RequestTime { get; set; }
     public required PassengerProfile PassengerProfile { get; set; }
-    public Vehicle? Vehicle { get; set; }
 }

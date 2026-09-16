@@ -13,18 +13,12 @@ import {
   Ticket,
   User,
   LogOut,
-  LayoutDashboard,
-  Users,
-  Gauge,
-  Wrench,
-  AlertCircle,
   ChevronLeft,
   Menu,
 } from "lucide-react"
 import { apiRequest } from "@/lib/api"
 
 interface SidebarProps {
-  role: "passenger" | "admin"
   isCollapsed: boolean
   onToggle: () => void
 }
@@ -38,21 +32,10 @@ const passengerNavItems = [
   { href: "/dashboard/profile", icon: User, label: "Profile" },
 ]
 
-const adminNavItems = [
-  { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/admin/users", icon: Users, label: "Users" },
-  { href: "/admin/vehicles", icon: Car, label: "Vehicles" },
-  { href: "/admin/rides", icon: History, label: "Rides" },
-  { href: "/admin/telemetry", icon: Gauge, label: "Telemetry" },
-  { href: "/admin/diagnostics", icon: AlertCircle, label: "Diagnostics" },
-  { href: "/admin/maintenance", icon: Wrench, label: "Maintenance" },
-  { href: "/admin/tickets", icon: Ticket, label: "Tickets" },
-]
-
-export function DashboardSidebar({ role, isCollapsed, onToggle }: SidebarProps) {
+export function DashboardSidebar({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const navItems = role === "admin" ? adminNavItems : passengerNavItems
+  const navItems = passengerNavItems
 
   const handleLogout = async () => {
     await apiRequest("/api/public/auth/logout", { method: "POST" })
@@ -69,7 +52,7 @@ export function DashboardSidebar({ role, isCollapsed, onToggle }: SidebarProps) 
       {/* Header */}
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
         {!isCollapsed && (
-          <Link href={role === "admin" ? "/admin" : "/dashboard"}>
+          <Link href="/dashboard">
             <CabryntLogo />
           </Link>
         )}
@@ -87,7 +70,7 @@ export function DashboardSidebar({ role, isCollapsed, onToggle }: SidebarProps) 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/dashboard" && item.href !== "/admin" && pathname.startsWith(item.href))
+            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
             return (
               <li key={item.href}>
                 <Link

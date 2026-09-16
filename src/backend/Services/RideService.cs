@@ -1,6 +1,4 @@
 using System.Security.Claims;
-using Project.Endpoints;
-
 
 namespace Project.Services;
 
@@ -10,8 +8,7 @@ public interface IRideService
     Task<RideQuoteResponseDto?> GetRideQuoteAsync(ClaimsPrincipal principal, RideRequestDto rideRequest);
     Task<List<RideResponseDto>?> GetAllRidesAsync(ClaimsPrincipal principal);
     Task<GetRideByIdResponseDto?> GetRideByIdAsync(ClaimsPrincipal principal, int rideId);
-    Task CheckAvailableVehicleAsync(int rideId);
-    Task<CompleteRideResponseDto?> CompleteRideAsync(ClaimsPrincipal principal, int rideId);
+    Task<bool?> CancelRideAsync(ClaimsPrincipal principal, int rideId);
 }
 
 public class RideService : IRideService
@@ -19,7 +16,6 @@ public class RideService : IRideService
     private readonly IRideRepository _rideRepository;
     private readonly IPassengerRepository _passengerRepository;
     private readonly IPriceService _priceService;
-    private readonly IPaymentService _paymentService;
     private readonly IRouteEstimator _routeEstimator;
     private readonly ITripDurationEstimator _tripDurationEstimator;
     private readonly ILogger<RideService> _logger;
@@ -28,7 +24,6 @@ public class RideService : IRideService
         IRideRepository rideRepository,
         IPassengerRepository passengerRepository,
         IPriceService priceService,
-        IPaymentService paymentService,
         IRouteEstimator routeEstimator,
         ITripDurationEstimator tripDurationEstimator,
         ILogger<RideService> logger)
@@ -36,7 +31,6 @@ public class RideService : IRideService
         _rideRepository = rideRepository;
         _passengerRepository = passengerRepository;
         _priceService = priceService;
-        _paymentService = paymentService;
         _routeEstimator = routeEstimator;
         _tripDurationEstimator = tripDurationEstimator;
         _logger = logger;
@@ -46,27 +40,15 @@ public class RideService : IRideService
     {
         var passenger = await GetPassengerAsync(principal);
         if (passenger is null)
-            return null;
-
-        int? vehicleId = await _rideRepository.GetNearestVehicleAsync(
-            rideRequest.DepartureLatitude,
-            rideRequest.DepartureLongitude,
-            rideRequest.PreferredVehicleType);
-
-
-        Vehicle? vehicle = null;
-
-        if (vehicleId is not null)
         {
-            vehicle = await _rideRepository.GetVehicleById(vehicleId.Value);
+            return null;
         }
 
         var routeEstimate = await EstimateRouteAsync(rideRequest);
         var distance = Math.Round((decimal)routeEstimate.DistanceKm, 2);
         var duration = Math.Round((decimal)routeEstimate.DurationMinutes, 2);
-        DiscountCode? discountCode = await ResolveDiscountCodeAsync(rideRequest.DiscountCode);
 
-        Ride ride = new Ride()
+        var ride = new Ride
         {
             DepartureLocation = rideRequest.DepartureLocation,
             DepartureLatitude = rideRequest.DepartureLatitude,
@@ -76,67 +58,26 @@ public class RideService : IRideService
             DestinationLongitude = rideRequest.DestinationLongitude,
             Distance = distance,
             Duration = duration,
-            DiscountCode = discountCode,
-            EstimatedPrice = 0,
+            EstimatedPrice = _priceService.EstimatePrice(
+                distance,
+                duration,
+                rideRequest.PreferredVehicleType,
+                DateTime.UtcNow),
             RequestTime = DateTime.UtcNow,
             PassengerProfile = passenger,
             RideStatus = RideStatus.Requested,
-            PreferredVehicleType = rideRequest.PreferredVehicleType,
-            Vehicle = null
+            PreferredVehicleType = rideRequest.PreferredVehicleType
         };
-
-        decimal price = _priceService.EstimatePrice(
-            distance,
-            duration,
-            rideRequest.PreferredVehicleType,
-            DateTime.UtcNow,
-            passenger.Points,
-            discountCode);
-
-        ride.EstimatedPrice = price;
-
-        if (vehicle is not null)
-        {
-            ride.RideStatus = RideStatus.InProgress;
-            ride.Vehicle = vehicle;
-            vehicle.VehicleStatus = VehicleStatus.InRide;
-        }
 
         await _rideRepository.AddRideAsync(ride);
         await _rideRepository.SaveChangesAsync();
 
-        if (vehicle is null)
-        {
-            _logger.LogWarning(
-                "Ride {RideId} created for passenger {PassengerUserId} without an available vehicle; ride remains {RideStatus}",
-                ride.Id,
-                passenger.UserId,
-                ride.RideStatus);
-        }
-        else
-        {
-            _logger.LogInformation(
-                "Ride {RideId} created for passenger {PassengerUserId} and assigned vehicle {VehicleId}",
-                ride.Id,
-                passenger.UserId,
-                vehicle.Id);
-        }
+        _logger.LogInformation(
+            "Ride request {RideId} created for passenger {PassengerUserId}",
+            ride.Id,
+            passenger.UserId);
 
-        RideResponseDto response = new RideResponseDto()
-        {
-            RideId = ride.Id,
-            RideStatus = ride.RideStatus,
-            RequestTime = ride.RequestTime,
-            VehicleId = vehicleId,
-            EstimatedPrice = ride.EstimatedPrice,
-            DepartureLocation = ride.DepartureLocation,
-            DestinationLocation = ride.DestinationLocation,
-            Distance = ride.Distance,
-            Duration = ride.Duration,
-            PreferredVehicleType = ride.PreferredVehicleType
-        };
-
-        return response;
+        return MapRide(ride);
     }
 
     public async Task<RideQuoteResponseDto?> GetRideQuoteAsync(ClaimsPrincipal principal, RideRequestDto rideRequest)
@@ -155,14 +96,11 @@ public class RideService : IRideService
             CreateRouteRequest(rideRequest),
             routeEstimate,
             quoteRequestedAt);
-        var discountCode = await ResolveDiscountCodeAsync(rideRequest.DiscountCode);
         var breakdown = _priceService.GetEstimatedBreakdown(
             distance,
             duration,
             rideRequest.PreferredVehicleType,
-            quoteRequestedAt.UtcDateTime,
-            passenger.Points,
-            discountCode);
+            quoteRequestedAt.UtcDateTime);
 
         return new RideQuoteResponseDto
         {
@@ -176,8 +114,6 @@ public class RideService : IRideService
             VehicleMultiplier = breakdown.VehicleMultiplier,
             NightSurcharge = breakdown.NightSurcharge,
             IsNightRateApplied = breakdown.IsNightRateApplied,
-            LoyaltyDiscount = breakdown.LoyaltyDiscount,
-            CodeDiscount = breakdown.CodeDiscount,
             VatAmount = breakdown.VatAmount,
             EstimatedPrice = breakdown.Total
         };
@@ -185,45 +121,23 @@ public class RideService : IRideService
 
     public async Task<List<RideResponseDto>?> GetAllRidesAsync(ClaimsPrincipal principal)
     {
-        var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!int.TryParse(sub, out var userId))
-            return null;
-
-        List<Ride> rides = await _rideRepository.GetAllRidesAsync(userId);
-        List<RideResponseDto> response = new List<RideResponseDto>();
-        foreach (var item in rides)
+        if (!TryGetUserId(principal, out var userId))
         {
-            RideResponseDto newRecord = new RideResponseDto()
-            {
-                RideId = item.Id,
-                RideStatus = item.RideStatus,
-                RequestTime = item.RequestTime,
-                VehicleId = item.Vehicle?.Id,
-                EstimatedPrice = item.EstimatedPrice,
-                DepartureLocation = item.DepartureLocation,
-                DestinationLocation = item.DestinationLocation,
-                Distance = item.Distance,
-                Duration = item.Duration,
-                PreferredVehicleType = item.PreferredVehicleType
-            };
-            response.Add(newRecord);
+            return null;
         }
 
-
-        // return rides;
-        return response;
+        var rides = await _rideRepository.GetAllRidesAsync(userId);
+        return rides.Select(MapRide).ToList();
     }
 
     public async Task<GetRideByIdResponseDto?> GetRideByIdAsync(ClaimsPrincipal principal, int rideId)
     {
-        var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!int.TryParse(sub, out var userId))
+        if (!TryGetUserId(principal, out var userId))
+        {
             return null;
+        }
 
-
-        Ride? ride = await _rideRepository.GetRideByIdAsync(rideId);
+        var ride = await _rideRepository.GetRideByIdAsync(rideId);
         if (ride is null)
         {
             return null;
@@ -234,138 +148,41 @@ public class RideService : IRideService
             throw new UnauthorizedAccessException();
         }
 
-        GetRideByIdResponseDto response = new GetRideByIdResponseDto
+        return new GetRideByIdResponseDto
         {
             Id = ride.Id,
             DepartureLocation = ride.DepartureLocation,
             DestinationLocation = ride.DestinationLocation,
             RequestTime = ride.RequestTime,
-            RideStatus = ride.RideStatus,
-            VehicleModel = ride.Vehicle?.Model
+            RideStatus = ride.RideStatus
         };
-
-        return response;
     }
 
-    public async Task CheckAvailableVehicleAsync(int rideId)
+    public async Task<bool?> CancelRideAsync(ClaimsPrincipal principal, int rideId)
     {
-        Ride? ride = await _rideRepository.GetRideByIdAsync(rideId);
-        if (ride is null)
+        if (!TryGetUserId(principal, out var userId))
         {
-            throw new InvalidOperationException("Ride not found");
-        }
-
-        int? vehicleId = await _rideRepository.GetNearestVehicleAsync(
-            ride.DepartureLatitude,
-            ride.DepartureLongitude,
-            ride.PreferredVehicleType);
-        if (vehicleId is null)
-        {
-            _logger.LogInformation("Ride {RideId} still has no available vehicle during assignment check", ride.Id);
-            return;
-        }
-
-        Vehicle? vehicle = await _rideRepository.GetVehicleById(vehicleId.Value);
-        if (vehicle is null)
-        {
-            throw new InvalidOperationException("Vehicle with that id is not found");
-        }
-
-        ride.RideStatus = RideStatus.InProgress;
-        ride.Vehicle = vehicle;
-        vehicle.VehicleStatus = VehicleStatus.InRide;
-        _rideRepository.UpdateRide(ride);
-        await _rideRepository.SaveChangesAsync();
-
-        _logger.LogInformation("Ride {RideId} was assigned vehicle {VehicleId} after waiting", ride.Id, vehicle.Id);
-
-    }
-
-    public async Task<CompleteRideResponseDto?> CompleteRideAsync(ClaimsPrincipal principal, int rideId)
-    {
-        var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!int.TryParse(sub, out var userId))
             return null;
+        }
 
         var ride = await _rideRepository.GetRideByIdAsync(rideId);
         if (ride is null)
         {
-            throw new InvalidOperationException("Ride not found");
+            return false;
         }
 
-        if (ride.Vehicle is null)
+        // Requests cannot be canceled on behalf of another passenger or after a future dispatch step.
+        if (ride.PassengerProfile.UserId != userId || ride.RideStatus != RideStatus.Requested)
         {
-            throw new InvalidOperationException("Ride has no assigned vehicle");
+            return false;
         }
 
-        if (ride.RideStatus != RideStatus.InProgress)
-        {
-            throw new InvalidOperationException("Only in-progress rides can be completed");
-        }
-
-        if (!principal.IsInRole("Admin") && ride.Vehicle.UserId != userId)
-        {
-            throw new UnauthorizedAccessException();
-        }
-
-        ride.RideStatus = RideStatus.Completed;
-        ride.Vehicle.VehicleStatus = VehicleStatus.Active;
-
-        var freedVehicle = ride.Vehicle;
-        await AssignFreedVehicleToWaitingRideAsync(freedVehicle);
-
+        ride.RideStatus = RideStatus.Canceled;
         _rideRepository.UpdateRide(ride);
         await _rideRepository.SaveChangesAsync();
 
-        var payment = await _paymentService.CreatePaymentAsync(new CreatePaymentRequestDto
-        {
-            RideId = ride.Id
-        });
-
-        if (payment is null)
-        {
-            throw new InvalidOperationException("Failed to create payment for completed ride");
-        }
-
-        _logger.LogInformation(
-            "Ride {RideId} completed by user {UserId}; payment {PaymentId} created and vehicle {VehicleId} processed for reassignment",
-            ride.Id,
-            userId,
-            payment.Id,
-            ride.Vehicle.Id);
-
-        return new CompleteRideResponseDto
-        {
-            RideId = ride.Id,
-            RideStatus = ride.RideStatus,
-            CompletedAt = DateTime.UtcNow,
-            VehicleId = ride.Vehicle.Id,
-            PaymentId = payment.Id,
-            PaymentAmount = payment.PayAmount
-        };
-    }
-
-    private async Task AssignFreedVehicleToWaitingRideAsync(Vehicle vehicle)
-    {
-        var waitingRide = await _rideRepository.GetOldestRequestedRideAsync(vehicle.VehicleType);
-        if (waitingRide is null)
-        {
-            _logger.LogInformation("Vehicle {VehicleId} became available with no waiting ride for type {VehicleType}", vehicle.Id, vehicle.VehicleType);
-            return;
-        }
-
-        waitingRide.Vehicle = vehicle;
-        waitingRide.RideStatus = RideStatus.InProgress;
-        vehicle.VehicleStatus = VehicleStatus.InRide;
-
-        _rideRepository.UpdateRide(waitingRide);
-
-        _logger.LogInformation(
-            "Vehicle {VehicleId} was reassigned to waiting ride {RideId} of type {VehicleType}",
-            vehicle.Id,
-            waitingRide.Id,
-            vehicle.VehicleType);
+        _logger.LogInformation("Ride request {RideId} was canceled by passenger {PassengerUserId}", ride.Id, userId);
+        return true;
     }
 
     private Task<RouteEstimate> EstimateRouteAsync(RideRequestDto rideRequest)
@@ -384,42 +201,29 @@ public class RideService : IRideService
 
     private async Task<PassengerProfile?> GetPassengerAsync(ClaimsPrincipal principal)
     {
-        var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!int.TryParse(sub, out var userId))
-            return null;
-
-        return await _passengerRepository.GetPassengerByIdAsync(userId);
+        return !TryGetUserId(principal, out var userId)
+            ? null
+            : await _passengerRepository.GetPassengerByIdAsync(userId);
     }
 
-    private async Task<DiscountCode?> ResolveDiscountCodeAsync(string? discountCodeValue)
+    private static bool TryGetUserId(ClaimsPrincipal principal, out int userId)
     {
-        if (string.IsNullOrWhiteSpace(discountCodeValue))
-        {
-            return null;
-        }
-
-        var discountCode = await _rideRepository.GetDiscountCodeByCodeAsync(discountCodeValue.Trim());
-        if (discountCode is null)
-        {
-            _logger.LogWarning("Ride creation rejected because discount code {DiscountCode} was not found", discountCodeValue.Trim());
-            throw new InvalidOperationException("Invalid discount code");
-        }
-
-        if (discountCode.ExpirationDate <= DateTime.UtcNow)
-        {
-            _logger.LogWarning("Ride creation rejected because discount code {DiscountCode} is expired", discountCode.Code);
-            throw new InvalidOperationException("Discount code has expired");
-        }
-
-        if (!discountCode.IsActive)
-        {
-            _logger.LogWarning("Ride creation rejected because discount code {DiscountCode} is inactive", discountCode.Code);
-            throw new InvalidOperationException("Discount code is not active");
-        }
-
-        return discountCode;
+        return int.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
     }
 
-
+    private static RideResponseDto MapRide(Ride ride)
+    {
+        return new RideResponseDto
+        {
+            RideId = ride.Id,
+            RideStatus = ride.RideStatus,
+            RequestTime = ride.RequestTime,
+            EstimatedPrice = ride.EstimatedPrice,
+            DepartureLocation = ride.DepartureLocation,
+            DestinationLocation = ride.DestinationLocation,
+            Distance = ride.Distance,
+            Duration = ride.Duration,
+            PreferredVehicleType = ride.PreferredVehicleType
+        };
+    }
 }

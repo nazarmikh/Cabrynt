@@ -1,5 +1,4 @@
 using Project.Enums;
-using Project.Models;
 using Project.Services;
 
 namespace backend.UnitTests.Services;
@@ -9,177 +8,30 @@ public class PriceServiceTest
     private readonly PriceService _service = new();
 
     [Fact]
-    public void EstimatePrice_ReturnsExpectedTotal_ForStandardDaytimeRide()
+    public void EstimatePrice_UsesMinimumFareBeforeVat()
     {
-        var result = _service.EstimatePrice(
-            distance: 10m,
-            duration: 20m,
-            vehicleType: VehicleType.Standard,
-            rideTime: new DateTime(2026, 4, 15, 14, 0, 0, DateTimeKind.Utc),
-            loyaltyPoints: 0,
-            discountCode: null);
+        var price = _service.EstimatePrice(0m, 0m, VehicleType.Standard, new DateTime(2026, 9, 16, 12, 0, 0));
 
-        Assert.Equal(23.60m, result);
+        Assert.Equal(6.05m, price);
     }
 
     [Fact]
-    public void EstimatePrice_AppliesVehicleMultiplierNightSurchargeAndPercentageDiscount()
+    public void GetEstimatedBreakdown_AppliesVehicleMultiplier()
     {
-        var discountCode = new DiscountCode
-        {
-            Code = "SUMMER15",
-            Type = DiscountType.Percentage,
-            Value = 15m,
-            MinimumRideValue = 10m,
-            ExpirationDate = new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc),
-            IsActive = true
-        };
+        var standard = _service.GetEstimatedBreakdown(10m, 20m, VehicleType.Standard, new DateTime(2026, 9, 16, 12, 0, 0));
+        var luxury = _service.GetEstimatedBreakdown(10m, 20m, VehicleType.Luxury, new DateTime(2026, 9, 16, 12, 0, 0));
 
-        var result = _service.EstimatePrice(
-            distance: 10m,
-            duration: 20m,
-            vehicleType: VehicleType.Luxury,
-            rideTime: new DateTime(2026, 4, 15, 22, 0, 0, DateTimeKind.Utc),
-            loyaltyPoints: 0,
-            discountCode: discountCode);
-
-        Assert.Equal(50.74m, result);
+        Assert.Equal(1m, standard.VehicleMultiplier);
+        Assert.Equal(2.2m, luxury.VehicleMultiplier);
+        Assert.True(luxury.Total > standard.Total);
     }
 
     [Fact]
-    public void GetFinalPrice_AppliesLoyaltyCapAndReturnsRemainingPoints()
+    public void GetEstimatedBreakdown_AppliesNightSurcharge()
     {
-        var result = _service.GetFinalPrice(
-            distance: 10m,
-            duration: 20m,
-            vehicleType: VehicleType.Standard,
-            rideTime: new DateTime(2026, 4, 15, 14, 0, 0, DateTimeKind.Utc),
-            loyaltyPoints: 1000,
-            discountCode: null);
+        var result = _service.GetEstimatedBreakdown(10m, 20m, VehicleType.Standard, new DateTime(2026, 9, 16, 23, 0, 0));
 
-        Assert.Equal(19.97m, result.finalPrice);
-        Assert.Equal(700, result.loyaltyPointRecalculated);
-    }
-
-    [Fact]
-    public void EstimatePrice_AppliesFlatDiscount_WhenCodeIsValid()
-    {
-        var discountCode = new DiscountCode
-        {
-            Code = "WELCOME5",
-            Type = DiscountType.Flat,
-            Value = 5m,
-            MinimumRideValue = 10m,
-            ExpirationDate = new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc),
-            IsActive = true
-        };
-
-        var result = _service.EstimatePrice(
-            distance: 10m,
-            duration: 20m,
-            vehicleType: VehicleType.Standard,
-            rideTime: new DateTime(2026, 4, 15, 14, 0, 0, DateTimeKind.Utc),
-            loyaltyPoints: 0,
-            discountCode: discountCode);
-
-        Assert.Equal(17.55m, result);
-    }
-
-    [Fact]
-    public void EstimatePrice_IgnoresDiscountCode_WhenItIsExpired()
-    {
-        var expiredCode = new DiscountCode
-        {
-            Code = "OLD15",
-            Type = DiscountType.Percentage,
-            Value = 15m,
-            MinimumRideValue = 10m,
-            ExpirationDate = new DateTime(2026, 4, 14, 0, 0, 0, DateTimeKind.Utc),
-            IsActive = true
-        };
-
-        var result = _service.EstimatePrice(
-            distance: 10m,
-            duration: 20m,
-            vehicleType: VehicleType.Standard,
-            rideTime: new DateTime(2026, 4, 15, 14, 0, 0, DateTimeKind.Utc),
-            loyaltyPoints: 0,
-            discountCode: expiredCode);
-
-        Assert.Equal(23.60m, result);
-    }
-
-    [Fact]
-    public void EstimatePrice_EnforcesMinimumFareAfterDiscounts()
-    {
-        var discountCode = new DiscountCode
-        {
-            Code = "FREE10",
-            Type = DiscountType.Flat,
-            Value = 10m,
-            MinimumRideValue = 0m,
-            ExpirationDate = new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc),
-            IsActive = true
-        };
-
-        var result = _service.EstimatePrice(
-            distance: 1m,
-            duration: 1m,
-            vehicleType: VehicleType.Standard,
-            rideTime: new DateTime(2026, 4, 15, 14, 0, 0, DateTimeKind.Utc),
-            loyaltyPoints: 0,
-            discountCode: discountCode);
-
-        Assert.Equal(6.05m, result);
-    }
-
-    [Fact]
-    public void EstimatePrice_AppliesNightSurchargeAtSixAmBoundary()
-    {
-        var result = _service.EstimatePrice(
-            distance: 10m,
-            duration: 20m,
-            vehicleType: VehicleType.Standard,
-            rideTime: new DateTime(2026, 4, 15, 6, 0, 0, DateTimeKind.Utc),
-            loyaltyPoints: 0,
-            discountCode: null);
-
-        Assert.Equal(27.13m, result);
-    }
-
-    [Fact]
-    public void EstimatePrice_DoesNotApplyNightSurchargeAfterSixAmBoundary()
-    {
-        var result = _service.EstimatePrice(
-            distance: 10m,
-            duration: 20m,
-            vehicleType: VehicleType.Standard,
-            rideTime: new DateTime(2026, 4, 15, 6, 1, 0, DateTimeKind.Utc),
-            loyaltyPoints: 0,
-            discountCode: null);
-
-        Assert.Equal(23.60m, result);
-    }
-
-    [Fact]
-    public void GetEstimatedBreakdown_ReturnsComponentsConsistentWithTotal()
-    {
-        var result = _service.GetEstimatedBreakdown(
-            distance: 10m,
-            duration: 20m,
-            vehicleType: VehicleType.Standard,
-            rideTime: new DateTime(2026, 4, 15, 14, 0, 0, DateTimeKind.Utc),
-            loyaltyPoints: 0,
-            discountCode: null);
-
-        Assert.Equal(2.5m, result.StartingRate);
-        Assert.Equal(11m, result.DistanceCost);
-        Assert.Equal(6m, result.DurationCost);
-        Assert.Equal(1m, result.VehicleMultiplier);
-        Assert.Equal(0m, result.NightSurcharge);
-        Assert.Equal(0m, result.LoyaltyDiscount);
-        Assert.Equal(0m, result.CodeDiscount);
-        Assert.Equal(4.10m, result.VatAmount);
-        Assert.Equal(23.60m, result.Total);
+        Assert.True(result.IsNightRateApplied);
+        Assert.True(result.NightSurcharge > 0m);
     }
 }

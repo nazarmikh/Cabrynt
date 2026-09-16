@@ -42,7 +42,6 @@ export default function PassengerDashboardLayout({
   return (
     <div className="min-h-screen bg-background">
       <DashboardSidebar
-        role="passenger"
         isCollapsed={isCollapsed}
         onToggle={() => setIsCollapsed(!isCollapsed)}
       />

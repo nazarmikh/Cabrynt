@@ -32,13 +32,6 @@ public class RideRequestDtoValidation : AbstractValidator<RideRequestDto>
             .InclusiveBetween(-180, 180)
             .WithMessage("Destination longitude is out of bounds.");
 
-        RuleFor(x => x.DiscountCode)
-            .MaximumLength(50);
-
-        RuleFor(x => x.DiscountCode)
-            .Must(code => string.IsNullOrWhiteSpace(code) || code.Trim().Length == code.Length)
-            .WithMessage("Discount code cannot start or end with spaces.");
-
         RuleFor(x => x.PreferredVehicleType)
             .IsInEnum()
             .WithMessage("Vehicle type is invalid.");

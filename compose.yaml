@@ -18,13 +18,6 @@ services:
       Jwt__ExpiryMinutes: ${Jwt__ExpiryMinutes}
       Admin__Email: ${Admin__Email}
       Admin__Password: ${Admin__Password}
-      Email__FromAddress: ${Email__FromAddress}
-      Email__PickupDirectory: ${Email__PickupDirectory:-}
-      Email__SmtpHost: ${Email__SmtpHost}
-      Email__SmtpPort: ${Email__SmtpPort}
-      Email__SmtpUsername: ${Email__SmtpUsername}
-      Email__SmtpPassword: ${Email__SmtpPassword}
-      Email__UseSsl: ${Email__UseSsl}
       DataProtection__ApplicationName: ${DataProtection__ApplicationName:-Cabrynt}
       DataProtection__KeyDirectory: ${DataProtection__KeyDirectory:-/app/App_Data/data-protection-keys}
       Routing__OsrmBaseUrl: ${Routing__OsrmBaseUrl:-}
@@ -44,8 +37,6 @@ services:
     ports:
       - "5113:8080"
     volumes:
-      - ./src/backend/GeneratedEmails:/app/GeneratedEmails
-      - ./src/backend/GeneratedInvoices:/app/GeneratedInvoices
       - trip_duration_models:/app/App_Data/models
       - data_protection_keys:/app/App_Data/data-protection-keys
     depends_on:

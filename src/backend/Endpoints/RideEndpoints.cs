@@ -129,38 +129,26 @@ public static class RideEndpoints
             }
         }).RequireAuthorization("Passenger");
 
-        app.MapPost("/api/private/rides/{rideId:int}/complete", async (
+        app.MapDelete("/api/public/rides/{rideId:int}", async (
             int rideId,
             IRideService rideService,
             ClaimsPrincipal token) =>
         {
             try
             {
-                var response = await rideService.CompleteRideAsync(token, rideId);
-                if (response is null)
+                var canceled = await rideService.CancelRideAsync(token, rideId);
+                if (canceled is null)
                 {
                     return Results.Unauthorized();
                 }
 
-                return Results.Ok(response);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Results.Forbid();
-            }
-            catch (InvalidOperationException ex) when (ex.Message == "Ride not found")
-            {
-                return Results.NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.BadRequest(ex.Message);
+                return canceled == true ? Results.NoContent() : Results.NotFound();
             }
             catch (Exception)
             {
-                return Results.Problem("Failed to complete ride.");
+                return Results.Problem("Failed to cancel ride.");
             }
-        }).RequireAuthorization("AdminOrVehicle");
+        }).RequireAuthorization("Passenger");
 
 
         return app;

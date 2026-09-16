@@ -9,5 +9,4 @@ public class RideRequestDto
     public double DestinationLatitude { get; set; }
     public double DestinationLongitude { get; set; }
     public VehicleType PreferredVehicleType { get; set; }
-    public string? DiscountCode { get; set; }
 }

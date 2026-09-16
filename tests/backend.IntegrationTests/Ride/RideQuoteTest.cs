@@ -47,28 +47,6 @@ public class RideQuoteTest : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task GetRideQuote_ReturnsBadRequest_WhenDiscountCodeIsInvalid()
-    {
-        var passenger = await IntegrationTestData.RegisterPassengerAsync(_client);
-        var passengerToken = await IntegrationTestData.LoginAsync(_client, passenger.Email, passenger.Password);
-        IntegrationTestData.Authorize(_client, passengerToken);
-
-        var response = await _client.PostAsJsonAsync("/api/public/rides/quote", new
-        {
-            departureLocation = "Kortrijk",
-            destinationLocation = "Ghent",
-            departureLatitude = 50.826,
-            departureLongitude = 3.264,
-            destinationLatitude = 51.054,
-            destinationLongitude = 3.717,
-            preferredVehicleType = "Standard",
-            discountCode = "NOTREAL"
-        });
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
     public async Task GetRideQuote_ReturnsUnauthorized_WhenNoTokenIsProvided()
     {
         var response = await _client.PostAsJsonAsync("/api/public/rides/quote", new

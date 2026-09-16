@@ -31,21 +31,11 @@ export interface RideResponse {
   rideStatus: string
   requestTime: string
   estimatedPrice: number
-  vehicleId?: number | null
   departureLocation?: string | null
   destinationLocation?: string | null
   distance: number
   duration: number
   preferredVehicleType: string
-}
-
-export interface CompleteRideResponse {
-  rideId: number
-  rideStatus: string
-  completedAt: string
-  vehicleId?: number | null
-  paymentId?: number | null
-  paymentAmount?: number | null
 }
 
 export interface CreateRideRequest {
@@ -56,7 +46,6 @@ export interface CreateRideRequest {
   destinationLatitude: number
   destinationLongitude: number
   preferredVehicleType: string
-  discountCode?: string
 }
 
 export interface UpdateMeRequest {
@@ -76,8 +65,6 @@ export interface RideQuoteResponse {
   vehicleMultiplier: number
   nightSurcharge: number
   isNightRateApplied: boolean
-  loyaltyDiscount: number
-  codeDiscount: number
   vatAmount: number
   estimatedPrice: number
 }
