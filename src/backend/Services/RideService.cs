@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.Extensions.Options;
 
 namespace Project.Services;
 
@@ -18,6 +19,7 @@ public class RideService : IRideService
     private readonly IPriceService _priceService;
     private readonly IRouteEstimator _routeEstimator;
     private readonly ITripDurationEstimator _tripDurationEstimator;
+    private readonly TripDurationModelOptions _tripDurationModelOptions;
     private readonly ILogger<RideService> _logger;
 
     public RideService(
@@ -26,6 +28,7 @@ public class RideService : IRideService
         IPriceService priceService,
         IRouteEstimator routeEstimator,
         ITripDurationEstimator tripDurationEstimator,
+        IOptions<TripDurationModelOptions> tripDurationModelOptions,
         ILogger<RideService> logger)
     {
         _rideRepository = rideRepository;
@@ -33,6 +36,7 @@ public class RideService : IRideService
         _priceService = priceService;
         _routeEstimator = routeEstimator;
         _tripDurationEstimator = tripDurationEstimator;
+        _tripDurationModelOptions = tripDurationModelOptions.Value;
         _logger = logger;
     }
 
@@ -44,9 +48,7 @@ public class RideService : IRideService
             return null;
         }
 
-        var routeEstimate = await EstimateRouteAsync(rideRequest);
-        var distance = Math.Round((decimal)routeEstimate.DistanceKm, 2);
-        var duration = Math.Round((decimal)routeEstimate.DurationMinutes, 2);
+        var quote = await CalculateQuoteAsync(rideRequest, DateTimeOffset.UtcNow);
 
         var ride = new Ride
         {
@@ -56,13 +58,12 @@ public class RideService : IRideService
             DestinationLocation = rideRequest.DestinationLocation,
             DestinationLatitude = rideRequest.DestinationLatitude,
             DestinationLongitude = rideRequest.DestinationLongitude,
-            Distance = distance,
-            Duration = duration,
-            EstimatedPrice = _priceService.EstimatePrice(
-                distance,
-                duration,
-                rideRequest.PreferredVehicleType,
-                DateTime.UtcNow),
+            Distance = quote.Breakdown.Distance,
+            Duration = quote.Breakdown.Duration,
+            EstimatedTripDuration = quote.EstimatedTripDuration,
+            EstimatedTripDurationSource = quote.EstimatedTripDurationSource,
+            TripDurationModelVersion = quote.TripDurationModelVersion,
+            EstimatedPrice = quote.Breakdown.Total,
             RequestTime = DateTime.UtcNow,
             PassengerProfile = passenger,
             RideStatus = RideStatus.Requested,
@@ -88,34 +89,22 @@ public class RideService : IRideService
             return null;
         }
 
-        var routeEstimate = await EstimateRouteAsync(rideRequest);
-        var distance = Math.Round((decimal)routeEstimate.DistanceKm, 2);
-        var duration = Math.Round((decimal)routeEstimate.DurationMinutes, 2);
-        var quoteRequestedAt = DateTimeOffset.UtcNow;
-        var tripDurationEstimate = await _tripDurationEstimator.EstimateAsync(
-            CreateRouteRequest(rideRequest),
-            routeEstimate,
-            quoteRequestedAt);
-        var breakdown = _priceService.GetEstimatedBreakdown(
-            distance,
-            duration,
-            rideRequest.PreferredVehicleType,
-            quoteRequestedAt.UtcDateTime);
+        var quote = await CalculateQuoteAsync(rideRequest, DateTimeOffset.UtcNow);
 
         return new RideQuoteResponseDto
         {
-            Distance = breakdown.Distance,
-            Duration = breakdown.Duration,
-            EstimatedTripDuration = Math.Round((decimal)tripDurationEstimate.DurationMinutes, 2),
-            EstimatedTripDurationSource = tripDurationEstimate.Source,
-            BaseFare = breakdown.StartingRate,
-            DistanceCost = breakdown.DistanceCost,
-            DurationCost = breakdown.DurationCost,
-            VehicleMultiplier = breakdown.VehicleMultiplier,
-            NightSurcharge = breakdown.NightSurcharge,
-            IsNightRateApplied = breakdown.IsNightRateApplied,
-            VatAmount = breakdown.VatAmount,
-            EstimatedPrice = breakdown.Total
+            Distance = quote.Breakdown.Distance,
+            Duration = quote.Breakdown.Duration,
+            EstimatedTripDuration = quote.EstimatedTripDuration,
+            EstimatedTripDurationSource = quote.EstimatedTripDurationSource,
+            BaseFare = quote.Breakdown.StartingRate,
+            DistanceCost = quote.Breakdown.DistanceCost,
+            DurationCost = quote.Breakdown.DurationCost,
+            VehicleMultiplier = quote.Breakdown.VehicleMultiplier,
+            NightSurcharge = quote.Breakdown.NightSurcharge,
+            IsNightRateApplied = quote.Breakdown.IsNightRateApplied,
+            VatAmount = quote.Breakdown.VatAmount,
+            EstimatedPrice = quote.Breakdown.Total
         };
     }
 
@@ -154,7 +143,10 @@ public class RideService : IRideService
             DepartureLocation = ride.DepartureLocation,
             DestinationLocation = ride.DestinationLocation,
             RequestTime = ride.RequestTime,
-            RideStatus = ride.RideStatus
+            RideStatus = ride.RideStatus,
+            EstimatedTripDuration = ride.EstimatedTripDuration,
+            EstimatedTripDurationSource = ride.EstimatedTripDurationSource,
+            TripDurationModelVersion = ride.TripDurationModelVersion
         };
     }
 
@@ -183,6 +175,32 @@ public class RideService : IRideService
 
         _logger.LogInformation("Ride request {RideId} was canceled by passenger {PassengerUserId}", ride.Id, userId);
         return true;
+    }
+
+    private async Task<RideQuoteSnapshot> CalculateQuoteAsync(
+        RideRequestDto rideRequest,
+        DateTimeOffset quoteRequestedAt)
+    {
+        var routeEstimate = await EstimateRouteAsync(rideRequest);
+        var distance = Math.Round((decimal)routeEstimate.DistanceKm, 2);
+        var duration = Math.Round((decimal)routeEstimate.DurationMinutes, 2);
+        var tripDurationEstimate = await _tripDurationEstimator.EstimateAsync(
+            CreateRouteRequest(rideRequest),
+            routeEstimate,
+            quoteRequestedAt);
+        var breakdown = _priceService.GetEstimatedBreakdown(
+            distance,
+            duration,
+            rideRequest.PreferredVehicleType,
+            quoteRequestedAt.UtcDateTime);
+
+        return new RideQuoteSnapshot(
+            breakdown,
+            Math.Round((decimal)tripDurationEstimate.DurationMinutes, 2),
+            tripDurationEstimate.Source,
+            tripDurationEstimate.Source == TripDurationEstimateSource.MachineLearning
+                ? _tripDurationModelOptions.ExpectedVersion
+                : null);
     }
 
     private Task<RouteEstimate> EstimateRouteAsync(RideRequestDto rideRequest)
@@ -223,7 +241,16 @@ public class RideService : IRideService
             DestinationLocation = ride.DestinationLocation,
             Distance = ride.Distance,
             Duration = ride.Duration,
+            EstimatedTripDuration = ride.EstimatedTripDuration,
+            EstimatedTripDurationSource = ride.EstimatedTripDurationSource,
+            TripDurationModelVersion = ride.TripDurationModelVersion,
             PreferredVehicleType = ride.PreferredVehicleType
         };
     }
+
+    private sealed record RideQuoteSnapshot(
+        PriceQuoteBreakdown Breakdown,
+        decimal EstimatedTripDuration,
+        TripDurationEstimateSource EstimatedTripDurationSource,
+        string? TripDurationModelVersion);
 }

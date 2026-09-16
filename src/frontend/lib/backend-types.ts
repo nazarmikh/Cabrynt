@@ -35,6 +35,9 @@ export interface RideResponse {
   destinationLocation?: string | null
   distance: number
   duration: number
+  estimatedTripDuration?: number | null
+  estimatedTripDurationSource?: TripDurationEstimateSource | null
+  tripDurationModelVersion?: string | null
   preferredVehicleType: string
 }
 

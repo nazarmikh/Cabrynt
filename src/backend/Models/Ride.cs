@@ -13,6 +13,9 @@ public class Ride
     public double DestinationLongitude { get; set; }
     public decimal Distance { get; set; }
     public decimal Duration { get; set; }
+    public decimal? EstimatedTripDuration { get; set; }
+    public TripDurationEstimateSource? EstimatedTripDurationSource { get; set; }
+    public string? TripDurationModelVersion { get; set; }
     public VehicleType PreferredVehicleType { get; set; }
     public decimal EstimatedPrice { get; set; }
     public RideStatus RideStatus { get; set; }

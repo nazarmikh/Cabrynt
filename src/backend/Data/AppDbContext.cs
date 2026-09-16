@@ -52,7 +52,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Maintenance>().Property(c => c.Cost).HasPrecision(18, 2);
         modelBuilder.Entity<Ride>().Property(r => r.Distance).HasPrecision(18, 2);
         modelBuilder.Entity<Ride>().Property(r => r.Duration).HasPrecision(18, 2);
+        modelBuilder.Entity<Ride>().Property(r => r.EstimatedTripDuration).HasPrecision(18, 2);
         modelBuilder.Entity<Ride>().Property(r => r.EstimatedPrice).HasPrecision(18, 2);
+        modelBuilder.Entity<Ride>().Property(r => r.TripDurationModelVersion).HasMaxLength(50);
 
         // Foreign keys and delete behavior
         modelBuilder.Entity<Ticket>()

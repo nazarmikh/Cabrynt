@@ -12,6 +12,9 @@ public class RideResponseDto
     public string? DestinationLocation { get; set; }
     public decimal Distance { get; set; }
     public decimal Duration { get; set; }
+    public decimal? EstimatedTripDuration { get; set; }
+    public TripDurationEstimateSource? EstimatedTripDurationSource { get; set; }
+    public string? TripDurationModelVersion { get; set; }
     public VehicleType PreferredVehicleType { get; set; }
 }
 
