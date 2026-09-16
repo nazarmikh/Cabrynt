@@ -35,7 +35,15 @@ Generated data, route caches, and production model binaries are intentionally ex
 
 ### Enable Model Inference
 
-The backend downloads the release model once during startup when `TripDurationModel__Enabled=true`. It verifies the model SHA-256 and the complete 23-feature contract from the companion metadata file before loading ONNX Runtime. A verified model is retained in the configured local cache; if a later release request fails, the cache is used. If neither source is valid, normal quotes continue with OSRM or the straight-line fallback.
+The local `.env.example` enables model inference and quote-time weather. After local OSRM is running, the backend downloads the release model once during startup. It verifies the model SHA-256 and the complete 23-feature contract from the companion metadata file before loading ONNX Runtime. A verified model is retained in the configured local cache; if a later release request fails, the cache is used. If neither source is valid, normal quotes continue with OSRM or the straight-line fallback.
+
+To start the complete local quote path, set `Routing__OsrmBaseUrl=http://osrm:5000` in `.env`, then run:
+
+```powershell
+docker compose --profile routing up -d --force-recreate backend osrm
+```
+
+Successful model-enabled quotes return `estimatedTripDurationSource: "MachineLearning"`. If OSRM, model loading, Porto validation, or weather retrieval is unavailable, the API deliberately identifies the fallback source instead of returning an unlabelled estimate.
 
 The tracked [`.env.example`](.env.example) contains the current release URLs and version. For Docker Compose, the cache is persisted in the named `trip_duration_models` volume. `TripDurationModel__ModelPath` remains available for a local manually supplied ONNX file, primarily for development and tests.
 
