@@ -91,6 +91,10 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
+builder.Services
+    .AddHealthChecks()
+    .AddDbContextCheck<AppDbContext>(tags: ["ready"]);
+
 // Validation
 
 builder.Services.AddFluentValidationAutoValidation();
@@ -218,6 +222,15 @@ using (var scope = app.Services.CreateScope())
 app.UseCors("FrontendDev");
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false
+});
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 
 app.MapAuthEndpoints();
 

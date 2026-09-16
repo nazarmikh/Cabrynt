@@ -118,7 +118,11 @@ Local endpoints:
 Frontend: http://localhost:3000
 Backend:  http://localhost:5113
 Swagger:  http://localhost:5113/swagger
+Liveness: http://localhost:5113/health/live
+Readiness: http://localhost:5113/health/ready
 ```
+
+`/health/live` confirms that the application process can serve requests. `/health/ready` also verifies PostgreSQL connectivity, which is required to read users and persist ride requests. OSRM, weather, and the ML model remain optional quote dependencies because the application has explicit fallback behavior for them.
 
 `docker compose` reads values from `.env`. For direct `dotnet run`, configure the corresponding database and admin settings through environment variables or .NET user secrets. See [`.env.example`](.env.example) for the required keys.
 
@@ -169,9 +173,8 @@ The ML environment and data preparation instructions are documented in the [ML R
 
 ## Roadmap
 
-- Add deployment-safe model artifact distribution and configure a production routing provider.
-- Add an admin model-status view and persist model quote snapshots with ride requests.
-- Add OpenID Connect login and production deployment configuration.
+- Configure a production routing provider and deployment environment.
+- Add OpenID Connect login for a production identity provider.
 - Add OpenTelemetry traces, metrics, and production deployment configuration.
 - Improve dispatch, concurrency handling, API consistency, and integration-test infrastructure.
 
