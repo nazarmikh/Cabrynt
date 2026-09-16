@@ -1,4 +1,3 @@
-using DnsClient.Protocol;
 using Project.Enums;
 
 namespace Project.DTOs;

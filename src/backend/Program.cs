@@ -2,7 +2,6 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Identity;
 using Project.Services;
-using MongoDB.Driver;
 using Project.Endpoints;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -23,8 +22,6 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IPassengerRepository, PassengerRepository>();
 builder.Services.AddScoped<IRideRepository, RideRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
-builder.Services.AddScoped<ITelemetryRepository, TelemetryRepository>();
-builder.Services.AddScoped<ISensorDiagnosticRepository, SensorDiagnosticRepository>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 
@@ -33,8 +30,6 @@ builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRideService, RideService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
-builder.Services.AddScoped<ITelemetryService, TelemetryService>();
-builder.Services.AddScoped<ISensorDiagnosticService, SensorDiagnosticService>();
 builder.Services.AddScoped<IPriceService, PriceService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
@@ -92,19 +87,6 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
-
-// Mongo db
-
-builder.Services.AddSingleton<TelemetryMongoContext>(sp =>
-{
-    var configuration = sp.GetRequiredService<IConfiguration>();
-    var mongoConnection = configuration.GetConnectionString("Mongo")
-        ?? throw new InvalidOperationException("Missing connection string 'Mongo'.");
-    var mongoDatabaseName = configuration["Mongo:DatabaseName"]
-        ?? throw new InvalidOperationException("Missing Mongo database name at 'Mongo:DatabaseName'.");
-
-    return new TelemetryMongoContext(mongoConnection, mongoDatabaseName);
-});
 
 // Validation
 
@@ -234,21 +216,11 @@ app.UseCors("FrontendDev");
 app.UseAuthentication();
 app.UseAuthorization();
 
-using (var scope = app.Services.CreateScope())
-{
-    var mongo = scope.ServiceProvider.GetRequiredService<TelemetryMongoContext>();
-    await mongo.EnsureIndexesAsync();
-}
-
 app.MapAuthEndpoints();
 
 app.MapRideEndpoints();
 
 app.MapVehicleEndpoints();
-
-app.MapTelemetryEndpoints();
-
-app.MapSensorDiagnosticEndpoints();
 
 app.MapTicketEndpoints();
 

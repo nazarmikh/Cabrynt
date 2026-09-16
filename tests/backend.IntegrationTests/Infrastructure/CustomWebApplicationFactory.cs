@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MongoDB.Driver;
 using Npgsql;
 using Project.Data;
 
@@ -13,9 +12,7 @@ namespace backend.IntegrationTests.Infrastructure;
 public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _postgresDatabaseName = $"CabryntPostgresTests_{Guid.NewGuid():N}";
-    private readonly string _mongoDatabaseName = $"CabryntMongoTests_{Guid.NewGuid():N}";
     private readonly string _postgresConnectionString;
-    private readonly string _mongoConnectionString;
     private readonly Dictionary<string, string?> _previousEnvironmentValues = new();
     private readonly IReadOnlyDictionary<string, string?> _configurationOverrides;
     private readonly Action<IServiceCollection>? _configureTestServices;
@@ -34,8 +31,6 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         ConfigureTestEnvironment();
 
         _postgresConnectionString = BuildPostgresConnectionString(_postgresDatabaseName);
-        _mongoConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Mongo")
-            ?? "mongodb://localhost:27017";
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -46,10 +41,6 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
             {
                 ["ConnectionStrings:Postgres"] = _postgresConnectionString,
                 ["ConnectionStrings__Postgres"] = _postgresConnectionString,
-                ["ConnectionStrings:Mongo"] = _mongoConnectionString,
-                ["ConnectionStrings__Mongo"] = _mongoConnectionString,
-                ["Mongo:DatabaseName"] = _mongoDatabaseName,
-                ["Mongo__DatabaseName"] = _mongoDatabaseName,
                 ["Admin:Email"] = IntegrationTestData.AdminEmail,
                 ["Admin__Email"] = IntegrationTestData.AdminEmail,
                 ["Admin:Password"] = IntegrationTestData.AdminPassword,
@@ -146,14 +137,5 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
             // Ignore test database cleanup failures to avoid masking test results.
         }
 
-        try
-        {
-            var mongoClient = new MongoClient(_mongoConnectionString);
-            mongoClient.DropDatabase(_mongoDatabaseName);
-        }
-        catch
-        {
-            // Ignore test database cleanup failures to avoid masking test results.
-        }
     }
 }

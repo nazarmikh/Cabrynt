@@ -11,7 +11,7 @@
 @rideId = 
 @ticketId =
 @maintenanceId =
-# optional for telementry and vehicle inserts
+# Optional for vehicle and maintenance requests.
 @vehicleId = 
 
 ###
@@ -88,54 +88,7 @@ Accept: application/json
 }
 
 ###
-# 7. Telemetry ingestion
-# Use this if you registered a dedicated vehicle above. If the Docker simulator is already running,
-# you can skip this request because seeded vehicles will already have live telemetry.
-POST {{host}}/api/private/telemetry
-Content-Type: application/json
-Accept: application/json
-
-{
-  "latitude": 51.2093,
-  "longitude": 3.2247,
-  "currentSpeed": 35,
-  "remainingBatteryPercentage": 80,
-  "hardwareTemperature": 52,
-  "vehicleId": {{vehicleId}}
-}
-
-###
-# 8. Telemetry that triggers automatic diagnostics
-POST {{host}}/api/private/telemetry
-Content-Type: application/json
-Accept: application/json
-
-{
-  "latitude": 51.2093,
-  "longitude": 3.2247,
-  "currentSpeed": 45,
-  "remainingBatteryPercentage": 60,
-  "hardwareTemperature": 90,
-  "vehicleId": {{vehicleId}}
-}
-
-###
-# 9. Direct sensor diagnostic ingestion
-POST {{host}}/api/private/sensor-diagnostics
-Content-Type: application/json
-Accept: application/json
-
-{
-  "sensorType": "Lidar",
-  "errorCode": 1201,
-  "deviationSeverity": "Severe",
-  "rawSensorValue": "{\"pointCloudQuality\":0.42,\"fault\":\"occlusion\"}",
-  "vehicleTelemetryId": "manual-demo-{{runId}}",
-  "vehicleId": {{vehicleId}}
-}
-
-###
-# 11. Create ride
+# 7. Create ride request
 # Run Passenger login again before this request if Vehicle login was the latest login.
 # Copy rideId from the response into @rideId above.
 POST {{host}}/api/public/rides
@@ -153,30 +106,23 @@ Accept: application/json
 }
 
 ###
-# 12. List rides
+# 8. List ride requests
 GET {{host}}/api/public/rides
 Accept: application/json
 
 ###
-# 13. Get ride by id
+# 9. Get ride request by id
 GET {{host}}/api/public/rides/{{rideId}}
 Accept: application/json
 
 ###
-# 14. Complete ride as admin
-# Run Admin login again before this request.
-# This now auto-creates payment, invoice PDF, and pickup email.
-POST {{host}}/api/private/rides/{{rideId}}/complete
+# 10. Cancel a ride request
+# Run Passenger login again before this request.
+DELETE {{host}}/api/public/rides/{{rideId}}
 Accept: application/json
 
 ###
-# Expected after ride completion:
-# - PostgreSQL payment row created automatically
-# - PDF file in src/backend/GeneratedInvoices
-# - pickup email .eml file in src/backend/GeneratedEmails
-
-###
-# 15. Create support ticket
+# 11. Create support ticket
 # Run Passenger login again before this request.
 # Copy ticketId from the response into @ticketId above.
 POST {{host}}/api/public/tickets
@@ -190,17 +136,17 @@ Accept: application/json
 }
 
 ###
-# 16. List passenger tickets
+# 12. List passenger tickets
 GET {{host}}/api/public/tickets
 Accept: application/json
 
 ###
-# 17. Get ticket by id
+# 13. Get ticket by id
 GET {{host}}/api/public/tickets/{{ticketId}}
 Accept: application/json
 
 ###
-# 18. Create maintenance record
+# 14. Create maintenance record
 # Run Admin login again before this request.
 # Copy maintenanceId from the response into @maintenanceId above.
 POST {{host}}/api/private/vehicles/{{vehicleId}}/maintenances
@@ -216,22 +162,11 @@ Accept: application/json
 }
 
 ###
-# 19. List maintenance records for the vehicle
+# 15. List maintenance records for the vehicle
 GET {{host}}/api/private/vehicles/{{vehicleId}}/maintenances
 Accept: application/json
 
 ###
-# 20. Get maintenance by id
+# 16. Get maintenance by id
 GET {{host}}/api/private/vehicles/{{vehicleId}}/maintenances/{{maintenanceId}}
 Accept: application/json
-
-###
-# 21. GraphQL example (admin only)
-# Run Admin login again before this request if needed.
-POST {{host}}/graphql
-Content-Type: application/json
-Accept: application/json
-
-{
-  "query": "query { vehicles { id model vehicleType vehicleStatus } rides { id departureLocation destinationLocation preferredVehicleType estimatedPrice rideStatus requestTime } sensorDiagnostics(limit: 5) { vehicleId sensorType errorCode deviationSeverity timeStamp } }"
-}

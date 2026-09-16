@@ -4,8 +4,8 @@ import 'leaflet/dist/leaflet.css'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Cabrynt - Autonomous Mobility Platform',
-  description: 'Scalable driverless taxi fleet system with real-time telemetry, smart pricing, and autonomous ride management',
+  title: 'Cabrynt - Porto Ride Duration Estimates',
+  description: 'Porto ride quotes using route-aware machine learning duration estimates.',
   icons: {
     icon: '/cabrynt-favicon.svg',
     shortcut: '/cabrynt-favicon.svg',
