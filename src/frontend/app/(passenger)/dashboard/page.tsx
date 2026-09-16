@@ -10,8 +10,7 @@ import { useCurrentUser } from "@/hooks/use-current-user"
 import { apiRequest } from "@/lib/api"
 import type { RideResponse, TicketsResponse } from "@/lib/backend-types"
 import { formatCurrency } from "@/lib/format"
-import { formatPaymentMethod } from "@/lib/payment-method"
-import { Car, History, Star, ArrowRight, Clock, CreditCard, Ticket } from "lucide-react"
+import { Car, History, ArrowRight, Clock, Ticket } from "lucide-react"
 
 export default function PassengerDashboard() {
   const { user } = useCurrentUser()
@@ -43,11 +42,8 @@ export default function PassengerDashboard() {
     void loadDashboard()
   }, [])
 
-  const activeRide = useMemo(
-    () => rides.find((ride) => ride.rideStatus === "InProgress" || ride.rideStatus === "Requested"),
-    [rides]
-  )
-  const completedRides = useMemo(() => rides.filter((ride) => ride.rideStatus === "Completed"), [rides])
+  const activeRide = useMemo(() => rides.find((ride) => ride.rideStatus === "Requested"), [rides])
+  const requestedRides = useMemo(() => rides.filter((ride) => ride.rideStatus === "Requested"), [rides])
   const recentRides = useMemo(() => rides.slice(0, 3), [rides])
 
   if (isLoading) {
@@ -65,16 +61,10 @@ export default function PassengerDashboard() {
         <p className="text-muted-foreground">Here&apos;s what&apos;s happening with your account today.</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard title="Active Ride" value={activeRide ? activeRide.rideStatus : "None"} description={activeRide ? `Ride #${activeRide.rideId}` : "Book your next ride"} icon={Car} />
-        <StatsCard title="Total Rides" value={completedRides.length} description="Completed rides" icon={History} />
-        <StatsCard title="Loyalty Points" value={(user?.points ?? 0).toLocaleString()} description="Available for discounts" icon={Star} />
-        <StatsCard
-          title="Payment Method"
-          value={formatPaymentMethod(user?.preferredPaymentMethod)}
-          description={user?.preferredPaymentMethod ? "Default payment preference" : "Add one in your profile"}
-          icon={CreditCard}
-        />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <StatsCard title="Pending Request" value={activeRide ? "Requested" : "None"} description={activeRide ? `Ride #${activeRide.rideId}` : "Create a route estimate"} icon={Car} />
+        <StatsCard title="Requested Rides" value={requestedRides.length} description="Saved ride requests" icon={History} />
+        <StatsCard title="Support Tickets" value={ticketCount} description="Open or resolved requests" icon={Ticket} />
       </div>
 
       {activeRide && (
@@ -82,7 +72,7 @@ export default function PassengerDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Car className="h-5 w-5 text-primary" />
-              Active Ride
+              Pending Request
             </CardTitle>
           </CardHeader>
           <CardContent>

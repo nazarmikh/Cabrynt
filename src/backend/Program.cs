@@ -1,6 +1,5 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Project.GraphQL;
 using Microsoft.AspNetCore.Identity;
 using Project.Services;
 using MongoDB.Driver;
@@ -26,7 +25,6 @@ builder.Services.AddScoped<IRideRepository, RideRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<ITelemetryRepository, TelemetryRepository>();
 builder.Services.AddScoped<ISensorDiagnosticRepository, SensorDiagnosticRepository>();
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 
@@ -37,10 +35,7 @@ builder.Services.AddScoped<IRideService, RideService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<ITelemetryService, TelemetryService>();
 builder.Services.AddScoped<ISensorDiagnosticService, SensorDiagnosticService>();
-builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IPriceService, PriceService>();
-builder.Services.AddScoped<IInvoiceService, InvoiceService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 
@@ -115,8 +110,6 @@ builder.Services.AddSingleton<TelemetryMongoContext>(sp =>
 
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestDtoValidator>();
-builder.Services.AddGraphQLServer()
-    .AddQueryType<Query>();
 
 builder.Services.AddCors(options =>
 {
@@ -257,13 +250,9 @@ app.MapTelemetryEndpoints();
 
 app.MapSensorDiagnosticEndpoints();
 
-app.MapPaymentEndpoints();
-
 app.MapTicketEndpoints();
 
 app.MapMaintenanceEndpoints();
-app.MapGraphQL("/graphql").RequireAuthorization("Admin");
-
 
 
 app.Run();

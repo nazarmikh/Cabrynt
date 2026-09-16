@@ -108,11 +108,11 @@ export default function RideHistoryPage() {
     },
   ]
 
-  const totalSpent = filteredRides
-    .filter((ride) => ride.rideStatus === "Completed")
+  const requestedPrice = filteredRides
+    .filter((ride) => ride.rideStatus === "Requested")
     .reduce((sum, ride) => sum + ride.estimatedPrice, 0)
-  const totalDistance = filteredRides
-    .filter((ride) => ride.rideStatus === "Completed")
+  const requestedDistance = filteredRides
+    .filter((ride) => ride.rideStatus === "Requested")
     .reduce((sum, ride) => sum + ride.distance, 0)
 
   return (
@@ -133,14 +133,14 @@ export default function RideHistoryPage() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Completed Spend</div>
-            <div className="text-2xl font-bold">{formatCurrency(totalSpent)}</div>
+            <div className="text-sm text-muted-foreground">Pending Estimate</div>
+            <div className="text-2xl font-bold">{formatCurrency(requestedPrice)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Completed Distance</div>
-            <div className="text-2xl font-bold">{totalDistance.toFixed(1)} km</div>
+            <div className="text-sm text-muted-foreground">Pending Distance</div>
+            <div className="text-2xl font-bold">{requestedDistance.toFixed(1)} km</div>
           </CardContent>
         </Card>
       </div>
@@ -166,8 +166,6 @@ export default function RideHistoryPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="Completed">Completed</SelectItem>
-                <SelectItem value="InProgress">In Progress</SelectItem>
                 <SelectItem value="Requested">Requested</SelectItem>
                 <SelectItem value="Cancelled">Cancelled</SelectItem>
               </SelectContent>

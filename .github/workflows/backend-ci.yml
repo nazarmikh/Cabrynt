@@ -92,13 +92,6 @@ jobs:
       Jwt__ExpiryMinutes: 60
       Admin__Email: admin@cabrynt.test
       Admin__Password: AdminPassword123!
-      Email__FromAddress: no-reply@cabrynt.test
-      Email__PickupDirectory: GeneratedEmails
-      Email__SmtpHost: smtp.example.com
-      Email__SmtpPort: 587
-      Email__SmtpUsername: change-me
-      Email__SmtpPassword: change-me
-      Email__UseSsl: true
 
     steps:
       - name: Checkout

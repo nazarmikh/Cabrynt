@@ -54,8 +54,6 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 ["Admin__Email"] = IntegrationTestData.AdminEmail,
                 ["Admin:Password"] = IntegrationTestData.AdminPassword,
                 ["Admin__Password"] = IntegrationTestData.AdminPassword,
-                ["Email:FromAddress"] = "no-reply@cabrynt.test",
-                ["Email:PickupDirectory"] = "GeneratedEmails"
             };
 
             foreach (var (key, value) in _configurationOverrides)
@@ -106,8 +104,6 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         SetEnvironmentVariable("Jwt__ExpiryMinutes", "60");
         SetEnvironmentVariable("Admin__Email", IntegrationTestData.AdminEmail);
         SetEnvironmentVariable("Admin__Password", IntegrationTestData.AdminPassword);
-        SetEnvironmentVariable("Email__FromAddress", "no-reply@cabrynt.test");
-        SetEnvironmentVariable("Email__PickupDirectory", "GeneratedEmails");
     }
 
     private void SetEnvironmentVariable(string key, string value)

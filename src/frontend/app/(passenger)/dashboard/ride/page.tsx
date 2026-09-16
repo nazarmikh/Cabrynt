@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,7 +17,7 @@ import type {
 import { type Coordinates } from "@/lib/location"
 import { formatCurrency } from "@/lib/format"
 import { PortoRoutePicker, type RoutePoint } from "@/components/ride/porto-route-picker"
-import { Car, Users, Crown, Check, Loader2, Tag, Star, Clock3, Sparkles } from "lucide-react"
+import { Car, Users, Crown, Check, Loader2, Clock3, Sparkles } from "lucide-react"
 
 const vehicleTypes = [
   {
@@ -59,8 +59,7 @@ function buildRidePayload(
   destination: string,
   pickupCoordinates: Coordinates,
   destinationCoordinates: Coordinates,
-  vehicleType: VehicleChoice,
-  discountCode: string
+  vehicleType: VehicleChoice
 ): CreateRideRequest {
   const selectedType = vehicleTypes.find((vehicle) => vehicle.id === vehicleType)
 
@@ -72,7 +71,6 @@ function buildRidePayload(
     destinationLatitude: destinationCoordinates.latitude,
     destinationLongitude: destinationCoordinates.longitude,
     preferredVehicleType: selectedType?.apiValue ?? "Standard",
-    discountCode: discountCode.trim() ? discountCode.trim() : undefined,
   }
 }
 
@@ -83,7 +81,6 @@ export default function BookRidePage() {
   const [destinationCoordinates, setDestinationCoordinates] = useState<Coordinates | null>(null)
   const [activeRoutePoint, setActiveRoutePoint] = useState<RoutePoint>("pickup")
   const [vehicleType, setVehicleType] = useState<VehicleChoice>("standard")
-  const [discountCode, setDiscountCode] = useState("")
   const [quote, setQuote] = useState<RideQuoteResponse | null>(null)
   const [quoteError, setQuoteError] = useState<string | null>(null)
   const [isLoadingQuote, setIsLoadingQuote] = useState(false)
@@ -113,8 +110,7 @@ export default function BookRidePage() {
           destination,
           pickupCoordinates,
           destinationCoordinates,
-          vehicleType,
-          discountCode
+          vehicleType
         )
         const response = await apiRequest<RideQuoteResponse>(
           "/api/public/rides/quote",
@@ -139,7 +135,6 @@ export default function BookRidePage() {
     pickupCoordinates,
     destinationCoordinates,
     vehicleType,
-    discountCode,
     canRequestQuote,
   ])
 
@@ -158,8 +153,7 @@ export default function BookRidePage() {
         destination,
         pickupCoordinates,
         destinationCoordinates,
-        vehicleType,
-        discountCode
+        vehicleType
       )
       const response = await apiRequest<RideResponse>(
         "/api/public/rides",
@@ -218,7 +212,6 @@ export default function BookRidePage() {
                 setPickupCoordinates(null)
                 setDestinationCoordinates(null)
                 setActiveRoutePoint("pickup")
-                setDiscountCode("")
                 setQuote(null)
               }}
             >
@@ -320,23 +313,6 @@ export default function BookRidePage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Discount Code</CardTitle>
-              <CardDescription>Optional. The backend validates the code when building the quote.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="relative">
-                <Tag className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Enter promotional code"
-                  className="pl-10"
-                  value={discountCode}
-                  onChange={(event) => setDiscountCode(event.target.value)}
-                />
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="lg:sticky lg:top-24 lg:self-start">
@@ -410,21 +386,6 @@ export default function BookRidePage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Night surcharge</span>
                       <span>+{formatCurrency(quote.nightSurcharge)}</span>
-                    </div>
-                  )}
-                  {quote.loyaltyDiscount > 0 && (
-                    <div className="flex justify-between text-sm text-accent">
-                      <span className="flex items-center gap-1">
-                        <Star className="h-3 w-3" />
-                        Loyalty discount
-                      </span>
-                      <span>-{formatCurrency(quote.loyaltyDiscount)}</span>
-                    </div>
-                  )}
-                  {quote.codeDiscount > 0 && (
-                    <div className="flex justify-between text-sm text-accent">
-                      <span>Code discount</span>
-                      <span>-{formatCurrency(quote.codeDiscount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">

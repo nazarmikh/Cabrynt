@@ -1,15 +1,15 @@
 # Cabrynt
 
-Cabrynt is a ride and fleet operations platform built with ASP.NET Core. It supports passenger, vehicle, ride, payment, maintenance, and telemetry workflows, and includes a separate, reproducible trip-duration machine-learning experiment for Porto.
+Cabrynt is a Porto ride quotation and request platform built with ASP.NET Core. It combines route-aware pricing with a reproducible trip-duration machine-learning experiment.
 
 The application is actively evolving as a portfolio project focused on backend engineering, data-intensive workflows, and production-oriented development practices.
 
 ## Highlights
 
 - Cookie-based browser authentication with role-based authorization.
-- Passenger, vehicle, ride quote, payment, invoice, support, maintenance, and diagnostic workflows.
+- Passenger authentication, route quotes, saved ride requests, cancellation, and support workflows.
 - PostgreSQL for transactional data and MongoDB for telemetry and sensor events.
-- REST APIs, GraphQL dashboard reads, OpenAPI documentation, FluentValidation, and automated tests.
+- REST APIs, OpenAPI documentation, FluentValidation, and automated tests.
 - Docker Compose development environment with PostgreSQL, MongoDB, administration tools, and an optional local OSRM routing profile.
 - GitHub Actions checks for formatting, build, unit tests, integration tests, ML tests, dependency auditing, and Docker image builds.
 - An OSRM-aware, ONNX-exported trip-duration model with guarded .NET quote inference and explicit fallback sources.
@@ -56,9 +56,9 @@ The .NET backend uses a pragmatic layered structure:
 - **Repositories** isolate PostgreSQL and MongoDB access.
 - **DTOs and validators** define and validate API boundaries.
 
-PostgreSQL stores users, passenger profiles, vehicles, rides, payments, tickets, maintenance, discount codes, and other transactional records. MongoDB stores high-volume vehicle telemetry and sensor diagnostics.
+PostgreSQL stores users, passenger profiles, ride requests, vehicles, tickets, maintenance records, and other transactional data. MongoDB currently stores vehicle telemetry and sensor diagnostics.
 
-The frontend is a Next.js application that consumes the backend API. GraphQL is used primarily for admin dashboard reads.
+The frontend is a Next.js application that consumes the backend REST API.
 
 ## Technology Stack
 
@@ -66,7 +66,7 @@ The frontend is a Next.js application that consumes the backend API. GraphQL is 
 | --- | --- |
 | Backend | .NET 10, ASP.NET Core Minimal APIs, Entity Framework Core, FluentValidation |
 | Data | PostgreSQL, MongoDB |
-| API | REST, OpenAPI/Swagger, Hot Chocolate GraphQL |
+| API | REST, OpenAPI/Swagger |
 | Authentication | ASP.NET Core cookie authentication, role-based authorization |
 | ML | Python, pandas, scikit-learn, LightGBM experiments, ONNX, ONNX Runtime, OSRM |
 | Frontend | Next.js, React, TypeScript |
@@ -114,10 +114,9 @@ Local endpoints:
 Frontend: http://localhost:3000
 Backend:  http://localhost:5113
 Swagger:  http://localhost:5113/swagger
-GraphQL:  http://localhost:5113/graphql
 ```
 
-`docker compose` reads values from `.env`. For direct `dotnet run`, configure the corresponding database, admin, and email settings through environment variables or .NET user secrets. See [`.env.example`](.env.example) for the required keys.
+`docker compose` reads values from `.env`. For direct `dotnet run`, configure the corresponding database and admin settings through environment variables or .NET user secrets. See [`.env.example`](.env.example) for the required keys.
 
 Docker Compose defaults to the `Development` environment because the local frontend and backend use HTTP. This lets the development cookie policy use the request scheme. A deployed production environment must set `ASPNETCORE_ENVIRONMENT=Production` and terminate HTTPS before enabling secure browser authentication.
 
@@ -167,9 +166,9 @@ The ML environment and data preparation instructions are documented in the [ML R
 ## Roadmap
 
 - Add deployment-safe model artifact distribution and configure a production routing provider.
-- Add OpenID Connect login and strengthen vehicle-to-system authentication.
-- Introduce gRPC for high-frequency telemetry ingestion where it provides a real benefit.
-- Add background processing and an outbox pattern for reliable side effects.
+- Add an admin model-status view and persist model quote snapshots with ride requests.
+- Remove legacy fleet telemetry and diagnostic infrastructure that is outside the quote-focused product scope.
+- Add OpenID Connect login and production deployment configuration.
 - Add OpenTelemetry traces, metrics, and production deployment configuration.
 - Improve dispatch, concurrency handling, API consistency, and integration-test infrastructure.
 

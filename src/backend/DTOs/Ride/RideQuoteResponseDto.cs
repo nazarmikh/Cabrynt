@@ -12,8 +12,6 @@ public class RideQuoteResponseDto
     public decimal VehicleMultiplier { get; set; }
     public decimal NightSurcharge { get; set; }
     public bool IsNightRateApplied { get; set; }
-    public decimal LoyaltyDiscount { get; set; }
-    public decimal CodeDiscount { get; set; }
     public decimal VatAmount { get; set; }
     public decimal EstimatedPrice { get; set; }
 }
