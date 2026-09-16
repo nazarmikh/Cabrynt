@@ -7,7 +7,7 @@ The application is actively evolving as a portfolio project focused on backend e
 ## Highlights
 
 - Cookie-based browser authentication with role-based authorization.
-- Passenger authentication, route quotes, saved ride requests, cancellation, and support workflows.
+- Passenger authentication, route quotes, saved ride requests with quote snapshots, cancellation, and support workflows.
 - PostgreSQL for application data.
 - REST APIs, OpenAPI documentation, FluentValidation, and automated tests.
 - Docker Compose development environment with PostgreSQL, administration tools, and an optional local OSRM routing profile.
@@ -29,7 +29,7 @@ On a locked 4,999-trip confirmation cohort, the selected model produced the foll
 
 The model has a versioned 23-feature float32 ONNX contract. Its ONNX predictions were verified against the scikit-learn model with a maximum difference of `0.000001752` minutes.
 
-When runtime ML inference is enabled, the passenger quote page shows the estimated trip time separately from the fare calculation and identifies whether it used the ML correction, OSRM routing, or the straight-line fallback. OSRM-backed results include OpenStreetMap attribution.
+When runtime ML inference is enabled, the passenger quote page shows the estimated trip time separately from the fare calculation and identifies whether it used the ML correction, OSRM routing, or the straight-line fallback. Creating a ride request persists that estimate and, for ML estimates, the configured model version so ride history remains auditable after the quote response expires. OSRM-backed results include OpenStreetMap attribution.
 
 Generated data, route caches, and production model binaries are intentionally excluded from Git. The trained ONNX model and its metadata are published as versioned GitHub Release assets rather than committed to source control. See the [ML README](ml/trip-duration/README.md) for methodology, data preparation, benchmarks, and local setup.
 

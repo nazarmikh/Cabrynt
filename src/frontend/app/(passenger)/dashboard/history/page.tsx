@@ -9,7 +9,7 @@ import { StatusBadge } from "@/components/dashboard/status-badge"
 import { apiRequest } from "@/lib/api"
 import type { RideResponse } from "@/lib/backend-types"
 import { formatCurrency, formatShortDate } from "@/lib/format"
-import { Search, Car, Calendar, MapPin } from "lucide-react"
+import { Search, Car, Calendar, MapPin, Sparkles } from "lucide-react"
 
 type RideRow = RideResponse & { id: string }
 
@@ -92,6 +92,27 @@ export default function RideHistoryPage() {
         <div className="text-sm text-muted-foreground">
           <div>{ride.distance} km</div>
           <div>{ride.duration} min</div>
+        </div>
+      ),
+    },
+    {
+      key: "estimate",
+      header: "Travel time",
+      cell: (ride: RideRow) => (
+        <div className="text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            {ride.estimatedTripDurationSource === "MachineLearning" && <Sparkles className="h-3.5 w-3.5 text-primary" />}
+            <span>{ride.estimatedTripDuration?.toFixed(1) ?? ride.duration.toFixed(1)} min</span>
+          </div>
+          <div className="text-xs">
+            {ride.estimatedTripDurationSource === "MachineLearning"
+              ? `Model v${ride.tripDurationModelVersion ?? "unknown"}`
+              : ride.estimatedTripDurationSource === "Osrm"
+                ? "Route estimate"
+                : ride.estimatedTripDurationSource === "StraightLineFallback"
+                  ? "Distance estimate"
+                  : "Saved route estimate"}
+          </div>
         </div>
       ),
     },

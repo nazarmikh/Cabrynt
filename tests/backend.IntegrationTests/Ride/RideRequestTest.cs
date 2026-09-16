@@ -28,6 +28,8 @@ public class RideRequestTest : IClassFixture<CustomWebApplicationFactory>
         Assert.NotNull(body);
         Assert.Equal("Requested", body!["rideStatus"].GetString());
         Assert.True(body["estimatedPrice"].GetDecimal() > 0m);
+        Assert.Equal("StraightLineFallback", body["estimatedTripDurationSource"].GetString());
+        Assert.Equal(body["duration"].GetDecimal(), body["estimatedTripDuration"].GetDecimal());
     }
 
     [Fact]
