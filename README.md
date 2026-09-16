@@ -47,6 +47,10 @@ Successful model-enabled quotes return `estimatedTripDurationSource: "MachineLea
 
 The tracked [`.env.example`](.env.example) contains the current release URLs and version. For Docker Compose, the cache is persisted in the named `trip_duration_models` volume. `TripDurationModel__ModelPath` remains available for a local manually supplied ONNX file, primarily for development and tests.
 
+### Model Status
+
+Administrators can open `/admin` to inspect whether the configured trip-duration model is disabled, loading, ready, or unavailable. The page reads the admin-only `GET /api/private/model-status` endpoint and shows the configured model version when inference is enabled. It intentionally does not expose model paths, release URLs, checksums, or raw startup errors.
+
 ## Architecture
 
 The .NET backend uses a pragmatic layered structure:

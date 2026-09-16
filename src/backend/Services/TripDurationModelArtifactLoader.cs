@@ -230,17 +230,20 @@ public sealed class TripDurationModelInitializationService : IHostedService
 {
     private readonly TripDurationModelArtifactLoader _artifactLoader;
     private readonly TripDurationPredictorProvider _predictorProvider;
+    private readonly TripDurationModelStatusProvider _statusProvider;
     private readonly TripDurationModelOptions _options;
     private readonly ILogger<TripDurationModelInitializationService> _logger;
 
     public TripDurationModelInitializationService(
         TripDurationModelArtifactLoader artifactLoader,
         TripDurationPredictorProvider predictorProvider,
+        TripDurationModelStatusProvider statusProvider,
         IOptions<TripDurationModelOptions> options,
         ILogger<TripDurationModelInitializationService> logger)
     {
         _artifactLoader = artifactLoader;
         _predictorProvider = predictorProvider;
+        _statusProvider = statusProvider;
         _options = options.Value;
         _logger = logger;
     }
@@ -255,6 +258,7 @@ public sealed class TripDurationModelInitializationService : IHostedService
         var modelPath = await _artifactLoader.GetVerifiedModelPathAsync(cancellationToken);
         if (modelPath is null)
         {
+            _statusProvider.SetUnavailable(_options.ExpectedVersion);
             _logger.LogWarning("Trip duration model is unavailable; quote estimates will use OSRM.");
             return;
         }
@@ -262,9 +266,11 @@ public sealed class TripDurationModelInitializationService : IHostedService
         try
         {
             _predictorProvider.Load(modelPath);
+            _statusProvider.SetReady(_options.ExpectedVersion);
         }
         catch (Exception exception)
         {
+            _statusProvider.SetUnavailable(_options.ExpectedVersion);
             _logger.LogError(exception, "Trip duration model could not be initialized; quote estimates will use OSRM.");
         }
     }

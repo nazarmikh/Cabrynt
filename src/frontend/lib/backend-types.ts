@@ -74,6 +74,13 @@ export interface RideQuoteResponse {
 
 export type TripDurationEstimateSource = "MachineLearning" | "Osrm" | "StraightLineFallback"
 
+export interface TripDurationModelStatus {
+  isEnabled: boolean
+  isAvailable: boolean
+  state: "Disabled" | "Initializing" | "Ready" | "Unavailable"
+  configuredVersion?: string | null
+}
+
 export type TicketPriority = "Low" | "Medium" | "High" | "Critical"
 export type TicketStatus = "Open" | "InProgress" | "Resolved"
 
