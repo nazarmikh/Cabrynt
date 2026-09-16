@@ -71,6 +71,9 @@ builder.Services.AddSingleton<ITripDurationFeatureBuilder, TripDurationFeatureBu
 builder.Services.AddSingleton<TripDurationPredictorProvider>();
 builder.Services.AddSingleton<ITripDurationPredictor>(serviceProvider =>
     serviceProvider.GetRequiredService<TripDurationPredictorProvider>());
+builder.Services.AddSingleton<TripDurationModelStatusProvider>();
+builder.Services.AddSingleton<ITripDurationModelStatusProvider>(serviceProvider =>
+    serviceProvider.GetRequiredService<TripDurationModelStatusProvider>());
 builder.Services.AddHostedService<TripDurationModelInitializationService>();
 builder.Services.AddScoped<ITripDurationEstimator, TripDurationEstimator>();
 
@@ -112,7 +115,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Cabrynt API",
         Version = "v1",
-        Description = "REST endpoints for the Cabrynt autonomous mobility platform."
+        Description = "REST endpoints for Cabrynt's Porto ride quotation platform."
     });
 });
 
@@ -219,6 +222,8 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 
 app.MapRideEndpoints();
+
+app.MapTripDurationModelEndpoints();
 
 app.MapVehicleEndpoints();
 
