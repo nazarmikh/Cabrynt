@@ -8,8 +8,8 @@ public interface IRideService
     Task<RideResponseDto?> CreateRideAsync(ClaimsPrincipal principal, RideRequestDto rideRequest);
     Task<RideQuoteResponseDto?> GetRideQuoteAsync(ClaimsPrincipal principal, RideRequestDto rideRequest);
     Task<List<RideResponseDto>?> GetAllRidesAsync(ClaimsPrincipal principal);
-    Task<GetRideByIdResponseDto?> GetRideByIdAsync(ClaimsPrincipal principal, int rideId);
-    Task<bool?> CancelRideAsync(ClaimsPrincipal principal, int rideId);
+    Task<RideReadResult> GetRideByIdAsync(ClaimsPrincipal principal, int rideId);
+    Task<RideRequestOperationStatus> CancelRideAsync(ClaimsPrincipal principal, int rideId);
 }
 
 public class RideService : IRideService
@@ -119,54 +119,49 @@ public class RideService : IRideService
         return rides.Select(MapRide).ToList();
     }
 
-    public async Task<GetRideByIdResponseDto?> GetRideByIdAsync(ClaimsPrincipal principal, int rideId)
+    public async Task<RideReadResult> GetRideByIdAsync(ClaimsPrincipal principal, int rideId)
     {
         if (!TryGetUserId(principal, out var userId))
         {
-            return null;
+            return new RideReadResult(RideRequestOperationStatus.Unauthorized, null);
         }
 
         var ride = await _rideRepository.GetRideByIdAsync(rideId);
         if (ride is null)
         {
-            return null;
+            return new RideReadResult(RideRequestOperationStatus.NotFound, null);
         }
 
         if (userId != ride.PassengerProfile.UserId)
         {
-            throw new UnauthorizedAccessException();
+            return new RideReadResult(RideRequestOperationStatus.Forbidden, null);
         }
 
-        return new GetRideByIdResponseDto
-        {
-            Id = ride.Id,
-            DepartureLocation = ride.DepartureLocation,
-            DestinationLocation = ride.DestinationLocation,
-            RequestTime = ride.RequestTime,
-            RideStatus = ride.RideStatus,
-            EstimatedTripDuration = ride.EstimatedTripDuration,
-            EstimatedTripDurationSource = ride.EstimatedTripDurationSource,
-            TripDurationModelVersion = ride.TripDurationModelVersion
-        };
+        return new RideReadResult(RideRequestOperationStatus.Success, MapRideDetails(ride));
     }
 
-    public async Task<bool?> CancelRideAsync(ClaimsPrincipal principal, int rideId)
+    public async Task<RideRequestOperationStatus> CancelRideAsync(ClaimsPrincipal principal, int rideId)
     {
         if (!TryGetUserId(principal, out var userId))
         {
-            return null;
+            return RideRequestOperationStatus.Unauthorized;
         }
 
         var ride = await _rideRepository.GetRideByIdAsync(rideId);
         if (ride is null)
         {
-            return false;
+            return RideRequestOperationStatus.NotFound;
         }
 
-        // Requests cannot be canceled on behalf of another passenger or after a future dispatch step.
-        if (ride.PassengerProfile.UserId != userId || ride.RideStatus != RideStatus.Requested)
+        if (ride.PassengerProfile.UserId != userId)
         {
-            return false;
+            return RideRequestOperationStatus.Forbidden;
+        }
+
+        // Requests cannot be canceled after they have already left the requested state.
+        if (ride.RideStatus != RideStatus.Requested)
+        {
+            return RideRequestOperationStatus.Conflict;
         }
 
         ride.RideStatus = RideStatus.Canceled;
@@ -174,7 +169,7 @@ public class RideService : IRideService
         await _rideRepository.SaveChangesAsync();
 
         _logger.LogInformation("Ride request {RideId} was canceled by passenger {PassengerUserId}", ride.Id, userId);
-        return true;
+        return RideRequestOperationStatus.Success;
     }
 
     private async Task<RideQuoteSnapshot> CalculateQuoteAsync(
@@ -245,6 +240,21 @@ public class RideService : IRideService
             EstimatedTripDurationSource = ride.EstimatedTripDurationSource,
             TripDurationModelVersion = ride.TripDurationModelVersion,
             PreferredVehicleType = ride.PreferredVehicleType
+        };
+    }
+
+    private static GetRideByIdResponseDto MapRideDetails(Ride ride)
+    {
+        return new GetRideByIdResponseDto
+        {
+            Id = ride.Id,
+            DepartureLocation = ride.DepartureLocation,
+            DestinationLocation = ride.DestinationLocation,
+            RequestTime = ride.RequestTime,
+            RideStatus = ride.RideStatus,
+            EstimatedTripDuration = ride.EstimatedTripDuration,
+            EstimatedTripDurationSource = ride.EstimatedTripDurationSource,
+            TripDurationModelVersion = ride.TripDurationModelVersion
         };
     }
 
