@@ -111,6 +111,8 @@ GraphQL:  http://localhost:5113/graphql
 
 `docker compose` reads values from `.env`. For direct `dotnet run`, configure the corresponding database, admin, and email settings through environment variables or .NET user secrets. See [`.env.example`](.env.example) for the required keys.
 
+Cookie-authentication keys are persisted in Docker's `data_protection_keys` volume. This preserves active sessions when the backend container is recreated. For a multi-instance production deployment, replace the local volume with a shared protected key store such as a cloud key-management service.
+
 ## Verification
 
 Run backend tests:

@@ -25,6 +25,8 @@ services:
       Email__SmtpUsername: ${Email__SmtpUsername}
       Email__SmtpPassword: ${Email__SmtpPassword}
       Email__UseSsl: ${Email__UseSsl}
+      DataProtection__ApplicationName: ${DataProtection__ApplicationName:-Cabrynt}
+      DataProtection__KeyDirectory: ${DataProtection__KeyDirectory:-/app/App_Data/data-protection-keys}
       Routing__OsrmBaseUrl: ${Routing__OsrmBaseUrl:-}
       Routing__UserAgent: ${Routing__UserAgent:-Cabrynt/1.0 (+https://github.com/nazarmikh/Cabrynt)}
       Routing__RequestTimeoutSeconds: ${Routing__RequestTimeoutSeconds:-3}
@@ -45,6 +47,7 @@ services:
       - ./src/backend/GeneratedEmails:/app/GeneratedEmails
       - ./src/backend/GeneratedInvoices:/app/GeneratedInvoices
       - trip_duration_models:/app/App_Data/models
+      - data_protection_keys:/app/App_Data/data-protection-keys
     depends_on:
       postgres:
         condition: service_healthy
@@ -149,3 +152,4 @@ volumes:
   postgres_data:
   mongo_data:
   trip_duration_models:
+  data_protection_keys:
