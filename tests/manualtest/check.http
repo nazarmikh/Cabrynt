@@ -96,12 +96,12 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "departureLocation": "Ghent Sint-Pieters",
-  "destinationLocation": "Vrijdagmarkt Ghent",
-  "departureLatitude": 51.0355,
-  "departureLongitude": 3.7103,
-  "destinationLatitude": 51.0567,
-  "destinationLongitude": 3.7277,
+  "departureLocation": "Aliados",
+  "destinationLocation": "Boavista",
+  "departureLatitude": 41.149,
+  "departureLongitude": -8.611,
+  "destinationLatitude": 41.16,
+  "destinationLongitude": -8.64,
   "preferredVehicleType": "Standard"
 }
 

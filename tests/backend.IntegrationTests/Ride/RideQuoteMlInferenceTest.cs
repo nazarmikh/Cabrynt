@@ -74,11 +74,11 @@ public class RideQuoteMlInferenceTest
         return new
         {
             departureLocation = "Porto centre",
-            destinationLocation = "Porto airport",
+            destinationLocation = "Foz",
             departureLatitude = 41.1579,
             departureLongitude = -8.6291,
-            destinationLatitude = 41.2356,
-            destinationLongitude = -8.6783,
+            destinationLatitude = 41.18,
+            destinationLongitude = -8.67,
             preferredVehicleType = "Standard"
         };
     }

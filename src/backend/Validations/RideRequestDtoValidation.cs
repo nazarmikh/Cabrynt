@@ -1,4 +1,5 @@
 using FluentValidation;
+using Project.Services;
 
 namespace Project.DTOs;
 
@@ -35,6 +36,12 @@ public class RideRequestDtoValidation : AbstractValidator<RideRequestDto>
         RuleFor(x => x.PreferredVehicleType)
             .IsInEnum()
             .WithMessage("Vehicle type is invalid.");
+
+        RuleFor(x => x)
+            .Must(x =>
+                PortoServiceArea.Contains(x.DepartureLatitude, x.DepartureLongitude)
+                && PortoServiceArea.Contains(x.DestinationLatitude, x.DestinationLongitude))
+            .WithMessage("Cabrynt currently supports routes inside the Porto service area.");
 
         RuleFor(x => x)
             .Must(x =>

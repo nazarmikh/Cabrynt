@@ -1,8 +1,13 @@
 @host = http://localhost:5113
 
 ###
-# Health/root
-GET {{host}}/
+# Liveness health check
+GET {{host}}/health/live
+Accept: application/json
+
+###
+# PostgreSQL readiness health check
+GET {{host}}/health/ready
 Accept: application/json
 
 ###

@@ -15,11 +15,6 @@ public readonly record struct TripDurationEstimate(
 
 public sealed class TripDurationEstimator : ITripDurationEstimator
 {
-    private const double PortoMinimumLongitude = -9d;
-    private const double PortoMaximumLongitude = -8d;
-    private const double PortoMinimumLatitude = 40.5d;
-    private const double PortoMaximumLatitude = 41.7d;
-
     private readonly ITripDurationPredictor _predictor;
     private readonly ITripDurationFeatureBuilder _featureBuilder;
     private readonly IQuoteWeatherProvider _weatherProvider;
@@ -53,7 +48,7 @@ public sealed class TripDurationEstimator : ITripDurationEstimator
                 TripDurationEstimateSource.StraightLineFallback);
         }
 
-        if (!_predictor.IsAvailable || !IsInsidePortoArea(route))
+        if (!_predictor.IsAvailable || !PortoServiceArea.Contains(route))
         {
             return new TripDurationEstimate(routeEstimate.DurationMinutes, TripDurationEstimateSource.Osrm);
         }
@@ -91,15 +86,4 @@ public sealed class TripDurationEstimator : ITripDurationEstimator
         }
     }
 
-    private static bool IsInsidePortoArea(RouteRequest route)
-    {
-        return IsInsidePortoArea(route.DepartureLatitude, route.DepartureLongitude)
-            && IsInsidePortoArea(route.DestinationLatitude, route.DestinationLongitude);
-    }
-
-    private static bool IsInsidePortoArea(double latitude, double longitude)
-    {
-        return longitude is >= PortoMinimumLongitude and <= PortoMaximumLongitude
-            && latitude is >= PortoMinimumLatitude and <= PortoMaximumLatitude;
-    }
 }

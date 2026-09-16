@@ -23,12 +23,12 @@ public class RideQuoteTest : IClassFixture<CustomWebApplicationFactory>
 
         var response = await _client.PostAsJsonAsync("/api/public/rides/quote", new
         {
-            departureLocation = "Kortrijk",
-            destinationLocation = "Ghent",
-            departureLatitude = 50.826,
-            departureLongitude = 3.264,
-            destinationLatitude = 51.054,
-            destinationLongitude = 3.717,
+            departureLocation = "Aliados",
+            destinationLocation = "Boavista",
+            departureLatitude = 41.149,
+            departureLongitude = -8.611,
+            destinationLatitude = 41.16,
+            destinationLongitude = -8.64,
             preferredVehicleType = "Standard"
         });
 
@@ -51,15 +51,35 @@ public class RideQuoteTest : IClassFixture<CustomWebApplicationFactory>
     {
         var response = await _client.PostAsJsonAsync("/api/public/rides/quote", new
         {
-            departureLocation = "Kortrijk",
+            departureLocation = "Aliados",
+            destinationLocation = "Boavista",
+            departureLatitude = 41.149,
+            departureLongitude = -8.611,
+            destinationLatitude = 41.16,
+            destinationLongitude = -8.64,
+            preferredVehicleType = "Standard"
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetRideQuote_ReturnsBadRequest_WhenRouteIsOutsidePorto()
+    {
+        var passenger = await IntegrationTestData.RegisterPassengerAsync(_client);
+        await IntegrationTestData.LoginAsync(_client, passenger.Email, passenger.Password);
+
+        var response = await _client.PostAsJsonAsync("/api/public/rides/quote", new
+        {
+            departureLocation = "Aliados",
             destinationLocation = "Ghent",
-            departureLatitude = 50.826,
-            departureLongitude = 3.264,
+            departureLatitude = 41.149,
+            departureLongitude = -8.611,
             destinationLatitude = 51.054,
             destinationLongitude = 3.717,
             preferredVehicleType = "Standard"
         });
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }
