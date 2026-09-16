@@ -8,7 +8,7 @@ services:
     container_name: cabrynt-backend
     restart: unless-stopped
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       ConnectionStrings__Mongo: mongodb://mongo:27017
       Mongo__DatabaseName: ${Mongo__DatabaseName}
@@ -53,6 +53,61 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
+
+  osrm-download:
+    image: curlimages/curl@sha256:58adaa4e8dca9c988bae2aba4ab3434a0bb2da16bbe3f92dec39ec7785166777
+    profiles: ["routing"]
+    restart: "no"
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        if [ -s /data/portugal-latest.osm.pbf ]; then
+          exit 0
+        fi
+        curl --fail --location --retry 3 --retry-delay 5 \
+          --output /data/portugal-latest.osm.pbf \
+          https://download.geofabrik.de/europe/portugal-latest.osm.pbf
+    volumes:
+      - osrm_data:/data
+
+  osrm-prepare:
+    image: ghcr.io/project-osrm/osrm-backend@sha256:8a1b1bc938412f15f9b5b32d794c4ec6bf4a85dfbbabfa0a014b70b187edb53b
+    profiles: ["routing"]
+    restart: "no"
+    depends_on:
+      osrm-download:
+        condition: service_completed_successfully
+    entrypoint: ["/bin/bash", "-ec"]
+    command:
+      - |
+        if [ -f /data/portugal-latest.osrm.mldgr ]; then
+          exit 0
+        fi
+        osrm-extract -p /opt/car.lua /data/portugal-latest.osm.pbf
+        osrm-partition /data/portugal-latest.osrm
+        osrm-customize /data/portugal-latest.osrm
+    volumes:
+      - osrm_data:/data
+
+  osrm:
+    image: ghcr.io/project-osrm/osrm-backend@sha256:8a1b1bc938412f15f9b5b32d794c4ec6bf4a85dfbbabfa0a014b70b187edb53b
+    profiles: ["routing"]
+    container_name: cabrynt-osrm
+    restart: unless-stopped
+    command: ["osrm-routed", "--algorithm", "mld", "/data/portugal-latest.osrm"]
+    ports:
+      - "127.0.0.1:${OSRM_PORT:-5001}:5000"
+    volumes:
+      - osrm_data:/data:ro
+    depends_on:
+      osrm-prepare:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "bash -ec 'echo > /dev/tcp/127.0.0.1/5000'"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   frontend:
     build:
@@ -153,3 +208,4 @@ volumes:
   mongo_data:
   trip_duration_models:
   data_protection_keys:
+  osrm_data:

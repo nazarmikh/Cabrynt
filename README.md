@@ -10,7 +10,7 @@ The application is actively evolving as a portfolio project focused on backend e
 - Passenger, vehicle, ride quote, payment, invoice, support, maintenance, and diagnostic workflows.
 - PostgreSQL for transactional data and MongoDB for telemetry and sensor events.
 - REST APIs, GraphQL dashboard reads, OpenAPI documentation, FluentValidation, and automated tests.
-- Docker Compose development environment with PostgreSQL, MongoDB, administration tools, and a vehicle telemetry simulator.
+- Docker Compose development environment with PostgreSQL, MongoDB, administration tools, and an optional local OSRM routing profile.
 - GitHub Actions checks for formatting, build, unit tests, integration tests, ML tests, dependency auditing, and Docker image builds.
 - An OSRM-aware, ONNX-exported trip-duration model with guarded .NET quote inference and explicit fallback sources.
 
@@ -111,7 +111,27 @@ GraphQL:  http://localhost:5113/graphql
 
 `docker compose` reads values from `.env`. For direct `dotnet run`, configure the corresponding database, admin, and email settings through environment variables or .NET user secrets. See [`.env.example`](.env.example) for the required keys.
 
+Docker Compose defaults to the `Development` environment because the local frontend and backend use HTTP. This lets the development cookie policy use the request scheme. A deployed production environment must set `ASPNETCORE_ENVIRONMENT=Production` and terminate HTTPS before enabling secure browser authentication.
+
 Cookie-authentication keys are persisted in Docker's `data_protection_keys` volume. This preserves active sessions when the backend container is recreated. For a multi-instance production deployment, replace the local volume with a shared protected key store such as a cloud key-management service.
+
+### Enable Local Road Routing
+
+Cabrynt defaults to a straight-line estimate so normal development and automated tests do not need routing data. To use local OSRM road routing, set the following value in `.env`:
+
+```text
+Routing__OsrmBaseUrl=http://osrm:5000
+```
+
+Then start the optional routing profile:
+
+```powershell
+docker compose --profile routing up -d backend osrm
+```
+
+On its first run, Docker downloads the OpenStreetMap Portugal extract into the ignored `osrm_data` volume, then runs OSRM extraction, partitioning, and customization. This can take a while and needs substantial disk space; later starts reuse the prepared volume. The application remains scoped to Porto even though the routing graph contains Portugal.
+
+When `cabrynt-osrm` is healthy, routes are available at `http://localhost:5001` for local inspection and the backend uses the internal Docker address. The configuration uses the official [OSRM backend image](https://github.com/Project-OSRM/osrm-backend) and [Geofabrik Portugal extract](https://download.geofabrik.de/europe/portugal.html).
 
 ## Verification
 
