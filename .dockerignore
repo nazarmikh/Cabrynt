@@ -12,5 +12,6 @@ tests/**/obj
 tests/http
 src/backend/GeneratedEmails
 src/backend/GeneratedInvoices
+**/App_Data
 postgres_data
 mongo_data

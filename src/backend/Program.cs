@@ -13,6 +13,8 @@ using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCabryntDataProtection(builder.Configuration);
+
 // Hasher
 
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();

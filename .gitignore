@@ -40,6 +40,7 @@ coverage/
 # Generated runtime artifacts
 src/backend/GeneratedEmails/
 src/backend/GeneratedInvoices/
+**/App_Data/
 
 backend.sln
 
