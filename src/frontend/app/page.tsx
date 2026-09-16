@@ -19,23 +19,23 @@ import {
 const features = [
   {
     icon: MapPin,
-    title: "Real-time Fleet Telemetry",
-    description: "Monitor your entire fleet with live GPS tracking, speed data, and battery status across all vehicles.",
+    title: "Route-aware Estimates",
+    description: "Combine road-network routing with a model trained on historical Porto taxi trips.",
   },
   {
     icon: Car,
-    title: "Autonomous Ride System",
-    description: "AI-powered routing and dispatch system that optimizes pickup times and passenger experience.",
+    title: "Model-informed Quotes",
+    description: "Use a guarded ONNX model correction when the route and quote-time context are available.",
   },
   {
     icon: CreditCard,
-    title: "Smart Pricing Engine",
-    description: "Dynamic pricing with transparent breakdowns, loyalty rewards, and promotional discounts.",
+    title: "Transparent Pricing",
+    description: "Review route distance, travel time, and a clear fare estimate before submitting a request.",
   },
   {
     icon: Wrench,
-    title: "Maintenance & Diagnostics",
-    description: "Predictive maintenance alerts and sensor diagnostics to keep your fleet running smoothly.",
+    title: "Explicit Fallbacks",
+    description: "Show whether an estimate came from the model, OSRM routing, or the straight-line fallback.",
   },
 ]
 
@@ -106,11 +106,11 @@ export default function LandingPage() {
               Now serving 25+ cities worldwide
             </div>
             <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Autonomous Mobility{" "}
-              <span className="text-primary">Platform</span>
+              Porto Ride{" "}
+              <span className="text-primary">Estimates</span>
             </h1>
             <p className="mt-6 text-pretty text-lg leading-relaxed text-muted-foreground sm:text-xl">
-              Scalable driverless fleet system with real-time telemetry, intelligent routing, and seamless passenger experiences. The future of urban transportation is here.
+              A ride quotation experience built around route-aware travel-time prediction and transparent estimates.
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Button size="lg" asChild className="w-full sm:w-auto">

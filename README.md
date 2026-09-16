@@ -8,9 +8,9 @@ The application is actively evolving as a portfolio project focused on backend e
 
 - Cookie-based browser authentication with role-based authorization.
 - Passenger authentication, route quotes, saved ride requests, cancellation, and support workflows.
-- PostgreSQL for transactional data and MongoDB for telemetry and sensor events.
+- PostgreSQL for application data.
 - REST APIs, OpenAPI documentation, FluentValidation, and automated tests.
-- Docker Compose development environment with PostgreSQL, MongoDB, administration tools, and an optional local OSRM routing profile.
+- Docker Compose development environment with PostgreSQL, administration tools, and an optional local OSRM routing profile.
 - GitHub Actions checks for formatting, build, unit tests, integration tests, ML tests, dependency auditing, and Docker image builds.
 - An OSRM-aware, ONNX-exported trip-duration model with guarded .NET quote inference and explicit fallback sources.
 
@@ -53,10 +53,10 @@ The .NET backend uses a pragmatic layered structure:
 
 - **Endpoints** expose Minimal API routes.
 - **Services** contain application and business workflows.
-- **Repositories** isolate PostgreSQL and MongoDB access.
+- **Repositories** isolate PostgreSQL access.
 - **DTOs and validators** define and validate API boundaries.
 
-PostgreSQL stores users, passenger profiles, ride requests, vehicles, tickets, maintenance records, and other transactional data. MongoDB currently stores vehicle telemetry and sensor diagnostics.
+PostgreSQL stores users, passenger profiles, ride requests, vehicles, tickets, maintenance records, and other application data.
 
 The frontend is a Next.js application that consumes the backend REST API.
 
@@ -65,7 +65,7 @@ The frontend is a Next.js application that consumes the backend REST API.
 | Area | Technologies |
 | --- | --- |
 | Backend | .NET 10, ASP.NET Core Minimal APIs, Entity Framework Core, FluentValidation |
-| Data | PostgreSQL, MongoDB |
+| Data | PostgreSQL |
 | API | REST, OpenAPI/Swagger |
 | Authentication | ASP.NET Core cookie authentication, role-based authorization |
 | ML | Python, pandas, scikit-learn, LightGBM experiments, ONNX, ONNX Runtime, OSRM |
@@ -83,7 +83,7 @@ tests/
   backend.IntegrationTests/ Backend integration tests
 ml/
   trip-duration/           Reproducible Porto trip-duration experiment
-scripts/                    Telemetry simulator and local utility scripts
+scripts/                    Local utility scripts
 docs/                       Engineering notes
 compose.yaml                Local multi-container environment
 ```
@@ -148,10 +148,10 @@ Run backend tests:
 dotnet test Cabrynt.sln
 ```
 
-Integration tests need PostgreSQL and MongoDB. Start them locally when they are not already running:
+Integration tests need PostgreSQL. Start it locally when it is not already running:
 
 ```powershell
-docker compose up -d postgres mongo
+docker compose up -d postgres
 ```
 
 Run ML tests:
@@ -167,7 +167,6 @@ The ML environment and data preparation instructions are documented in the [ML R
 
 - Add deployment-safe model artifact distribution and configure a production routing provider.
 - Add an admin model-status view and persist model quote snapshots with ride requests.
-- Remove legacy fleet telemetry and diagnostic infrastructure that is outside the quote-focused product scope.
 - Add OpenID Connect login and production deployment configuration.
 - Add OpenTelemetry traces, metrics, and production deployment configuration.
 - Improve dispatch, concurrency handling, API consistency, and integration-test infrastructure.
