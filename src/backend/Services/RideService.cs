@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Microsoft.Extensions.Options;
 
 namespace Project.Services;
 
@@ -16,27 +15,18 @@ public class RideService : IRideService
 {
     private readonly IRideRepository _rideRepository;
     private readonly IPassengerRepository _passengerRepository;
-    private readonly IPriceService _priceService;
-    private readonly IRouteEstimator _routeEstimator;
-    private readonly ITripDurationEstimator _tripDurationEstimator;
-    private readonly TripDurationModelOptions _tripDurationModelOptions;
+    private readonly IQuoteService _quoteService;
     private readonly ILogger<RideService> _logger;
 
     public RideService(
         IRideRepository rideRepository,
         IPassengerRepository passengerRepository,
-        IPriceService priceService,
-        IRouteEstimator routeEstimator,
-        ITripDurationEstimator tripDurationEstimator,
-        IOptions<TripDurationModelOptions> tripDurationModelOptions,
+        IQuoteService quoteService,
         ILogger<RideService> logger)
     {
         _rideRepository = rideRepository;
         _passengerRepository = passengerRepository;
-        _priceService = priceService;
-        _routeEstimator = routeEstimator;
-        _tripDurationEstimator = tripDurationEstimator;
-        _tripDurationModelOptions = tripDurationModelOptions.Value;
+        _quoteService = quoteService;
         _logger = logger;
     }
 
@@ -48,7 +38,7 @@ public class RideService : IRideService
             return null;
         }
 
-        var quote = await CalculateQuoteAsync(rideRequest, DateTimeOffset.UtcNow);
+        var quote = await _quoteService.CalculateAsync(rideRequest, DateTimeOffset.UtcNow);
 
         var ride = new Ride
         {
@@ -89,7 +79,7 @@ public class RideService : IRideService
             return null;
         }
 
-        var quote = await CalculateQuoteAsync(rideRequest, DateTimeOffset.UtcNow);
+        var quote = await _quoteService.CalculateAsync(rideRequest, DateTimeOffset.UtcNow);
 
         return new RideQuoteResponseDto
         {
@@ -172,46 +162,6 @@ public class RideService : IRideService
         return RideRequestOperationStatus.Success;
     }
 
-    private async Task<RideQuoteSnapshot> CalculateQuoteAsync(
-        RideRequestDto rideRequest,
-        DateTimeOffset quoteRequestedAt)
-    {
-        var routeEstimate = await EstimateRouteAsync(rideRequest);
-        var distance = Math.Round((decimal)routeEstimate.DistanceKm, 2);
-        var duration = Math.Round((decimal)routeEstimate.DurationMinutes, 2);
-        var tripDurationEstimate = await _tripDurationEstimator.EstimateAsync(
-            CreateRouteRequest(rideRequest),
-            routeEstimate,
-            quoteRequestedAt);
-        var breakdown = _priceService.GetEstimatedBreakdown(
-            distance,
-            duration,
-            rideRequest.PreferredVehicleType,
-            quoteRequestedAt.UtcDateTime);
-
-        return new RideQuoteSnapshot(
-            breakdown,
-            Math.Round((decimal)tripDurationEstimate.DurationMinutes, 2),
-            tripDurationEstimate.Source,
-            tripDurationEstimate.Source == TripDurationEstimateSource.MachineLearning
-                ? _tripDurationModelOptions.ExpectedVersion
-                : null);
-    }
-
-    private Task<RouteEstimate> EstimateRouteAsync(RideRequestDto rideRequest)
-    {
-        return _routeEstimator.EstimateAsync(CreateRouteRequest(rideRequest));
-    }
-
-    private static RouteRequest CreateRouteRequest(RideRequestDto rideRequest)
-    {
-        return new RouteRequest(
-            rideRequest.DepartureLatitude,
-            rideRequest.DepartureLongitude,
-            rideRequest.DestinationLatitude,
-            rideRequest.DestinationLongitude);
-    }
-
     private async Task<PassengerProfile?> GetPassengerAsync(ClaimsPrincipal principal)
     {
         return !TryGetUserId(principal, out var userId)
@@ -257,10 +207,4 @@ public class RideService : IRideService
             TripDurationModelVersion = ride.TripDurationModelVersion
         };
     }
-
-    private sealed record RideQuoteSnapshot(
-        PriceQuoteBreakdown Breakdown,
-        decimal EstimatedTripDuration,
-        TripDurationEstimateSource EstimatedTripDurationSource,
-        string? TripDurationModelVersion);
 }
