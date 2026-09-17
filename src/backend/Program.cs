@@ -6,6 +6,7 @@ using Project.Endpoints;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Options;
+using System.Threading.RateLimiting;
 
 
 
@@ -31,6 +32,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRideService, RideService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IPriceService, PriceService>();
+builder.Services.AddScoped<IQuoteService, QuoteService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 
@@ -109,6 +111,25 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
+    });
+});
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("model-demo", httpContext =>
+    {
+        var clientAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            clientAddress,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
     });
 });
 
@@ -220,6 +241,7 @@ using (var scope = app.Services.CreateScope())
 
 
 app.UseCors("FrontendDev");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -237,6 +259,8 @@ app.MapAuthEndpoints();
 app.MapRideEndpoints();
 
 app.MapTripDurationModelEndpoints();
+
+app.MapModelInsightsEndpoints();
 
 app.MapVehicleEndpoints();
 

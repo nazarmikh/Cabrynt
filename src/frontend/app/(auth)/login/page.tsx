@@ -128,6 +128,12 @@ export default function LoginPage() {
             </Link>
           </div>
 
+          <Button variant="outline" className="mt-4 w-full" asChild>
+            <Link href="/model-insights">
+              Explore trip-duration model
+            </Link>
+          </Button>
+
           <div className="mt-6 rounded-lg bg-muted/50 p-4">
             <p className="text-xs text-muted-foreground">
               <strong className="text-foreground">Tip:</strong>

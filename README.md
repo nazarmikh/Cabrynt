@@ -20,12 +20,16 @@ The application is actively evolving as a portfolio project focused on backend e
 
 The selected model is a HistGradientBoosting residual model: OSRM provides a road-network duration estimate, and the model predicts a correction. When the model, current weather, an OSRM route, and Porto-scoped coordinates are available, the application calculates `max(OSRM duration + model correction, 0)`. Otherwise, it returns the OSRM estimate or the existing straight-line fallback and identifies the source in the quote response.
 
-On a locked 4,999-trip confirmation cohort, the selected model produced the following result:
+The deployed residual model was fitted on 199,994 route-ready historical trips drawn from a 1,049,044-trip cleaned training split. It was then evaluated once on a separate, locked 4,999-trip chronological confirmation cohort that was not used for feature, parameter, or model selection:
 
-| Model | MAE | P90 absolute error |
-| --- | ---: | ---: |
-| Direct OSRM | 5.488 min | 10.817 min |
-| Selected OSRM-residual model | 3.383 min | 6.702 min |
+| Model | MAE | Median absolute error | P90 absolute error |
+| --- | ---: | ---: | ---: |
+| Direct OSRM | 5.488 min | 3.530 min | 10.817 min |
+| Selected OSRM-residual model | 3.383 min | 1.656 min | 6.702 min |
+
+That is a 38.4% MAE reduction and a 38.0% P90 absolute-error reduction versus direct OSRM on the same final cohort. The paired 95% bootstrap interval for model MAE minus OSRM MAE was -2.186 to -2.033 minutes.
+
+The model is not uniformly better for every trip. Direct OSRM was more accurate for completed historical trips lasting up to five minutes (1.183 versus 1.924 MAE minutes). Actual duration is unavailable at quote time, so this finding cannot be translated into a reliable live duration threshold. Cabrynt therefore presents both estimates when ML is active and labels the source used by every quote.
 
 The model has a versioned 23-feature float32 ONNX contract. Its ONNX predictions were verified against the scikit-learn model with a maximum difference of `0.000001752` minutes.
 

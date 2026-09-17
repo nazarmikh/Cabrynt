@@ -16,7 +16,9 @@ import type {
 } from "@/lib/backend-types"
 import { type Coordinates } from "@/lib/location"
 import { formatCurrency } from "@/lib/format"
+import { formatDuration, formatDurationCorrection } from "@/lib/duration"
 import { PortoRoutePicker, type RoutePoint } from "@/components/ride/porto-route-picker"
+import { Badge } from "@/components/ui/badge"
 import { Car, Users, Crown, Check, Loader2, Clock3, Sparkles } from "lucide-react"
 
 const vehicleTypes = [
@@ -49,8 +51,8 @@ const vehicleTypes = [
 type VehicleChoice = (typeof vehicleTypes)[number]["id"]
 
 const tripDurationSourceLabels: Record<TripDurationEstimateSource, string> = {
-  MachineLearning: "Model-informed route estimate",
-  Osrm: "Route estimate",
+  MachineLearning: "ML correction applied to the OSRM route baseline",
+  Osrm: "OSRM route estimate",
   StraightLineFallback: "Distance estimate",
 }
 
@@ -337,35 +339,63 @@ export default function BookRidePage() {
                 </div>
               ) : quote ? (
                 <div className="space-y-3">
-                  <div className="rounded-md border bg-muted/40 p-3">
-                    <div className="flex items-center gap-2 text-sm font-medium">
-                      {quote.estimatedTripDurationSource === "MachineLearning" ? (
-                        <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
-                      ) : (
-                        <Clock3 className="h-4 w-4 text-primary" aria-hidden="true" />
-                      )}
-                      <span>Estimated trip time</span>
-                    </div>
-                    <p className="mt-1 text-2xl font-bold">
-                      {Math.round(quote.estimatedTripDuration)} min
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {tripDurationSourceLabels[quote.estimatedTripDurationSource]}
-                    </p>
-                    {quote.estimatedTripDurationSource !== "StraightLineFallback" && (
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        Routing data ©{" "}
-                        <a
-                          className="underline underline-offset-2 hover:text-foreground"
-                          href="https://www.openstreetmap.org/copyright"
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          OpenStreetMap contributors
-                        </a>
+                  {quote.estimatedTripDurationSource === "MachineLearning" ? (
+                    <div className="border-y py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
+                          <span>Trip duration estimate</span>
+                        </div>
+                        <Badge variant="outline">ML active</Badge>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 divide-x border">
+                        <div className="p-3">
+                          <p className="text-xs text-muted-foreground">OSRM route baseline</p>
+                          <p className="mt-1 font-semibold">{formatDuration(quote.duration)}</p>
+                        </div>
+                        <div className="bg-primary/5 p-3">
+                          <p className="text-xs text-muted-foreground">Model-corrected ETA</p>
+                          <p className="mt-1 font-semibold text-primary">
+                            {formatDuration(quote.estimatedTripDuration)}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        Model correction: {formatDurationCorrection(quote.estimatedTripDuration - quote.duration)} compared with the route baseline.
                       </p>
-                    )}
-                  </div>
+                      {quote.distance < 0.5 && (
+                        <p className="mt-3 border-l-2 border-primary pl-3 text-xs leading-5 text-muted-foreground">
+                          Very short routes are a less representative model use case. Both estimates remain visible so the route baseline can be compared with the ML correction.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="border-y py-3">
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <Clock3 className="h-4 w-4 text-primary" aria-hidden="true" />
+                        <span>Estimated trip time</span>
+                      </div>
+                      <p className="mt-1 text-2xl font-bold">
+                        {formatDuration(quote.estimatedTripDuration)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {tripDurationSourceLabels[quote.estimatedTripDurationSource]}
+                      </p>
+                    </div>
+                  )}
+                  {quote.estimatedTripDurationSource !== "StraightLineFallback" && (
+                    <p className="text-xs text-muted-foreground">
+                      Routing data (c){" "}
+                      <a
+                        className="underline underline-offset-2 hover:text-foreground"
+                        href="https://www.openstreetmap.org/copyright"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        OpenStreetMap contributors
+                      </a>
+                    </p>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Base fare</span>
                     <span>{formatCurrency(quote.baseFare)}</span>

@@ -270,6 +270,8 @@ The locked 4,999-trip confirmation cohort was evaluated once after all model, pa
 
 The route-speed variant improved MAE by only `0.007` minutes against the tuned residual baseline, and its paired 95% interval (`-0.017` to `0.004`) includes zero. The final model therefore keeps the simpler 23-feature OSRM-aware input contract and the tuned residual parameters: absolute-error loss, `0.06` learning rate, 200 iterations, and 63 leaves. It improves direct OSRM by `2.105` MAE minutes and the full route-free model by `0.361` minutes on this final cohort.
 
+Direct OSRM remains more accurate for the 606 completed trips that lasted up to five minutes: `1.183` MAE minutes versus `1.924` for the deployed residual model. This segment is defined by actual duration, which is unavailable at quote time. A later test of live proxies based on OSRM duration and route distance did not identify a threshold where replacing the residual model with OSRM improved either chronological development fold. The application therefore does not apply an unsupported short-route fallback; it exposes both estimates and documents this limitation in the public model demo.
+
 ## Training-Data Learning Curve
 
 Before routing a substantially larger training cohort, the selected model is evaluated on fixed nested 25,000-, 50,000-, and 100,000-row samples. Each sample is drawn deterministically from the training part of both existing expanding chronological folds; every validation row is later than every training row. The locked test and confirmation cohorts are not read.

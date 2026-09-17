@@ -81,6 +81,18 @@ export interface TripDurationModelStatus {
   configuredVersion?: string | null
 }
 
+export type RouteEstimateSource = "Osrm" | "StraightLineFallback"
+
+export interface ModelDemoEstimate {
+  routeDistance: number
+  routeDuration: number
+  routeEstimateSource: RouteEstimateSource
+  estimatedTripDuration: number
+  estimatedTripDurationSource: TripDurationEstimateSource
+  modelCorrection?: number | null
+  modelVersion?: string | null
+}
+
 export type TicketPriority = "Low" | "Medium" | "High" | "Critical"
 export type TicketStatus = "Open" | "InProgress" | "Resolved"
 

@@ -1,276 +1,208 @@
-"use client"
-
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { ArrowRight, BarChart3, Braces, Database, Map, Route, ShieldCheck } from "lucide-react"
 import { CabryntLogo } from "@/components/cabrynt-logo"
-import {
-  Car,
-  MapPin,
-  Gauge,
-  Wrench,
-  Shield,
-  Clock,
-  CreditCard,
-  ChevronRight,
-  ArrowRight,
-} from "lucide-react"
+import { Button } from "@/components/ui/button"
 
-const features = [
+const projectAreas = [
   {
-    icon: MapPin,
-    title: "Route-aware Estimates",
-    description: "Combine road-network routing with a model trained on historical Porto taxi trips.",
+    icon: Route,
+    title: "Route-aware estimation",
+    description: "OSRM supplies road-network distance and duration. A residual model learns when historical Porto taxi trips differ from that route baseline.",
   },
   {
-    icon: Car,
-    title: "Model-informed Quotes",
-    description: "Use a guarded ONNX model correction when the route and quote-time context are available.",
+    icon: Braces,
+    title: "Backend delivery",
+    description: "The exported ONNX model is verified at startup and served through ASP.NET Core quote endpoints with explicit fallback sources.",
   },
   {
-    icon: CreditCard,
-    title: "Transparent Pricing",
-    description: "Review route distance, travel time, and a clear fare estimate before submitting a request.",
-  },
-  {
-    icon: Wrench,
-    title: "Explicit Fallbacks",
-    description: "Show whether an estimate came from the model, OSRM routing, or the straight-line fallback.",
+    icon: ShieldCheck,
+    title: "Reliable application flows",
+    description: "Cookie authentication, role-based access, validation, persisted quote snapshots, cancellation, and integration tests support the surrounding workflow.",
   },
 ]
 
-const stats = [
-  { value: "50K+", label: "Rides Completed" },
-  { value: "99.9%", label: "Uptime" },
-  { value: "150+", label: "Active Vehicles" },
-  { value: "4.9", label: "Passenger Rating" },
-]
-
-const benefits = [
-  {
-    icon: Shield,
-    title: "Enterprise Security",
-    description: "Bank-level encryption and compliance with global safety standards.",
-  },
-  {
-    icon: Clock,
-    title: "24/7 Support",
-    description: "Round-the-clock technical support and passenger assistance.",
-  },
-  {
-    icon: Gauge,
-    title: "Real-time Analytics",
-    description: "Comprehensive dashboards with actionable insights and reporting.",
-  },
+const technologies = [
+  "ASP.NET Core",
+  "C# / .NET",
+  "PostgreSQL",
+  "Python",
+  "scikit-learn",
+  "ONNX Runtime",
+  "OSRM",
+  "Next.js",
+  "Docker Compose",
+  "GitHub Actions",
 ]
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <CabryntLogo />
-          <nav className="hidden items-center gap-8 md:flex">
-            <Link href="#features" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              Features
+          <nav className="hidden items-center gap-6 md:flex">
+            <Link href="#project" className="text-sm text-muted-foreground hover:text-foreground">
+              Project
             </Link>
-            <Link href="#pricing" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              Pricing
+            <Link href="#technology" className="text-sm text-muted-foreground hover:text-foreground">
+              Technologies
             </Link>
-            <Link href="#about" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              About
+            <Link href="#validation" className="text-sm text-muted-foreground hover:text-foreground">
+              Model validation
             </Link>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Button variant="ghost" asChild className="hidden sm:inline-flex">
-              <Link href="/login">Sign In</Link>
+              <Link href="/login">Sign in</Link>
             </Button>
             <Button asChild>
-              <Link href="/register">Get Started</Link>
+              <Link href="/model-insights">Test the model</Link>
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(45%_40%_at_50%_60%,oklch(0.55_0.2_250/0.12),transparent)]" />
-        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+      <section className="border-b">
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.2fr_0.8fr] lg:py-24">
+          <div>
+            <p className="text-sm font-medium text-primary">Portfolio project</p>
+            <h1 className="mt-3 text-4xl font-bold sm:text-5xl">Cabrynt</h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
+              A Porto ride quotation and request application that combines ASP.NET Core backend workflows with a validated machine-learning trip-duration model.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button size="lg" asChild>
+                <Link href="/model-insights">
+                  Test a route estimate
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link href="/login">Open the application</Link>
+              </Button>
+            </div>
+          </div>
+
+          <div className="border p-6">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <BarChart3 className="h-4 w-4 text-primary" aria-hidden="true" />
+              Locked final evaluation
+            </div>
+            <dl className="mt-6 grid gap-5 sm:grid-cols-3 lg:grid-cols-1">
+              <div>
+                <dt className="text-xs text-muted-foreground">Selected model MAE</dt>
+                <dd className="mt-1 text-2xl font-semibold">3.383 min</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Improvement over direct OSRM</dt>
+                <dd className="mt-1 text-2xl font-semibold">38.4%</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Final confirmation routes</dt>
+                <dd className="mt-1 text-2xl font-semibold">4,999</dd>
+              </div>
+            </dl>
+            <p className="mt-6 border-t pt-4 text-xs leading-5 text-muted-foreground">
+              The final cohort was held out from model and parameter selection. The deployed model was fitted on 199,994 route-ready historical trips.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="project" className="py-16 lg:py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="max-w-2xl">
+            <p className="text-sm font-medium text-primary">Project description</p>
+            <h2 className="mt-2 text-3xl font-bold">An ML feature delivered as an application capability.</h2>
+            <p className="mt-4 leading-7 text-muted-foreground">
+              Cabrynt is not only a notebook experiment. It provides public route exploration, authenticated quotes, saved ride requests, predictable API results, and a deployment path for a versioned model artifact.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {projectAreas.map((area) => (
+              <article key={area.title} className="border p-5">
+                <area.icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                <h3 className="mt-4 font-semibold">{area.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{area.description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="technology" className="border-y bg-muted/25 py-16 lg:py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="flex items-center gap-2">
+            <Database className="h-5 w-5 text-primary" aria-hidden="true" />
+            <h2 className="text-2xl font-bold">Technologies</h2>
+          </div>
+          <p className="mt-3 max-w-2xl leading-7 text-muted-foreground">
+            The project combines data preparation and model evaluation in Python with a .NET API, PostgreSQL persistence, and a TypeScript frontend.
+          </p>
+          <div className="mt-7 flex flex-wrap gap-2">
+            {technologies.map((technology) => (
+              <span key={technology} className="border bg-background px-3 py-2 text-sm font-medium">
+                {technology}
               </span>
-              Now serving 25+ cities worldwide
-            </div>
-            <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Porto Ride{" "}
-              <span className="text-primary">Estimates</span>
-            </h1>
-            <p className="mt-6 text-pretty text-lg leading-relaxed text-muted-foreground sm:text-xl">
-              A ride quotation experience built around route-aware travel-time prediction and transparent estimates.
-            </p>
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button size="lg" asChild className="w-full sm:w-auto">
-                <Link href="/register">
-                  Get Started
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild className="w-full sm:w-auto">
-                <Link href="/login">
-                  Sign In to Dashboard
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="border-y border-border bg-card">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-            {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-3xl font-bold text-foreground sm:text-4xl">{stat.value}</div>
-                <div className="mt-1 text-sm text-muted-foreground">{stat.label}</div>
-              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Everything you need to manage autonomous fleets
-            </h2>
-            <p className="mt-4 text-pretty text-lg text-muted-foreground">
-              A complete platform for operating, monitoring, and scaling your driverless vehicle fleet.
+      <section id="validation" className="py-16 lg:py-20">
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1.15fr_0.85fr]">
+          <div>
+            <div className="flex items-center gap-2">
+              <Map className="h-5 w-5 text-primary" aria-hidden="true" />
+              <h2 className="text-2xl font-bold">Model validation</h2>
+            </div>
+            <p className="mt-3 max-w-2xl leading-7 text-muted-foreground">
+              The final residual model was compared with direct OSRM on a locked, chronological Porto cohort that was not used to select features or parameters.
             </p>
+            <div className="mt-6 overflow-x-auto border">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-muted/50 text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Model</th>
+                    <th className="px-4 py-3 text-right font-medium">MAE</th>
+                    <th className="px-4 py-3 text-right font-medium">P90 error</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t">
+                    <td className="px-4 py-3">Direct OSRM</td>
+                    <td className="px-4 py-3 text-right">5.488 min</td>
+                    <td className="px-4 py-3 text-right">10.817 min</td>
+                  </tr>
+                  <tr className="border-t bg-primary/5 font-medium">
+                    <td className="px-4 py-3">OSRM + ML correction</td>
+                    <td className="px-4 py-3 text-right">3.383 min</td>
+                    <td className="px-4 py-3 text-right">6.702 min</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature) => (
-              <Card key={feature.title} className="group relative overflow-hidden border-border/50 bg-card transition-all hover:border-primary/30 hover:shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                    <feature.icon className="h-6 w-6" />
-                  </div>
-                  <h3 className="mt-4 text-lg font-semibold text-foreground">{feature.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <aside className="border p-6">
+            <h3 className="font-semibold">Scope and limitations</h3>
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
+              <li>The model is trained and evaluated for Porto routes only.</li>
+              <li>For completed rides under five minutes, direct OSRM was more accurate in evaluation. Actual duration is unknown at quote time, so this result cannot become a simple live duration fallback.</li>
+              <li>OSRM, current weather, and ONNX inference have labelled fallbacks so quotes remain available when optional dependencies are unavailable.</li>
+            </ul>
+            <Button variant="outline" className="mt-6 w-full" asChild>
+              <Link href="/model-insights">Explore validation and test a route</Link>
+            </Button>
+          </aside>
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="bg-card py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid items-center gap-12 lg:grid-cols-2">
-            <div>
-              <h2 className="text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                Built for reliability and scale
-              </h2>
-              <p className="mt-4 text-pretty text-lg text-muted-foreground">
-                Cabrynt provides enterprise-grade infrastructure designed to handle millions of rides with 99.9% uptime guarantee.
-              </p>
-              <div className="mt-8 space-y-6">
-                {benefits.map((benefit) => (
-                  <div key={benefit.title} className="flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
-                      <benefit.icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">{benefit.title}</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">{benefit.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="relative">
-              <div className="aspect-square rounded-2xl bg-gradient-to-br from-primary/20 via-accent/10 to-primary/5 p-8">
-                <div className="flex h-full flex-col justify-center rounded-xl bg-card p-6 shadow-xl">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-muted-foreground">Fleet Status</span>
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent">
-                        <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                        All Systems Operational
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="rounded-lg bg-muted/50 p-4">
-                        <div className="text-2xl font-bold text-foreground">147</div>
-                        <div className="text-xs text-muted-foreground">Active Vehicles</div>
-                      </div>
-                      <div className="rounded-lg bg-muted/50 p-4">
-                        <div className="text-2xl font-bold text-foreground">23</div>
-                        <div className="text-xs text-muted-foreground">In Transit</div>
-                      </div>
-                      <div className="rounded-lg bg-muted/50 p-4">
-                        <div className="text-2xl font-bold text-foreground">89%</div>
-                        <div className="text-xs text-muted-foreground">Avg. Battery</div>
-                      </div>
-                      <div className="rounded-lg bg-muted/50 p-4">
-                        <div className="text-2xl font-bold text-foreground">4.2m</div>
-                        <div className="text-xs text-muted-foreground">Avg. ETA</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-primary px-8 py-16 text-center sm:px-16">
-            <div className="relative z-10">
-              <h2 className="text-balance text-3xl font-bold text-primary-foreground sm:text-4xl">
-                Ready to transform your fleet?
-              </h2>
-              <p className="mx-auto mt-4 max-w-xl text-pretty text-primary-foreground/80">
-                Join thousands of operators already using Cabrynt to power their autonomous mobility services.
-              </p>
-              <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <Button size="lg" variant="secondary" asChild>
-                  <Link href="/register">
-                    Start Free Trial
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button size="lg" variant="ghost" asChild className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
-                  <Link href="/login">Contact Sales</Link>
-                </Button>
-              </div>
-            </div>
-            <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_30%_50%,oklch(1_0_0/0.1),transparent)]" />
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-border bg-card">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-            <CabryntLogo />
-            <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} Cabrynt. All rights reserved.
-            </p>
-          </div>
+      <footer className="border-t bg-muted/25">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <CabryntLogo />
+          <span>Portfolio project: ML-assisted route quotation for Porto.</span>
         </div>
       </footer>
-    </div>
+    </main>
   )
 }
