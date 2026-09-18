@@ -12,6 +12,8 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+ProductionConfigurationValidator.Validate(builder.Configuration, builder.Environment);
+
 builder.Services.AddCabryntDataProtection(builder.Configuration);
 
 // Hasher
@@ -100,12 +102,13 @@ builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestDtoValidator
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("FrontendDev", policy =>
+    options.AddPolicy("Frontend", policy =>
     {
-        var allowedOrigins = builder.Configuration
-            .GetSection("Cors:AllowedOrigins")
-            .Get<string[]>()
-            ?? ["http://localhost:3000", "http://localhost:3001"];
+        var allowedOrigins = CorsOriginConfiguration.GetConfiguredOrigins(builder.Configuration);
+        if (allowedOrigins.Length == 0 && builder.Environment.IsDevelopment())
+        {
+            allowedOrigins = ["http://localhost:3000", "http://localhost:3001"];
+        }
 
         policy
             .WithOrigins(allowedOrigins)
@@ -238,7 +241,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 
-app.UseCors("FrontendDev");
+app.UseCors("Frontend");
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();

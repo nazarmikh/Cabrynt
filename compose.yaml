@@ -9,6 +9,7 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      Cors__AllowedOrigins: ${Cors__AllowedOrigins:-http://localhost:3000,http://localhost:3001}
       ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       JwtToken: ${JwtToken}
       Jwt__Issuer: ${Jwt__Issuer}
