@@ -56,13 +56,11 @@ public sealed class ModelInsightsDemoTest : IClassFixture<CustomWebApplicationFa
     {
         return new
         {
-            departureLocation = "Aliados",
-            destinationLocation = "Boavista",
             departureLatitude = 41.149,
             departureLongitude = -8.611,
             destinationLatitude = 41.16,
             destinationLongitude = -8.64,
-            preferredVehicleType = "Standard"
+            preferredServiceTier = "Standard"
         };
     }
 }

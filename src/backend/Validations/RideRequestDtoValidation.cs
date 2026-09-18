@@ -7,16 +7,6 @@ public class RideRequestDtoValidation : AbstractValidator<RideRequestDto>
 {
     public RideRequestDtoValidation()
     {
-        RuleFor(x => x.DepartureLocation)
-            .NotEmpty()
-            .MaximumLength(200)
-            .WithMessage("Pickup location is required.");
-
-        RuleFor(x => x.DestinationLocation)
-            .NotEmpty()
-            .MaximumLength(200)
-            .WithMessage("Destination is required.");
-
         RuleFor(x => x.DepartureLatitude)
             .InclusiveBetween(-90, 90)
             .WithMessage("Pickup latitude is out of bounds.");
@@ -33,9 +23,9 @@ public class RideRequestDtoValidation : AbstractValidator<RideRequestDto>
             .InclusiveBetween(-180, 180)
             .WithMessage("Destination longitude is out of bounds.");
 
-        RuleFor(x => x.PreferredVehicleType)
+        RuleFor(x => x.PreferredServiceTier)
             .IsInEnum()
-            .WithMessage("Vehicle type is invalid.");
+            .WithMessage("Service tier is invalid.");
 
         RuleFor(x => x)
             .Must(x =>

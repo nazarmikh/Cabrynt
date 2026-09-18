@@ -34,9 +34,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Ticket>().Property(t => t.Subject).HasMaxLength(200).IsRequired();
         modelBuilder.Entity<Ticket>().Property(t => t.Description).HasMaxLength(2000).IsRequired();
 
-        modelBuilder.Entity<Ride>().Property(r => r.DepartureLocation).HasMaxLength(200).IsRequired();
-        modelBuilder.Entity<Ride>().Property(r => r.DestinationLocation).HasMaxLength(200).IsRequired();
-
         // Decimal precision
         modelBuilder.Entity<Ride>().Property(r => r.Distance).HasPrecision(18, 2);
         modelBuilder.Entity<Ride>().Property(r => r.Duration).HasPrecision(18, 2);

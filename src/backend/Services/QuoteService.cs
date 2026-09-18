@@ -53,7 +53,7 @@ public sealed class QuoteService : IQuoteService
         var breakdown = _priceService.GetEstimatedBreakdown(
             distance,
             duration,
-            rideRequest.PreferredVehicleType,
+            rideRequest.PreferredServiceTier,
             quoteRequestedAt.UtcDateTime);
 
         return new QuoteCalculation(

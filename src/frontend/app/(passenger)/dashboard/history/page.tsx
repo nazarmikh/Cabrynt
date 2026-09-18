@@ -39,10 +39,7 @@ export default function RideHistoryPage() {
 
   const filteredRides = useMemo(() => {
     return rides.filter((ride) => {
-      const matchesSearch =
-        (ride.departureLocation ?? "").toLowerCase().includes(search.toLowerCase()) ||
-        (ride.destinationLocation ?? "").toLowerCase().includes(search.toLowerCase()) ||
-        String(ride.rideId).includes(search)
+      const matchesSearch = String(ride.rideId).includes(search)
       const matchesStatus = statusFilter === "all" || ride.rideStatus === statusFilter
       return matchesSearch && matchesStatus
     })
@@ -66,22 +63,22 @@ export default function RideHistoryPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-sm">
             <div className="h-2 w-2 rounded-full bg-primary" />
-            <span className="line-clamp-1">{ride.departureLocation ?? "Unknown pickup"}</span>
+            <span className="line-clamp-1">{ride.departureLatitude.toFixed(4)}, {ride.departureLongitude.toFixed(4)}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MapPin className="h-3 w-3" />
-            <span className="line-clamp-1">{ride.destinationLocation ?? "Unknown destination"}</span>
+            <span className="line-clamp-1">{ride.destinationLatitude.toFixed(4)}, {ride.destinationLongitude.toFixed(4)}</span>
           </div>
         </div>
       ),
     },
     {
-      key: "vehicle",
-      header: "Vehicle",
+      key: "serviceTier",
+      header: "Service tier",
       cell: (ride: RideRow) => (
         <div className="flex items-center gap-2">
           <Car className="h-4 w-4 text-muted-foreground" />
-          <span className="capitalize">{ride.preferredVehicleType}</span>
+          <span className="capitalize">{ride.preferredServiceTier}</span>
         </div>
       ),
     },
@@ -175,7 +172,7 @@ export default function RideHistoryPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by location or ride ID..."
+                placeholder="Search by ride ID..."
                 className="pl-10"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
