@@ -71,41 +71,6 @@ internal static class IntegrationTestData
         };
     }
 
-    internal static async Task<VehicleRegistrationResult> RegisterVehicleAsync(HttpClient client, string? systemEmail = null)
-    {
-        var suffix = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
-        var request = new VehicleRegistrationRequest
-        {
-            VIN = $"1HGCM82633A{suffix}",
-            LicencePlate = $"TEST{suffix}",
-            Model = "Toyota Camry",
-            VehicleType = 0,
-            Year = 2020,
-            SystemEmail = systemEmail ?? $"it-register-vehicle-{Guid.NewGuid():N}@cabrynt.test",
-            SystemPassword = DefaultPassword
-        };
-
-        var response = await client.PostAsJsonAsync("/api/private/vehicles", request);
-
-        response.EnsureSuccessStatusCode();
-
-        var body = await response.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
-
-        Assert.NotNull(body);
-
-        return new VehicleRegistrationResult
-        {
-            Request = request,
-            VehicleId = body!["vehicleId"].GetInt32(),
-            VIN = body["vin"].GetString()!,
-            LicencePlate = body["licencePlate"].GetString()!,
-            Model = body["model"].GetString()!,
-            Year = body["year"].GetInt32(),
-            VehicleType = body["vehicleType"].GetString()!,
-            VehicleStatus = body["vehicleStatus"].GetString()!
-        };
-    }
-
     internal static void Authorize(HttpClient client, string authCookie)
     {
         client.DefaultRequestHeaders.Remove("Cookie");
@@ -121,26 +86,4 @@ internal static class IntegrationTestData
         public required string PreferredPaymentMethod { get; init; }
     }
 
-    internal sealed class VehicleRegistrationRequest
-    {
-        public required string VIN { get; init; }
-        public required string LicencePlate { get; init; }
-        public required string Model { get; init; }
-        public int VehicleType { get; init; }
-        public int Year { get; init; }
-        public required string SystemEmail { get; init; }
-        public required string SystemPassword { get; init; }
-    }
-
-    internal sealed class VehicleRegistrationResult
-    {
-        public required VehicleRegistrationRequest Request { get; init; }
-        public int VehicleId { get; init; }
-        public required string VIN { get; init; }
-        public required string LicencePlate { get; init; }
-        public required string Model { get; init; }
-        public int Year { get; init; }
-        public required string VehicleType { get; init; }
-        public required string VehicleStatus { get; init; }
-    }
 }

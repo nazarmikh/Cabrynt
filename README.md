@@ -64,7 +64,7 @@ The .NET backend uses a pragmatic layered structure:
 - **Repositories** isolate PostgreSQL access.
 - **DTOs and validators** define and validate API boundaries.
 
-PostgreSQL stores users, passenger profiles, ride requests, vehicles, tickets, maintenance records, and other application data.
+PostgreSQL stores users, passenger profiles, ride requests and their prediction metadata, tickets, and other application data.
 
 The frontend is a Next.js application that consumes the backend REST API.
 
