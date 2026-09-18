@@ -1,5 +1,5 @@
-export type AppRole = "Passenger" | "Admin" | "Vehicle"
-export type UiRole = "passenger" | "admin" | "vehicle"
+export type AppRole = "Passenger" | "Admin"
+export type UiRole = "passenger" | "admin"
 export type PaymentMethod = "Cash" | "Card" | "ApplePay"
 
 export interface LoginResponse {
@@ -112,12 +112,4 @@ export interface TicketsResponse {
 export interface AdminTicketResponse extends TicketResponse {
   passengerUserId: number
   passengerEmail: string
-}
-
-export interface CreateMaintenanceRequest {
-  serviceDate: string
-  description: string
-  technicianName: string
-  cost: number
-  nextInspectionMileage: number
 }

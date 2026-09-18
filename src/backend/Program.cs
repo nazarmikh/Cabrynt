@@ -22,19 +22,15 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 builder.Services.AddScoped<IPassengerRepository, PassengerRepository>();
 builder.Services.AddScoped<IRideRepository, RideRepository>();
-builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
-builder.Services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 
 // Services
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRideService, RideService>();
-builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IPriceService, PriceService>();
 builder.Services.AddScoped<IQuoteService, QuoteService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
-builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 
 builder.Services.Configure<RoutingOptions>(
     builder.Configuration.GetSection(RoutingOptions.SectionName));
@@ -180,10 +176,7 @@ builder.Services
 
 
 builder.Services.AddAuthorization(o => o.AddPolicy("Admin", p => p.RequireRole("Admin")));
-builder.Services.AddAuthorization(o => o.AddPolicy("Vehicle", p => p.RequireRole("Vehicle")));
 builder.Services.AddAuthorization(o => o.AddPolicy("Passenger", p => p.RequireRole("Passenger")));
-builder.Services.AddAuthorization(o => o.AddPolicy("AdminOrVehicle", p => p.RequireAssertion(ctx =>
-    ctx.User.IsInRole("Admin") || ctx.User.IsInRole("Vehicle"))));
 
 var app = builder.Build();
 
@@ -262,11 +255,7 @@ app.MapTripDurationModelEndpoints();
 
 app.MapModelInsightsEndpoints();
 
-app.MapVehicleEndpoints();
-
 app.MapTicketEndpoints();
-
-app.MapMaintenanceEndpoints();
 
 
 app.Run();
