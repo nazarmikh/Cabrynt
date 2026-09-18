@@ -7,11 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { User, Mail, MapPin, CreditCard, Star, Edit, Save, X, Loader2 } from "lucide-react"
+import { User, Mail, MapPin, CreditCard, Edit, Save, X, Loader2 } from "lucide-react"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { apiRequest } from "@/lib/api"
 import type { MeResponse, PaymentMethod, UpdateMeRequest } from "@/lib/backend-types"
-import { formatCurrency } from "@/lib/format"
 import { formatPaymentMethod, paymentMethodOptions } from "@/lib/payment-method"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -190,21 +189,6 @@ export default function ProfilePage() {
         </Card>
 
         <div className="space-y-6">
-          <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                  <Star className="h-7 w-7" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Loyalty Points</p>
-                  <p className="text-3xl font-bold">{(user?.points ?? 0).toLocaleString()}</p>
-                  <p className="text-xs text-accent">Worth {formatCurrency((user?.points ?? 0) * 0.01)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">

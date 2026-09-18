@@ -132,6 +132,14 @@ Readiness: http://localhost:5113/health/ready
 
 Docker Compose defaults to the `Development` environment because the local frontend and backend use HTTP. This lets the development cookie policy use the request scheme. A deployed production environment must set `ASPNETCORE_ENVIRONMENT=Production` and terminate HTTPS before enabling secure browser authentication.
 
+## Deployment Checklist
+
+Before deploying, configure the production frontend URL through `Cors__AllowedOrigins` and `NEXT_PUBLIC_API_BASE_URL`. Do not commit a production `.env` file. Store database, admin, and application secrets in the hosting provider or GitHub Secrets. The backend now fails fast in `Production` when PostgreSQL, the admin password, data-protection settings, HTTPS CORS origins, or enabled-model URLs are missing or use placeholder values.
+
+The production deployment must provide persistent PostgreSQL storage and a persistent data-protection key store. Configure `Routing__OsrmBaseUrl`, the model release URLs, and weather settings before enabling model inference. After deployment, verify registration, cookie login, a model-backed route quote, fallback behavior, ride cancellation, and backend restart behavior.
+
+The required production settings and pre-deployment checks are documented in [Production configuration](docs/production-configuration.md).
+
 Cookie-authentication keys are persisted in Docker's `data_protection_keys` volume. This preserves active sessions when the backend container is recreated. For a multi-instance production deployment, replace the local volume with a shared protected key store such as a cloud key-management service.
 
 ### Enable Local Road Routing

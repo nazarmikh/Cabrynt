@@ -194,18 +194,6 @@ export default function RegisterPage() {
               <p className="text-sm text-destructive">{error}</p>
             )}
           </form>
-
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            By creating an account, you agree to our{" "}
-            <Link href="#" className="text-primary hover:underline">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="#" className="text-primary hover:underline">
-              Privacy Policy
-            </Link>
-          </p>
-
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link href="/login" className="font-medium text-primary hover:underline">
