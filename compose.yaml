@@ -101,11 +101,11 @@ services:
       context: ./src/frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_BASE_URL: http://localhost:5113
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:5113}
     container_name: cabrynt-frontend
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:5113
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:5113}
     ports:
       - "3000:3000"
     depends_on:
