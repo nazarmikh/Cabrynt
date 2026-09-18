@@ -23,8 +23,6 @@ public class RideQuoteTest : IClassFixture<CustomWebApplicationFactory>
 
         var response = await _client.PostAsJsonAsync("/api/public/rides/quote", new
         {
-            departureLocation = "Aliados",
-            destinationLocation = "Boavista",
             departureLatitude = 41.149,
             departureLongitude = -8.611,
             destinationLatitude = 41.16,
@@ -51,8 +49,6 @@ public class RideQuoteTest : IClassFixture<CustomWebApplicationFactory>
     {
         var response = await _client.PostAsJsonAsync("/api/public/rides/quote", new
         {
-            departureLocation = "Aliados",
-            destinationLocation = "Boavista",
             departureLatitude = 41.149,
             departureLongitude = -8.611,
             destinationLatitude = 41.16,
@@ -71,8 +67,6 @@ public class RideQuoteTest : IClassFixture<CustomWebApplicationFactory>
 
         var response = await _client.PostAsJsonAsync("/api/public/rides/quote", new
         {
-            departureLocation = "Aliados",
-            destinationLocation = "Ghent",
             departureLatitude = 41.149,
             departureLongitude = -8.611,
             destinationLatitude = 51.054,

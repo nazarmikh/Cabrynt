@@ -20,8 +20,6 @@ const benchmarkRows = [
 
 function createDemoRequest(pickup: Coordinates, destination: Coordinates) {
   return {
-    departureLocation: "Selected pickup",
-    destinationLocation: "Selected destination",
     departureLatitude: pickup.latitude,
     departureLongitude: pickup.longitude,
     destinationLatitude: destination.latitude,

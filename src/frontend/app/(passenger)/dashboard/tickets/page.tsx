@@ -335,7 +335,7 @@ export default function TicketsPage() {
               },
               {
                 q: "Can I cancel a ride after requesting?",
-                a: "Yes, you can cancel within 2 minutes of requesting without any charge.",
+                a: "Yes. You can cancel while the ride request is still pending.",
               },
               {
                 q: "How do loyalty points work?",

@@ -31,8 +31,10 @@ export interface RideResponse {
   rideStatus: string
   requestTime: string
   estimatedPrice: number
-  departureLocation?: string | null
-  destinationLocation?: string | null
+  departureLatitude: number
+  departureLongitude: number
+  destinationLatitude: number
+  destinationLongitude: number
   distance: number
   duration: number
   estimatedTripDuration?: number | null
@@ -42,8 +44,6 @@ export interface RideResponse {
 }
 
 export interface CreateRideRequest {
-  departureLocation: string
-  destinationLocation: string
   departureLatitude: number
   departureLongitude: number
   destinationLatitude: number

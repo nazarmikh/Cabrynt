@@ -73,8 +73,6 @@ public class RideQuoteMlInferenceTest
     {
         return new
         {
-            departureLocation = "Porto centre",
-            destinationLocation = "Foz",
             departureLatitude = 41.1579,
             departureLongitude = -8.6291,
             destinationLatitude = 41.18,

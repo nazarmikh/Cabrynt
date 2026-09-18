@@ -42,10 +42,8 @@ public class RideService : IRideService
 
         var ride = new Ride
         {
-            DepartureLocation = rideRequest.DepartureLocation,
             DepartureLatitude = rideRequest.DepartureLatitude,
             DepartureLongitude = rideRequest.DepartureLongitude,
-            DestinationLocation = rideRequest.DestinationLocation,
             DestinationLatitude = rideRequest.DestinationLatitude,
             DestinationLongitude = rideRequest.DestinationLongitude,
             Distance = quote.Breakdown.Distance,
@@ -182,8 +180,10 @@ public class RideService : IRideService
             RideStatus = ride.RideStatus,
             RequestTime = ride.RequestTime,
             EstimatedPrice = ride.EstimatedPrice,
-            DepartureLocation = ride.DepartureLocation,
-            DestinationLocation = ride.DestinationLocation,
+            DepartureLatitude = ride.DepartureLatitude,
+            DepartureLongitude = ride.DepartureLongitude,
+            DestinationLatitude = ride.DestinationLatitude,
+            DestinationLongitude = ride.DestinationLongitude,
             Distance = ride.Distance,
             Duration = ride.Duration,
             EstimatedTripDuration = ride.EstimatedTripDuration,
@@ -198,8 +198,10 @@ public class RideService : IRideService
         return new GetRideByIdResponseDto
         {
             Id = ride.Id,
-            DepartureLocation = ride.DepartureLocation,
-            DestinationLocation = ride.DestinationLocation,
+            DepartureLatitude = ride.DepartureLatitude,
+            DepartureLongitude = ride.DepartureLongitude,
+            DestinationLatitude = ride.DestinationLatitude,
+            DestinationLongitude = ride.DestinationLongitude,
             RequestTime = ride.RequestTime,
             RideStatus = ride.RideStatus,
             EstimatedTripDuration = ride.EstimatedTripDuration,

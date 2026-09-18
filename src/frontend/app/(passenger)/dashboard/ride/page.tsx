@@ -57,8 +57,6 @@ const tripDurationSourceLabels: Record<TripDurationEstimateSource, string> = {
 }
 
 function buildRidePayload(
-  pickup: string,
-  destination: string,
   pickupCoordinates: Coordinates,
   destinationCoordinates: Coordinates,
   vehicleType: VehicleChoice
@@ -66,8 +64,6 @@ function buildRidePayload(
   const selectedType = vehicleTypes.find((vehicle) => vehicle.id === vehicleType)
 
   return {
-    departureLocation: pickup,
-    destinationLocation: destination,
     departureLatitude: pickupCoordinates.latitude,
     departureLongitude: pickupCoordinates.longitude,
     destinationLatitude: destinationCoordinates.latitude,
@@ -90,7 +86,7 @@ export default function BookRidePage() {
   const [bookingError, setBookingError] = useState<string | null>(null)
   const [createdRide, setCreatedRide] = useState<RideResponse | null>(null)
 
-  const canRequestQuote = pickup.trim().length > 0 && destination.trim().length > 0 && pickupCoordinates !== null && destinationCoordinates !== null
+  const canRequestQuote = pickupCoordinates !== null && destinationCoordinates !== null
 
   useEffect(() => {
     if (!canRequestQuote) {
@@ -108,8 +104,6 @@ export default function BookRidePage() {
         }
 
         const payload = buildRidePayload(
-          pickup,
-          destination,
           pickupCoordinates,
           destinationCoordinates,
           vehicleType
@@ -132,8 +126,6 @@ export default function BookRidePage() {
 
     return () => clearTimeout(timeout)
   }, [
-    pickup,
-    destination,
     pickupCoordinates,
     destinationCoordinates,
     vehicleType,
@@ -151,8 +143,6 @@ export default function BookRidePage() {
       setIsBooking(true)
       setBookingError(null)
       const payload = buildRidePayload(
-        pickup,
-        destination,
         pickupCoordinates,
         destinationCoordinates,
         vehicleType
