@@ -14,7 +14,7 @@ public class Ride
     public decimal? EstimatedTripDuration { get; set; }
     public TripDurationEstimateSource? EstimatedTripDurationSource { get; set; }
     public string? TripDurationModelVersion { get; set; }
-    public VehicleType PreferredVehicleType { get; set; }
+    public VehicleType PreferredServiceTier { get; set; }
     public decimal EstimatedPrice { get; set; }
     public RideStatus RideStatus { get; set; }
     public DateTime RequestTime { get; set; }

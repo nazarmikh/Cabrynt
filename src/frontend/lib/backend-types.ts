@@ -40,7 +40,7 @@ export interface RideResponse {
   estimatedTripDuration?: number | null
   estimatedTripDurationSource?: TripDurationEstimateSource | null
   tripDurationModelVersion?: string | null
-  preferredVehicleType: string
+  preferredServiceTier: string
 }
 
 export interface CreateRideRequest {
@@ -48,7 +48,7 @@ export interface CreateRideRequest {
   departureLongitude: number
   destinationLatitude: number
   destinationLongitude: number
-  preferredVehicleType: string
+  preferredServiceTier: string
 }
 
 export interface UpdateMeRequest {

@@ -77,7 +77,7 @@ public class RideQuoteMlInferenceTest
             departureLongitude = -8.6291,
             destinationLatitude = 41.18,
             destinationLongitude = -8.67,
-            preferredVehicleType = "Standard"
+            preferredServiceTier = "Standard"
         };
     }
 

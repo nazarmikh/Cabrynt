@@ -73,12 +73,12 @@ export default function RideHistoryPage() {
       ),
     },
     {
-      key: "vehicle",
-      header: "Vehicle",
+      key: "serviceTier",
+      header: "Service tier",
       cell: (ride: RideRow) => (
         <div className="flex items-center gap-2">
           <Car className="h-4 w-4 text-muted-foreground" />
-          <span className="capitalize">{ride.preferredVehicleType}</span>
+          <span className="capitalize">{ride.preferredServiceTier}</span>
         </div>
       ),
     },

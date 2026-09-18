@@ -98,7 +98,7 @@ public class RideRequestTest : IClassFixture<CustomWebApplicationFactory>
             departureLongitude = -8.611,
             destinationLatitude = 41.16,
             destinationLongitude = -8.64,
-            preferredVehicleType = "Standard"
+            preferredServiceTier = "Standard"
         };
     }
 }

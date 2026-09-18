@@ -24,7 +24,7 @@ function createDemoRequest(pickup: Coordinates, destination: Coordinates) {
     departureLongitude: pickup.longitude,
     destinationLatitude: destination.latitude,
     destinationLongitude: destination.longitude,
-    preferredVehicleType: "Standard",
+    preferredServiceTier: "Standard",
   }
 }
 

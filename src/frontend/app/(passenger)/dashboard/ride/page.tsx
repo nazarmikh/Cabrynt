@@ -68,7 +68,7 @@ function buildRidePayload(
     departureLongitude: pickupCoordinates.longitude,
     destinationLatitude: destinationCoordinates.latitude,
     destinationLongitude: destinationCoordinates.longitude,
-    preferredVehicleType: selectedType?.apiValue ?? "Standard",
+    preferredServiceTier: selectedType?.apiValue ?? "Standard",
   }
 }
 

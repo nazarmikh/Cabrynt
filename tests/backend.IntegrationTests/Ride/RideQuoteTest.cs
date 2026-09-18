@@ -27,7 +27,7 @@ public class RideQuoteTest : IClassFixture<CustomWebApplicationFactory>
             departureLongitude = -8.611,
             destinationLatitude = 41.16,
             destinationLongitude = -8.64,
-            preferredVehicleType = "Standard"
+            preferredServiceTier = "Standard"
         });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -53,7 +53,7 @@ public class RideQuoteTest : IClassFixture<CustomWebApplicationFactory>
             departureLongitude = -8.611,
             destinationLatitude = 41.16,
             destinationLongitude = -8.64,
-            preferredVehicleType = "Standard"
+            preferredServiceTier = "Standard"
         });
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -71,7 +71,7 @@ public class RideQuoteTest : IClassFixture<CustomWebApplicationFactory>
             departureLongitude = -8.611,
             destinationLatitude = 51.054,
             destinationLongitude = 3.717,
-            preferredVehicleType = "Standard"
+            preferredServiceTier = "Standard"
         });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

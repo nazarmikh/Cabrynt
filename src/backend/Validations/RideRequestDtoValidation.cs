@@ -23,9 +23,9 @@ public class RideRequestDtoValidation : AbstractValidator<RideRequestDto>
             .InclusiveBetween(-180, 180)
             .WithMessage("Destination longitude is out of bounds.");
 
-        RuleFor(x => x.PreferredVehicleType)
+        RuleFor(x => x.PreferredServiceTier)
             .IsInEnum()
-            .WithMessage("Vehicle type is invalid.");
+            .WithMessage("Service tier is invalid.");
 
         RuleFor(x => x)
             .Must(x =>

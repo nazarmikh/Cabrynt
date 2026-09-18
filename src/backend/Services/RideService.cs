@@ -55,7 +55,7 @@ public class RideService : IRideService
             RequestTime = DateTime.UtcNow,
             PassengerProfile = passenger,
             RideStatus = RideStatus.Requested,
-            PreferredVehicleType = rideRequest.PreferredVehicleType
+            PreferredServiceTier = rideRequest.PreferredServiceTier
         };
 
         await _rideRepository.AddRideAsync(ride);
@@ -189,7 +189,7 @@ public class RideService : IRideService
             EstimatedTripDuration = ride.EstimatedTripDuration,
             EstimatedTripDurationSource = ride.EstimatedTripDurationSource,
             TripDurationModelVersion = ride.TripDurationModelVersion,
-            PreferredVehicleType = ride.PreferredVehicleType
+            PreferredServiceTier = ride.PreferredServiceTier
         };
     }
 

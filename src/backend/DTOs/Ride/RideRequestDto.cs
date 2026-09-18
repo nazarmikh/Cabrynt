@@ -6,5 +6,5 @@ public class RideRequestDto
     public double DepartureLongitude { get; set; }
     public double DestinationLatitude { get; set; }
     public double DestinationLongitude { get; set; }
-    public VehicleType PreferredVehicleType { get; set; }
+    public VehicleType PreferredServiceTier { get; set; }
 }
