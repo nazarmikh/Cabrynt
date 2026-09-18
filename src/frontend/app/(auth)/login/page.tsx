@@ -80,12 +80,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link href="#" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -133,16 +128,6 @@ export default function LoginPage() {
               Explore trip-duration model
             </Link>
           </Button>
-
-          <div className="mt-6 rounded-lg bg-muted/50 p-4">
-            <p className="text-xs text-muted-foreground">
-              <strong className="text-foreground">Tip:</strong>
-              <br />
-              Use a real passenger account you registered in your backend.
-              <br />
-              Admin login uses the configured backend admin credentials.
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

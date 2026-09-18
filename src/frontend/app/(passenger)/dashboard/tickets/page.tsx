@@ -338,8 +338,8 @@ export default function TicketsPage() {
                 a: "Yes. You can cancel while the ride request is still pending.",
               },
               {
-                q: "How do loyalty points work?",
-                a: "Earn points on rides and use them as discounts in the pricing flow.",
+                q: "How do I request a ride?",
+                a: "Open Book Ride, select two points inside Porto, choose a service tier, and review the backend quote before requesting the ride.",
               },
             ].map((faq, i) => (
               <div key={i} className="rounded-lg border border-border p-4">

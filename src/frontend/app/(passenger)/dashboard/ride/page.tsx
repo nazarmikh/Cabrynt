@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
@@ -21,34 +20,31 @@ import { PortoRoutePicker, type RoutePoint } from "@/components/ride/porto-route
 import { Badge } from "@/components/ui/badge"
 import { Car, Users, Crown, Check, Loader2, Clock3, Sparkles } from "lucide-react"
 
-const vehicleTypes = [
+const serviceTiers = [
   {
     id: "standard",
     name: "Standard",
     apiValue: "Standard",
-    description: "Comfortable ride for 1-4 passengers",
+    description: "Everyday option with the base fare multiplier.",
     icon: Car,
-    eta: "3-5 min",
   },
   {
     id: "van",
     name: "Van",
     apiValue: "Van",
-    description: "Extra space for groups or luggage",
+    description: "Higher-capacity option for groups or luggage.",
     icon: Users,
-    eta: "5-8 min",
   },
   {
     id: "luxury",
     name: "Luxury",
     apiValue: "Luxury",
-    description: "Premium comfort and amenities",
+    description: "Premium option with a higher fare multiplier.",
     icon: Crown,
-    eta: "4-7 min",
   },
 ] as const
 
-type VehicleChoice = (typeof vehicleTypes)[number]["id"]
+type ServiceTierChoice = (typeof serviceTiers)[number]["id"]
 
 const tripDurationSourceLabels: Record<TripDurationEstimateSource, string> = {
   MachineLearning: "ML correction applied to the OSRM route baseline",
@@ -59,26 +55,24 @@ const tripDurationSourceLabels: Record<TripDurationEstimateSource, string> = {
 function buildRidePayload(
   pickupCoordinates: Coordinates,
   destinationCoordinates: Coordinates,
-  vehicleType: VehicleChoice
+  serviceTier: ServiceTierChoice
 ): CreateRideRequest {
-  const selectedType = vehicleTypes.find((vehicle) => vehicle.id === vehicleType)
+  const selectedTier = serviceTiers.find((tier) => tier.id === serviceTier)
 
   return {
     departureLatitude: pickupCoordinates.latitude,
     departureLongitude: pickupCoordinates.longitude,
     destinationLatitude: destinationCoordinates.latitude,
     destinationLongitude: destinationCoordinates.longitude,
-    preferredServiceTier: selectedType?.apiValue ?? "Standard",
+    preferredServiceTier: selectedTier?.apiValue ?? "Standard",
   }
 }
 
 export default function BookRidePage() {
-  const [pickup, setPickup] = useState("")
-  const [destination, setDestination] = useState("")
   const [pickupCoordinates, setPickupCoordinates] = useState<Coordinates | null>(null)
   const [destinationCoordinates, setDestinationCoordinates] = useState<Coordinates | null>(null)
   const [activeRoutePoint, setActiveRoutePoint] = useState<RoutePoint>("pickup")
-  const [vehicleType, setVehicleType] = useState<VehicleChoice>("standard")
+  const [serviceTier, setServiceTier] = useState<ServiceTierChoice>("standard")
   const [quote, setQuote] = useState<RideQuoteResponse | null>(null)
   const [quoteError, setQuoteError] = useState<string | null>(null)
   const [isLoadingQuote, setIsLoadingQuote] = useState(false)
@@ -106,7 +100,7 @@ export default function BookRidePage() {
         const payload = buildRidePayload(
           pickupCoordinates,
           destinationCoordinates,
-          vehicleType
+          serviceTier
         )
         const response = await apiRequest<RideQuoteResponse>(
           "/api/public/rides/quote",
@@ -128,11 +122,14 @@ export default function BookRidePage() {
   }, [
     pickupCoordinates,
     destinationCoordinates,
-    vehicleType,
+    serviceTier,
     canRequestQuote,
   ])
 
-  const selectedVehicle = useMemo(() => vehicleTypes.find((type) => type.id === vehicleType), [vehicleType])
+  const selectedServiceTier = useMemo(
+    () => serviceTiers.find((tier) => tier.id === serviceTier),
+    [serviceTier]
+  )
 
   const handleBookRide = async () => {
     try {
@@ -145,7 +142,7 @@ export default function BookRidePage() {
       const payload = buildRidePayload(
         pickupCoordinates,
         destinationCoordinates,
-        vehicleType
+        serviceTier
       )
       const response = await apiRequest<RideResponse>(
         "/api/public/rides",
@@ -172,17 +169,17 @@ export default function BookRidePage() {
             </div>
             <h2 className="text-2xl font-bold text-foreground">Ride requested</h2>
             <p className="mt-2 text-muted-foreground">
-              Your {selectedVehicle?.name.toLowerCase() ?? "vehicle"} request has been created successfully.
+              Your {selectedServiceTier?.name.toLowerCase() ?? "standard"} service-tier ride request has been created successfully.
             </p>
             <div className="mt-6 rounded-lg bg-card p-4 text-left">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground">Pickup:</span>
-                  <span className="font-medium">{pickup}</span>
+                  <span className="font-medium">Map-selected point</span>
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground">Destination:</span>
-                  <span className="font-medium">{destination}</span>
+                  <span className="font-medium">Map-selected point</span>
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground">Status:</span>
@@ -199,8 +196,6 @@ export default function BookRidePage() {
               className="mt-6"
               onClick={() => {
                 setCreatedRide(null)
-                setPickup("")
-                setDestination("")
                 setPickupCoordinates(null)
                 setDestinationCoordinates(null)
                 setActiveRoutePoint("pickup")
@@ -230,22 +225,16 @@ export default function BookRidePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="pickup">Pickup Location</Label>
-                <Input
-                  id="pickup"
-                  placeholder="Pickup label"
-                  value={pickup}
-                  onChange={(event) => setPickup(event.target.value)}
-                />
+                <Label>Pickup point</Label>
+                <div className="rounded-md border border-input bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                  {pickupCoordinates ? "Pickup point selected on the map" : "Choose a pickup point on the map"}
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="destination">Destination</Label>
-                <Input
-                  id="destination"
-                  placeholder="Destination label"
-                  value={destination}
-                  onChange={(event) => setDestination(event.target.value)}
-                />
+                <Label>Destination point</Label>
+                <div className="rounded-md border border-input bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+                  {destinationCoordinates ? "Destination selected on the map" : "Choose a destination point on the map"}
+                </div>
               </div>
               <PortoRoutePicker
                 activePoint={activeRoutePoint}
@@ -255,13 +244,11 @@ export default function BookRidePage() {
                 onPointSelect={(point, coordinates) => {
                   if (point === "pickup") {
                     setPickupCoordinates(coordinates)
-                    setPickup((value) => value.trim() ? value : "Selected pickup")
                     setActiveRoutePoint("destination")
                     return
                   }
 
                   setDestinationCoordinates(coordinates)
-                  setDestination((value) => value.trim() ? value : "Selected destination")
                 }}
               />
             </CardContent>
@@ -269,36 +256,35 @@ export default function BookRidePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Select Vehicle Type</CardTitle>
+              <CardTitle className="text-lg">Select service tier</CardTitle>
             </CardHeader>
             <CardContent>
               <RadioGroup
-                value={vehicleType}
-                onValueChange={(value) => setVehicleType(value as VehicleChoice)}
+                value={serviceTier}
+                onValueChange={(value) => setServiceTier(value as ServiceTierChoice)}
                 className="grid gap-3 sm:grid-cols-3"
               >
-                {vehicleTypes.map((type) => (
+                {serviceTiers.map((tier) => (
                   <label
-                    key={type.id}
+                    key={tier.id}
                     className={`relative flex cursor-pointer flex-col rounded-xl border-2 p-4 transition-all ${
-                      vehicleType === type.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                      serviceTier === tier.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
                     }`}
                   >
-                    <RadioGroupItem value={type.id} className="sr-only" />
+                    <RadioGroupItem value={tier.id} className="sr-only" />
                     <div className="flex items-center gap-3">
                       <div
                         className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                          vehicleType === type.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                          serviceTier === tier.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                         }`}
                       >
-                        <type.icon className="h-5 w-5" />
+                        <tier.icon className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="font-semibold">{type.name}</p>
-                        <p className="text-xs text-muted-foreground">{type.eta}</p>
+                        <p className="font-semibold">{tier.name}</p>
                       </div>
                     </div>
-                    <p className="mt-2 text-xs text-muted-foreground">{type.description}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">{tier.description}</p>
                   </label>
                 ))}
               </RadioGroup>
@@ -325,7 +311,7 @@ export default function BookRidePage() {
               ) : quoteError ? (
                 <div className="space-y-3">
                   <p className="text-sm text-destructive">{quoteError}</p>
-                  <p className="text-xs text-muted-foreground">Check the route details and vehicle type, then try again.</p>
+                  <p className="text-xs text-muted-foreground">Check the selected route and service tier, then try again.</p>
                 </div>
               ) : quote ? (
                 <div className="space-y-3">
@@ -399,7 +385,7 @@ export default function BookRidePage() {
                     <span>{formatCurrency(quote.durationCost)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Vehicle multiplier</span>
+                    <span className="text-muted-foreground">Service tier multiplier</span>
                     <span>{quote.vehicleMultiplier.toFixed(2)}x</span>
                   </div>
                   {quote.isNightRateApplied && (

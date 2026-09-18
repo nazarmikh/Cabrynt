@@ -1,49 +1,44 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useCurrentUser } from "@/hooks/use-current-user"
 import { formatCurrency } from "@/lib/format"
-import { CreditCard, MapPin, Clock, Car, Users, Crown, Moon, Star, Tag, Info } from "lucide-react"
+import { CreditCard, MapPin, Clock, Car, Users, Crown, Moon, Info } from "lucide-react"
 
 const pricing = {
   baseFare: 2.5,
   distanceRate: 1.1,
   durationRate: 0.3,
-  vehicleMultipliers: {
+  serviceTierMultipliers: {
     Standard: 1,
     Van: 1.5,
     Luxury: 2.2,
   },
   nightSurchargeRate: 0.15,
+  minimumFare: 5,
 }
 
-const vehicleInfo = [
+const serviceTierInfo = [
   {
     name: "Standard",
     icon: Car,
-    multiplier: pricing.vehicleMultipliers.Standard,
-    description: "Comfortable autonomous vehicle for 1-4 passengers",
-    features: ["4 passenger seats", "Standard luggage space", "Climate control"],
+    multiplier: pricing.serviceTierMultipliers.Standard,
+    description: "Base fare multiplier for everyday route quotes.",
   },
   {
     name: "Van",
     icon: Users,
-    multiplier: pricing.vehicleMultipliers.Van,
-    description: "Spacious vehicle for groups or extra luggage",
-    features: ["6 passenger seats", "Large luggage area", "USB charging ports"],
+    multiplier: pricing.serviceTierMultipliers.Van,
+    description: "Higher multiplier for group and luggage-oriented trips.",
   },
   {
     name: "Luxury",
     icon: Crown,
-    multiplier: pricing.vehicleMultipliers.Luxury,
-    description: "Premium experience with enhanced comfort",
-    features: ["Leather seats", "Privacy glass", "Premium audio", "Complimentary water"],
+    multiplier: pricing.serviceTierMultipliers.Luxury,
+    description: "Premium multiplier for a higher-priced quote option.",
   },
 ]
 
 export default function PricingPage() {
-  const { user } = useCurrentUser()
-  const loyaltyValue = (user?.points ?? 0) * 0.01
   const exampleSubtotal = pricing.baseFare + 10 * pricing.distanceRate + 25 * pricing.durationRate
 
   return (
@@ -92,34 +87,26 @@ export default function PricingPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Car className="h-5 w-5 text-primary" />
-            Vehicle Types and Multipliers
+            Service tiers and multipliers
           </CardTitle>
-          <CardDescription>Different ride classes apply different multipliers to the subtotal.</CardDescription>
+          <CardDescription>Each service tier applies a fixed multiplier to the route subtotal.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
-            {vehicleInfo.map((vehicle) => (
-              <div key={vehicle.name} className="rounded-xl border border-border p-5 transition-all hover:border-primary/30 hover:shadow-md">
+            {serviceTierInfo.map((tier) => (
+              <div key={tier.name} className="rounded-xl border border-border p-5 transition-all hover:border-primary/30 hover:shadow-md">
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                    <vehicle.icon className="h-6 w-6 text-primary" />
+                    <tier.icon className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">{vehicle.name}</h3>
+                    <h3 className="font-semibold">{tier.name}</h3>
                     <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                      {vehicle.multiplier.toFixed(1)}x multiplier
+                      {tier.multiplier.toFixed(1)}x multiplier
                     </span>
                   </div>
                 </div>
-                <p className="mt-3 text-sm text-muted-foreground">{vehicle.description}</p>
-                <ul className="mt-4 space-y-2">
-                  {vehicle.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+                <p className="mt-3 text-sm text-muted-foreground">{tier.description}</p>
               </div>
             ))}
           </div>
@@ -150,56 +137,23 @@ export default function PricingPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-accent" />
-              Loyalty Points
+              <CreditCard className="h-5 w-5 text-primary" />
+              Minimum fare
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Current balance</p>
-                <p className="mt-2 text-2xl font-bold">{(user?.points ?? 0).toLocaleString()} points</p>
-                <p className="mt-1 text-xs text-accent">Equivalent to {formatCurrency(loyaltyValue)}</p>
+                <p className="text-sm text-muted-foreground">Applied after route and tier calculations.</p>
+                <p className="mt-2 text-2xl font-bold">{formatCurrency(pricing.minimumFare)}</p>
               </div>
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
-                <Star className="h-8 w-8 text-accent" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <CreditCard className="h-8 w-8 text-primary" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Tag className="h-5 w-5 text-primary" />
-            Promotions
-          </CardTitle>
-          <CardDescription>Discount codes are validated by the backend against expiration and minimum fare rules.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex items-center gap-4 rounded-xl border border-dashed border-primary/50 bg-primary/5 p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <span className="text-lg font-bold">10%</span>
-              </div>
-              <div>
-                <p className="font-mono font-semibold">CABRYNT10</p>
-                <p className="text-sm text-muted-foreground">Example percentage discount</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 rounded-xl border border-dashed border-accent/50 bg-accent/5 p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                <span className="text-lg font-bold">5</span>
-              </div>
-              <div>
-                <p className="font-mono font-semibold">FLAT5</p>
-                <p className="text-sm text-muted-foreground">Example flat discount</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       <Card className="bg-muted/30">
         <CardHeader>
@@ -225,8 +179,8 @@ export default function PricingPage() {
                 <span>{formatCurrency(25 * pricing.durationRate)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Vehicle multiplier (Standard)</span>
-                <span>{pricing.vehicleMultipliers.Standard.toFixed(1)}x</span>
+                <span className="text-muted-foreground">Service tier multiplier (Standard)</span>
+                <span>{pricing.serviceTierMultipliers.Standard.toFixed(1)}x</span>
               </div>
               <div className="my-2 border-t border-border" />
               <div className="flex justify-between text-base font-bold">
