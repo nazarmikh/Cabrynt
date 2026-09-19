@@ -21,6 +21,7 @@ PostgreSQL does not have public network access because it is deployed into the V
 - Azure CLI authenticated to the intended subscription.
 - Registered providers: `Microsoft.App` and `Microsoft.DBforPostgreSQL`.
 - Bicep CLI. Install it once with `az bicep install`.
+- GitHub Actions OIDC identity and repository secrets/variables, as described below.
 
 ## Preview
 
@@ -55,3 +56,22 @@ The backend uses Azure Blob-backed data-protection keys protected by this Key Va
 The OSRM image in [`src/osrm`](../src/osrm) uses the mounted `osrm-data` Azure Files share. It reuses a prepared Portugal graph when one exists; on its first start, it downloads the Geofabrik Portugal extract and runs OSRM extraction, partitioning, and customization before it accepts route requests.
 
 The migration job is manual. It starts the backend image with migrations enabled, exits after they complete, and is intended to run before a backend image revision is deployed.
+
+## GitHub Actions
+
+`publish-images.yml` runs after backend or OSRM changes reach `main`. It publishes immutable images to GitHub Container Registry using the commit SHA, for example `ghcr.io/nazarmikh/cabrynt-backend:sha-abc123`.
+
+The first successful publishing run creates the two GHCR packages. Confirm that both packages are public in GitHub Packages before deployment; the Container Apps deployment then pulls them without storing a GitHub token in Azure.
+
+`deploy-production.yml` is manual-only. It deploys the image tags supplied when starting the workflow. Configure these repository secrets before using it:
+
+- `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_SUBSCRIPTION_ID` for the GitHub OIDC application.
+- `POSTGRES_ADMIN_PASSWORD` and `ADMIN_PASSWORD`.
+
+Configure these repository variables:
+
+- `ADMIN_EMAIL`
+- `FRONTEND_ORIGIN`
+- `BUDGET_NOTIFICATION_EMAIL`
+
+Use a GitHub `production` environment and add a required reviewer before the first real deployment. The workflow deploys only after GitHub grants that environment approval.

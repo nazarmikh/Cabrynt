@@ -11,6 +11,8 @@ RUN dotnet publish ./src/backend/Cabrynt.Backend.csproj -c Release -o /app/publi
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
+LABEL org.opencontainers.image.source="https://github.com/nazarmikh/Cabrynt"
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates libgssapi-krb5-2 \
     && rm -rf /var/lib/apt/lists/*

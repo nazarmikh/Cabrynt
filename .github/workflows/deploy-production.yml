@@ -1,0 +1,96 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      backend_image_tag:
+        description: 'Immutable backend image tag, for example sha-<commit>'
+        required: true
+        type: string
+      osrm_image_tag:
+        description: 'Immutable OSRM image tag, for example sha-<commit>'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AZURE_LOCATION: francecentral
+  APPLICATION_NAME: cabrynt
+  RESOURCE_GROUP_NAME: rg-cabrynt-prod-frc
+  BACKEND_IMAGE: ghcr.io/nazarmikh/cabrynt-backend
+  OSRM_IMAGE: ghcr.io/nazarmikh/cabrynt-osrm
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sign in to Azure with OpenID Connect
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Azure resources
+        env:
+          POSTGRES_ADMIN_PASSWORD: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+          FRONTEND_ORIGIN: ${{ vars.FRONTEND_ORIGIN }}
+          BUDGET_NOTIFICATION_EMAIL: ${{ vars.BUDGET_NOTIFICATION_EMAIL }}
+        run: |
+          migration_job_name="$(az deployment sub create \
+            --name "cabrynt-${GITHUB_RUN_ID}" \
+            --location "$AZURE_LOCATION" \
+            --template-file infra/main.bicep \
+            --parameters \
+              applicationName="$APPLICATION_NAME" \
+              resourceGroupName="$RESOURCE_GROUP_NAME" \
+              postgresAdministratorPassword="$POSTGRES_ADMIN_PASSWORD" \
+              adminEmail="$ADMIN_EMAIL" \
+              adminPassword="$ADMIN_PASSWORD" \
+              frontendOrigin="$FRONTEND_ORIGIN" \
+              backendImage="$BACKEND_IMAGE:${{ inputs.backend_image_tag }}" \
+              osrmImage="$OSRM_IMAGE:${{ inputs.osrm_image_tag }}" \
+              budgetNotificationEmail="$BUDGET_NOTIFICATION_EMAIL" \
+              budgetStartDate="$(date -u +%F)" \
+            --query properties.outputs.migrationJobName.value \
+            --output tsv)"
+
+          echo "Migration job: $migration_job_name"
+          execution_name="$(az containerapp job start \
+            --name "$migration_job_name" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --query name \
+            --output tsv)"
+
+          for attempt in {1..60}; do
+            status="$(az containerapp job execution show \
+              --name "$migration_job_name" \
+              --resource-group "$RESOURCE_GROUP_NAME" \
+              --job-execution-name "$execution_name" \
+              --query properties.status \
+              --output tsv)"
+
+            echo "Migration job status (attempt $attempt/60): $status"
+            if [ "$status" = "Succeeded" ]; then
+              exit 0
+            fi
+
+            if [ "$status" = "Failed" ]; then
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+          echo "Migration job did not finish within 10 minutes."
+          exit 1
