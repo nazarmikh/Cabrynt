@@ -15,9 +15,15 @@ Set these values in the deployment platform's secret or environment-variable sto
 | `Cors__AllowedOrigins` | Comma-separated HTTPS frontend origins, for example `https://cabrynt.example,https://www.cabrynt.example`. Do not include localhost. |
 | `NEXT_PUBLIC_API_BASE_URL` | Public HTTPS URL of the backend API. This value is embedded when the Next.js frontend is built. |
 | `DataProtection__ApplicationName` | Stable application name, normally `Cabrynt`. |
-| `DataProtection__KeyDirectory` | A persistent path. All backend instances must share the same protected key store. |
+| `DataProtection__BlobUri` | HTTPS URI of the `key-ring.xml` blob in the private `data-protection` container. |
+| `DataProtection__KeyVaultKeyIdentifier` | Versionless HTTPS identifier of the `data-protection` Key Vault key. |
+| `ReverseProxy__UseForwardedHeaders` | `true` behind Azure Container Apps ingress so HTTPS cookies and client-IP rate limits use the original request. |
+| `Database__ApplyMigrationsOnStartup` | Leave `false` for normal backend replicas. Set `true` only in the one-off migration job. |
+| `Database__ExitAfterMigrations` | Set `true` together with migration mode so the one-off job exits after applying migrations. |
 
 `Cors__AllowedOrigins` is intentionally a comma-separated environment variable because Compose and most hosting dashboards expose environment values as strings. The backend also supports JSON configuration arrays.
+
+Production uses Azure Blob Storage for the shared ASP.NET Core data-protection key ring and Azure Key Vault to encrypt those keys. The backend Container App authenticates with its managed identity; it needs `Storage Blob Data Contributor`, `Key Vault Crypto User`, and `Key Vault Secrets User`. `DataProtection__KeyDirectory` remains the local Docker setting and is not used by the Azure production path.
 
 ## Optional Model Inference
 
@@ -35,9 +41,9 @@ The backend downloads versioned model assets into `TripDurationModel__CacheDirec
 
 ## Startup Guardrails
 
-In `Production`, the backend refuses to start when any required value is missing, when a configured value contains `change-me`, when CORS contains localhost or non-HTTPS URLs, or when required model settings are absent while inference is enabled. This catches configuration errors before the service accepts traffic.
+In `Production`, the backend refuses to start when any required value is missing, when a configured value contains `change-me`, when CORS contains localhost or non-HTTPS URLs, when Azure data-protection values are incomplete, or when required model settings are absent while inference is enabled. This catches configuration errors before the service accepts traffic.
 
-The guardrail cannot verify that a mounted directory is actually durable or shared between replicas. Verify that with the selected platform before release.
+Normal production replicas do not apply database migrations at startup. A dedicated migration job enables migrations once, then exits before the backend revision accepts traffic.
 
 ## Smoke Test
 

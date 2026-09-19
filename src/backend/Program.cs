@@ -15,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 ProductionConfigurationValidator.Validate(builder.Configuration, builder.Environment);
 
 builder.Services.AddCabryntDataProtection(builder.Configuration);
+builder.Services.AddCabryntForwardedHeaders(builder.Configuration);
 
 // Hasher
 
@@ -188,13 +189,24 @@ builder.Services.AddAuthorization(o => o.AddPolicy("Passenger", p => p.RequireRo
 
 var app = builder.Build();
 
+if (HostingConfiguration.UsesForwardedHeaders(app.Configuration))
+{
+    app.UseForwardedHeaders();
+}
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
-using (var scope = app.Services.CreateScope())
+if (HostingConfiguration.ShouldApplyMigrations(app.Configuration, app.Environment))
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
+}
+
+if (HostingConfiguration.ShouldExitAfterMigrations(app.Configuration, app.Environment))
+{
+    return;
 }
 
 using (var scope = app.Services.CreateScope())

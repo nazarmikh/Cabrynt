@@ -28,7 +28,9 @@ public class DeploymentConfigurationTest
             ["ConnectionStrings:Postgres"] = "Host=db;Database=cabrynt;Username=cabrynt;Password=secret",
             ["Admin:Password"] = "secret",
             ["DataProtection:ApplicationName"] = "Cabrynt",
-            ["DataProtection:KeyDirectory"] = "/keys",
+            ["DataProtection:BlobUri"] = "https://cabrynt.blob.core.windows.net/data-protection/key-ring.xml",
+            ["DataProtection:KeyVaultKeyIdentifier"] = "https://cabrynt.vault.azure.net/keys/data-protection",
+            ["ReverseProxy:UseForwardedHeaders"] = "true",
             ["Cors:AllowedOrigins"] = "http://localhost:3000"
         });
 
@@ -46,7 +48,9 @@ public class DeploymentConfigurationTest
             ["ConnectionStrings:Postgres"] = "Host=db;Database=cabrynt;Username=cabrynt;Password=secret",
             ["Admin:Password"] = "secret",
             ["DataProtection:ApplicationName"] = "Cabrynt",
-            ["DataProtection:KeyDirectory"] = "/keys",
+            ["DataProtection:BlobUri"] = "https://cabrynt.blob.core.windows.net/data-protection/key-ring.xml",
+            ["DataProtection:KeyVaultKeyIdentifier"] = "https://cabrynt.vault.azure.net/keys/data-protection",
+            ["ReverseProxy:UseForwardedHeaders"] = "true",
             ["Cors:AllowedOrigins"] = "https://cabrynt.example",
             ["TripDurationModel:Enabled"] = "true",
             ["Routing:OsrmBaseUrl"] = "http://osrm:5000",
@@ -56,6 +60,65 @@ public class DeploymentConfigurationTest
         });
 
         ProductionConfigurationValidator.Validate(configuration, new ProductionHostEnvironment());
+    }
+
+    [Fact]
+    public void Validate_RejectsMissingAzureDataProtectionConfiguration()
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["ConnectionStrings:Postgres"] = "Host=db;Database=cabrynt;Username=cabrynt;Password=secret",
+            ["Admin:Password"] = "secret",
+            ["DataProtection:ApplicationName"] = "Cabrynt",
+            ["Cors:AllowedOrigins"] = "https://cabrynt.example",
+            ["ReverseProxy:UseForwardedHeaders"] = "true"
+        });
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => ProductionConfigurationValidator.Validate(configuration, new ProductionHostEnvironment()));
+
+        Assert.Contains("DataProtection:BlobUri", exception.Message);
+        Assert.Contains("DataProtection:KeyVaultKeyIdentifier", exception.Message);
+    }
+
+    [Fact]
+    public void ShouldApplyMigrations_OnlyRunsAutomaticallyInDevelopment()
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?>());
+        var productionEnvironment = new ProductionHostEnvironment();
+        var developmentEnvironment = new ProductionHostEnvironment { EnvironmentName = Environments.Development };
+
+        Assert.False(HostingConfiguration.ShouldApplyMigrations(configuration, productionEnvironment));
+        Assert.True(HostingConfiguration.ShouldApplyMigrations(configuration, developmentEnvironment));
+    }
+
+    [Fact]
+    public void ShouldApplyMigrations_AllowsAnExplicitProductionMigrationJob()
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["Database:ApplyMigrationsOnStartup"] = "true"
+        });
+
+        Assert.True(HostingConfiguration.ShouldApplyMigrations(configuration, new ProductionHostEnvironment()));
+    }
+
+    [Fact]
+    public void ShouldExitAfterMigrations_RequiresMigrationMode()
+    {
+        var exitOnlyConfiguration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["Database:ExitAfterMigrations"] = "true"
+        });
+        var migrationJobConfiguration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["Database:ApplyMigrationsOnStartup"] = "true",
+            ["Database:ExitAfterMigrations"] = "true"
+        });
+        var productionEnvironment = new ProductionHostEnvironment();
+
+        Assert.False(HostingConfiguration.ShouldExitAfterMigrations(exitOnlyConfiguration, productionEnvironment));
+        Assert.True(HostingConfiguration.ShouldExitAfterMigrations(migrationJobConfiguration, productionEnvironment));
     }
 
     private static IConfiguration BuildConfiguration(IDictionary<string, string?> values)

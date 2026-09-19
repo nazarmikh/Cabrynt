@@ -45,7 +45,13 @@ public static class ProductionConfigurationValidator
         RequireConfiguredValue(configuration.GetConnectionString("Postgres"), "ConnectionStrings:Postgres", errors);
         RequireConfiguredValue(configuration["Admin:Password"], "Admin:Password", errors);
         RequireConfiguredValue(configuration["DataProtection:ApplicationName"], "DataProtection:ApplicationName", errors);
-        RequireConfiguredValue(configuration["DataProtection:KeyDirectory"], "DataProtection:KeyDirectory", errors);
+        RequireHttpsUri(configuration["DataProtection:BlobUri"], "DataProtection:BlobUri", errors);
+        RequireHttpsUri(configuration["DataProtection:KeyVaultKeyIdentifier"], "DataProtection:KeyVaultKeyIdentifier", errors);
+
+        if (!HostingConfiguration.UsesForwardedHeaders(configuration))
+        {
+            errors.Add("ReverseProxy:UseForwardedHeaders must be true in production.");
+        }
 
         ValidateCorsOrigins(CorsOriginConfiguration.GetConfiguredOrigins(configuration), errors);
         ValidateOptionalModelConfiguration(configuration, errors);

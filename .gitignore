@@ -37,6 +37,9 @@ coverage/
 .env.*
 !.env.example
 
+# Local Azure deployment parameters can contain a real notification address.
+infra/parameters/production.bicepparam
+
 # Generated runtime artifacts
 src/backend/GeneratedEmails/
 src/backend/GeneratedInvoices/

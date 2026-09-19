@@ -38,6 +38,23 @@ public class DataProtectionConfigurationTest : IDisposable
         Assert.Equal("cookie-session", unprotectedValue);
     }
 
+    [Fact]
+    public void UsesAzureKeyStore_RequiresBlobAndKeyVaultUris()
+    {
+        var missingKeyVault = new DataProtectionKeyOptions
+        {
+            BlobUri = "https://cabrynt.blob.core.windows.net/data-protection/key-ring.xml"
+        };
+        var completeConfiguration = new DataProtectionKeyOptions
+        {
+            BlobUri = "https://cabrynt.blob.core.windows.net/data-protection/key-ring.xml",
+            KeyVaultKeyIdentifier = "https://cabrynt.vault.azure.net/keys/data-protection"
+        };
+
+        Assert.False(missingKeyVault.UsesAzureKeyStore);
+        Assert.True(completeConfiguration.UsesAzureKeyStore);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_keyDirectory))
