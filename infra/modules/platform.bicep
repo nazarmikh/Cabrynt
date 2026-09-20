@@ -17,7 +17,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09
     sku: {
       name: 'PerGB2018'
     }
-    retentionInDays: 7
+    retentionInDays: 30
     workspaceCapping: {
       dailyQuotaGb: 1
     }
@@ -85,7 +85,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
       name: 'standard'
     }
     enableRbacAuthorization: true
-    enablePurgeProtection: false
+    enablePurgeProtection: true
     softDeleteRetentionInDays: 7
     publicNetworkAccess: 'Enabled'
     networkAcls: {

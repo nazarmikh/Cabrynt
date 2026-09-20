@@ -6,7 +6,7 @@ This directory defines Cabrynt's Azure production foundation in Bicep. It create
 
 - A France Central resource group and virtual network.
 - A delegated subnet for Azure Container Apps and a separate delegated private subnet for PostgreSQL Flexible Server.
-- A consumption-based Container Apps environment with a seven-day Log Analytics retention period and a `1 GB` daily ingestion cap.
+- A consumption-based Container Apps environment with a 30-day Log Analytics retention period and a `1 GB` daily ingestion cap.
 - Public backend and private OSRM Container Apps, plus a manual migration Container Apps Job.
 - A shared user-assigned managed identity with Blob Data Contributor, Key Vault Crypto User, and Key Vault Secrets User roles.
 - A private PostgreSQL 17 Flexible Server on the `Standard_B1ms` burstable SKU, with a 32 GB storage allocation and seven-day backups.
@@ -51,7 +51,7 @@ az deployment sub what-if `
 
 ## Deployment
 
-The backend uses Azure Blob-backed data-protection keys protected by this Key Vault key. The shared workload identity has `Storage Blob Data Contributor`, `Key Vault Crypto User`, and `Key Vault Secrets User` roles. Backend configuration references Key Vault secrets instead of embedding database or administrator credentials in the Container App definition.
+The backend uses Azure Blob-backed data-protection keys protected by this Key Vault key. The shared workload identity has `Storage Blob Data Contributor`, `Key Vault Crypto User`, and `Key Vault Secrets User` roles. The GitHub deployment identity also needs `Cost Management Contributor` to create the budget. Backend configuration references Key Vault secrets instead of embedding database or administrator credentials in the Container App definition.
 
 The OSRM image in [`src/osrm`](../src/osrm) uses the mounted `osrm-data` Azure Files share. It reuses a prepared Portugal graph when one exists; on its first start, it downloads the Geofabrik Portugal extract and runs OSRM extraction, partitioning, and customization before it accepts route requests.
 
