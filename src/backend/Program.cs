@@ -212,44 +212,32 @@ if (HostingConfiguration.ShouldExitAfterMigrations(app.Configuration, app.Enviro
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
-    try
+    User? adminUser = await db.Users.FirstOrDefaultAsync(x => x.Role == Role.Admin);
+    if (adminUser == null)
     {
-        User? adminUser = await db.Users.FirstOrDefaultAsync(x => x.Role == Role.Admin);
-        if (adminUser == null)
+        string? adminEmail = builder.Configuration["Admin:Email"];
+        string? adminPassword = builder.Configuration["Admin:Password"];
+        if (string.IsNullOrEmpty(adminEmail) || string.IsNullOrEmpty(adminPassword))
         {
-            string? adminEmail = builder.Configuration["Admin:Email"];
-            string? adminPassword = builder.Configuration["Admin:Password"];
-            if (string.IsNullOrEmpty(adminEmail) || string.IsNullOrEmpty(adminPassword))
-            {
-                throw new ArgumentException("Admin email and password are required in .env");
-            }
-            User newAdmin = new User()
-            {
-                Role = Role.Admin,
-                Email = adminEmail,
-                PasswordHash = string.Empty,
-                LastLogin = DateTime.UtcNow,
-                AccountCreated = DateTime.UtcNow
-            };
-
-            newAdmin.PasswordHash = authService.HashPassword(adminPassword, newAdmin);
-
-            await db.Users.AddAsync(newAdmin);
-            await db.SaveChangesAsync();
-
+            throw new ArgumentException("Admin email and password are required in .env");
         }
 
-    }
-    catch (DbUpdateException)
-    {
-        var adminExists = await db.Users.AnyAsync(x => x.Role == Role.Admin);
-        if (!adminExists)
-        {
-            throw new InvalidOperationException("Failed to create admin user.");
-        }
-    }
+        var existingUser = await db.Users.FirstOrDefaultAsync(x => x.Email == adminEmail);
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
+        adminUser = AdminAccountBootstrapper.CreateOrPromote(
+            existingUser,
+            adminEmail,
+            adminPassword,
+            passwordHasher,
+            DateTime.UtcNow);
 
+        if (existingUser == null)
+        {
+            await db.Users.AddAsync(adminUser);
+        }
+
+        await db.SaveChangesAsync();
+    }
 }
 
 
