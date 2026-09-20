@@ -34,16 +34,6 @@ param backendImage string
 @description('Immutable GHCR OSRM image tag to deploy.')
 param osrmImage string
 
-@description('Email address that receives monthly cost alerts.')
-param budgetNotificationEmail string
-
-@minValue(1)
-@description('Monthly resource-group budget in EUR.')
-param monthlyBudgetAmount int = 60
-
-@description('First day of the monthly budget period in UTC, in YYYY-MM-DD format.')
-param budgetStartDate string
-
 var uniqueSuffix = take(uniqueString(subscription().id, resourceGroupName, location), 6)
 var compactApplicationName = toLower(replace(applicationName, '-', ''))
 var storageAccountName = 'st${compactApplicationName}${uniqueSuffix}'
@@ -89,16 +79,6 @@ module database './modules/postgres.bicep' = {
     administratorPassword: postgresAdministratorPassword
     virtualNetworkId: network.outputs.virtualNetworkId
     postgresSubnetId: network.outputs.postgresSubnetId
-  }
-}
-
-module budget './modules/budget.bicep' = {
-  name: 'budget'
-  scope: deploymentResourceGroup
-  params: {
-    amount: monthlyBudgetAmount
-    notificationEmail: budgetNotificationEmail
-    startDate: budgetStartDate
   }
 }
 

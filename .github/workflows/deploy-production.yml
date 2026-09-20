@@ -45,7 +45,6 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
           FRONTEND_ORIGIN: ${{ vars.FRONTEND_ORIGIN }}
-          BUDGET_NOTIFICATION_EMAIL: ${{ vars.BUDGET_NOTIFICATION_EMAIL }}
         run: |
           migration_job_name="$(az deployment sub create \
             --name "cabrynt-${GITHUB_RUN_ID}" \
@@ -60,8 +59,6 @@ jobs:
               frontendOrigin="$FRONTEND_ORIGIN" \
               backendImage="$BACKEND_IMAGE:${{ inputs.backend_image_tag }}" \
               osrmImage="$OSRM_IMAGE:${{ inputs.osrm_image_tag }}" \
-              budgetNotificationEmail="$BUDGET_NOTIFICATION_EMAIL" \
-              budgetStartDate="$(date -u +%F)" \
             --query properties.outputs.migrationJobName.value \
             --output tsv)"
 

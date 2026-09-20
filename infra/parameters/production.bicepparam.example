@@ -8,8 +8,4 @@ param adminEmail = 'replace-with-your-admin-email@example.com'
 param frontendOrigin = 'https://replace-with-your-vercel-domain.vercel.app'
 param backendImage = 'ghcr.io/nazarmikh/cabrynt-backend:replace-with-commit-sha'
 param osrmImage = 'ghcr.io/nazarmikh/cabrynt-osrm:replace-with-commit-sha'
-param budgetNotificationEmail = 'replace-with-your-email@example.com'
-param monthlyBudgetAmount = 60
-param budgetStartDate = '2026-09-18'
-
 // Do not add postgresAdministratorPassword here. Pass it through Azure CLI at deployment time.
