@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, ArrowUpRight, Check, Github, Linkedin, Navigation } from "lucide-react"
+import { ArrowRight, ArrowUpRight } from "lucide-react"
+import { PublicHeader } from "@/components/public-header"
 
 const steps = [
   ["01", "Route request", "Coordinates and ride details"],
@@ -13,61 +14,18 @@ const steps = [
 const githubUrl = "https://github.com/nazarmikh/Cabrynt"
 const linkedInUrl = "https://www.linkedin.com/in/nazar-mikhin-dev/"
 
-function Wordmark() {
-  return (
-    <Link
-      href="#top"
-      className="flex items-center gap-2.5 font-semibold tracking-[-0.03em] text-[#172033]"
-      aria-label="Cabrynt home"
-    >
-      <span className="flex size-7 items-center justify-center rounded-[4px] bg-[#3157D5] text-sm font-bold text-white">
-        C
-      </span>
-      <span>cabrynt</span>
-    </Link>
-  )
-}
-
 function RoutePreview() {
   return (
     <div className="overflow-hidden rounded-lg border border-[#D9DCD8] bg-[#FCFCFA] shadow-[0_16px_40px_rgba(23,32,51,0.07)]">
-      <div className="flex items-center justify-between border-b border-[#E7E9E4] px-5 py-3.5 text-xs text-[#556070]">
-        <span className="font-medium text-[#172033]">Example quote response</span>
-        <span>Aliados → Boavista</span>
-      </div>
-      <div className="relative h-[270px] overflow-hidden bg-[#E9ECE8]">
+      <div className="relative aspect-[1672/941]">
         <Image
-          src="/cabrynt-route-preview.png"
-          alt="Route visualization for an Aliados to Boavista quote"
+          src="/cabrynt-home-preview.png"
+          alt="Cabrynt model demo showing a Porto route, OSRM baseline, and ML-corrected trip-duration prediction"
           fill
           priority
           sizes="(min-width: 1024px) 700px, 100vw"
           className="object-cover"
         />
-        <div className="absolute left-4 top-4 flex items-center gap-2 rounded border border-[#D9DCD8] bg-[#FCFCFA]/95 px-3 py-2 text-xs text-[#556070]">
-          <Navigation className="size-3.5 text-[#3157D5]" />
-          OSRM road route
-        </div>
-      </div>
-      <div className="border-t border-[#E7E9E4] p-5">
-        <div className="grid gap-5 sm:grid-cols-3">
-          <div>
-            <p className="text-xs text-[#556070]">OSRM baseline</p>
-            <p className="mt-1 text-lg font-semibold text-[#8B632E]">3 min 37 sec</p>
-          </div>
-          <div>
-            <p className="text-xs text-[#556070]">ML correction</p>
-            <p className="mt-1 text-lg font-semibold text-[#3157D5]">+4 min 32 sec</p>
-          </div>
-          <div>
-            <p className="text-xs text-[#556070]">Estimated duration</p>
-            <p className="mt-1 text-lg font-semibold text-[#246C66]">8 min 9 sec</p>
-          </div>
-        </div>
-        <div className="mt-5 flex items-center gap-2 border-t border-[#E7E9E4] pt-3 text-xs text-[#556070]">
-          <Check className="size-3.5 text-[#2A7F78]" />
-          Source: ONNX residual model · version 1.0.0
-        </div>
       </div>
     </div>
   )
@@ -76,23 +34,7 @@ function RoutePreview() {
 export default function CabryntHome() {
   return (
     <main id="top" className="min-h-screen bg-[#F7F7F4] text-[#172033]">
-      <header className="border-b border-[#E7E9E4]">
-        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-6 py-5 lg:px-8">
-          <Wordmark />
-          <nav className="flex items-center gap-4" aria-label="Social profiles">
-            <a href={githubUrl} target="_blank" rel="noreferrer" className="text-[#556070] transition-colors hover:text-[#172033]" aria-label="GitHub" title="GitHub">
-              <Github className="size-4" />
-            </a>
-            <a href={linkedInUrl} target="_blank" rel="noreferrer" className="text-[#556070] transition-colors hover:text-[#172033]" aria-label="LinkedIn" title="LinkedIn">
-              <Linkedin className="size-4" />
-            </a>
-          </nav>
-          <div className="flex justify-end gap-5 text-sm">
-            <Link href="/model-insights" className="text-[#3157D5] transition-colors hover:text-[#172033]">Try model</Link>
-            <Link href="/login" className="font-medium text-[#172033] transition-colors hover:text-[#3157D5]">Sign in</Link>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       <section className="mx-auto grid max-w-6xl gap-12 px-6 pb-20 pt-16 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:px-8 lg:pb-24 lg:pt-24">
         <div>

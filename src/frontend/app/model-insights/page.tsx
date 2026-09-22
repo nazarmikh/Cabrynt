@@ -1,9 +1,8 @@
 "use client"
 
-import Link from "next/link"
 import { useState } from "react"
 import { Clock3, Loader2, MapPin, Route, Sparkles } from "lucide-react"
-import { CabryntLogo } from "@/components/cabrynt-logo"
+import { PublicHeader } from "@/components/public-header"
 import { PortoRoutePicker, type RoutePoint } from "@/components/ride/porto-route-picker"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -64,15 +63,7 @@ export default function ModelInsightsPage() {
 
   return (
     <main className="min-h-screen bg-[#F7F7F4] text-[#172033]">
-      <header className="border-b border-[#E7E9E4] bg-[#FCFCFA]">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" aria-label="Cabrynt home"><CabryntLogo /></Link>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" className="text-[#172033] hover:bg-[#E9ECE8] hover:text-[#172033]" asChild><Link href="/login">Sign in</Link></Button>
-            <Button className="bg-[#3157D5] text-white hover:bg-[#2748B4]" asChild><Link href="/register">Create account</Link></Button>
-          </div>
-        </div>
-      </header>
+      <PublicHeader currentPage="model" />
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <section className="max-w-3xl py-10 lg:py-14">
