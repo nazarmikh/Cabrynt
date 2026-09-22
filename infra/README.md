@@ -52,9 +52,9 @@ az deployment sub what-if `
 
 The backend uses Azure Blob-backed data-protection keys protected by this Key Vault key. The shared workload identity has `Storage Blob Data Contributor`, `Key Vault Crypto User`, and `Key Vault Secrets User` roles. Backend configuration references Key Vault secrets instead of embedding database or administrator credentials in the Container App definition.
 
-The OSRM image in [`src/osrm`](../src/osrm) uses the mounted `osrm-data` Azure Files share. It reuses a prepared Portugal graph when one exists; on its first start, it downloads the Geofabrik Portugal extract and runs OSRM extraction, partitioning, and customization before it accepts route requests.
+The OSRM image in [`src/osrm`](../src/osrm) uses the mounted `osrm-data` Azure Files share. The Portugal graph must be prepared outside the production Container App and uploaded to that share before the first production OSRM start. Preparing the full Portugal extract exceeds the memory assigned to the consumption-based OSRM app; runtime replicas only load the prepared graph and serve routes.
 
-The migration job is manual. It starts the backend image with migrations enabled, exits after they complete, and is intended to run before a backend image revision is deployed.
+The migration job is manual. It starts the backend image with migrations enabled and exits after they complete. The current deployment workflow applies the Azure template, then starts and waits for this job; backend schema changes therefore need to remain compatible while that post-deployment migration runs.
 
 ## GitHub Actions
 
@@ -72,8 +72,16 @@ Configure these repository variables:
 - `ADMIN_EMAIL`
 - `FRONTEND_ORIGIN`
 
-Use a GitHub `production` environment and add a required reviewer before the first real deployment. The workflow deploys only after GitHub grants that environment approval.
+The workflow targets the GitHub `production` environment. Add required reviewers when manual deployment approval is desired; GitHub enforces any protection rules configured on that environment before the workflow runs.
+
+## OSRM graph preparation
+
+Prepare the Portugal graph locally with the optional Docker Compose routing profile. Export only the generated `portugal-latest.osrm*` files from the `osrm_data` Docker volume, then upload them to the `osrm-data` Azure Files share. The original `.pbf` download is not required in Azure.
+
+After the upload, restart the active OSRM revision. Confirm that the revision is healthy and that a quote reports `routeEstimateSource: "Osrm"` before treating the deployment as ready.
+
+The OSRM graph is a long-lived operational artifact. Rebuild and upload it only when intentionally updating the OpenStreetMap source data or changing the OSRM profile/version.
 
 ## Budget alert
 
-Create the budget separately in Azure Portal after the application deployment. Cost-management permissions on this Azure subscription cannot be used by the GitHub deployment identity, and an alert must not block application releases. Use the `rg-cabrynt-prod-frc` resource group, a monthly EUR 60 cost budget, and email notifications at 50%, 75%, and 90%.
+Create the budget separately in Azure Portal after the application deployment. Cost-management permissions on this Azure subscription cannot be used by the GitHub deployment identity, and an alert must not block application releases. Use the `rg-cabrynt-prod-frc` resource group, a monthly EUR 45 cost budget, and email notifications at 50%, 75%, and 90%.

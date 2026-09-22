@@ -1,6 +1,6 @@
 # Production Configuration
 
-This document describes the application configuration required before selecting a hosting platform. It does not prescribe a cloud provider, reverse proxy, or deployment topology.
+This document describes Cabrynt's production configuration and the guardrails used by its Vercel and Azure deployment. The frontend is hosted on Vercel; the backend, PostgreSQL database, and internal OSRM service run on Azure.
 
 ## Required Values
 
@@ -25,6 +25,8 @@ Set these values in the deployment platform's secret or environment-variable sto
 
 Production uses Azure Blob Storage for the shared ASP.NET Core data-protection key ring and Azure Key Vault to encrypt those keys. The backend Container App authenticates with its managed identity; it needs `Storage Blob Data Contributor`, `Key Vault Crypto User`, and `Key Vault Secrets User`. `DataProtection__KeyDirectory` remains the local Docker setting and is not used by the Azure production path.
 
+`NEXT_PUBLIC_API_BASE_URL` is a non-secret Vercel build-time configuration value. Configure it for the production environment, then redeploy the frontend so the browser bundle uses the deployed backend URL.
+
 ## Optional Model Inference
 
 Leave `TripDurationModel__Enabled=false` when the routing service or model assets are not available. When it is enabled, configure all of the following:
@@ -38,6 +40,8 @@ Leave `TripDurationModel__Enabled=false` when the routing service or model asset
 | `Weather__Enabled` | `true` to supply the weather features expected by the model. |
 
 The backend downloads versioned model assets into `TripDurationModel__CacheDirectory`. That directory must be persistent if startup should avoid downloading the assets after every container recreation.
+
+The OSRM Container App mounts a prepared Portugal graph from Azure Files. Do not rely on it to preprocess the full Portugal `.pbf` on startup; prepare and upload the `portugal-latest.osrm*` files before enabling production routing.
 
 ## Startup Guardrails
 
@@ -55,3 +59,4 @@ After deployment, verify the following in order:
 4. A Porto route quote returns an OSRM or ML source as configured.
 5. Stop and recreate the backend instance, then confirm an existing authenticated browser session still works.
 6. Confirm that an unavailable OSRM, weather provider, or model produces the documented quote fallback rather than an unhandled error.
+7. Confirm that the OSRM Container App revision is healthy and a normal Porto route reports `routeEstimateSource: "Osrm"` and `estimatedTripDurationSource: "MachineLearning"`.

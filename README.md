@@ -1,18 +1,50 @@
 # Cabrynt
 
-Cabrynt is a Porto ride quotation and request platform built with ASP.NET Core. It combines route-aware pricing with a reproducible trip-duration machine-learning experiment.
+Cabrynt is an ML-assisted Porto trip-duration prediction and ride quotation application built with ASP.NET Core. It combines OSRM road routing with an ONNX residual model that adjusts route-duration estimates using quote-time context.
 
-The application is actively evolving as a portfolio project focused on backend engineering, data-intensive workflows, and production-oriented development practices.
+It covers historical trip preparation, model evaluation, ONNX inference in .NET, persisted quote snapshots, and a deployed application.
+
+## Live Deployment
+
+The public application is available at [cabrynt.vercel.app](https://cabrynt.vercel.app).
+
+The frontend runs on Vercel. The ASP.NET Core API runs on Azure Container Apps with PostgreSQL, private OSRM routing, and Azure storage for operational data. GitHub Actions publishes immutable container images and deploys them to Azure through OpenID Connect.
+
+![Cabrynt model demo showing an OSRM route baseline and ML-corrected trip-duration prediction](src/frontend/public/cabrynt-model-demo.png)
 
 ## Highlights
 
-- Cookie-based browser authentication with role-based authorization.
-- Passenger authentication, route quotes, saved ride requests with quote snapshots, cancellation, and support workflows.
-- PostgreSQL for application data.
-- REST APIs, OpenAPI documentation, FluentValidation, and automated tests.
-- Docker Compose development environment with PostgreSQL, administration tools, and an optional local OSRM routing profile.
-- GitHub Actions checks for formatting, build, unit tests, integration tests, ML tests, dependency auditing, and Docker image builds.
-- An OSRM-aware, ONNX-exported trip-duration model with guarded .NET quote inference and explicit fallback sources.
+- **OSRM-residual trip-duration model exported to ONNX, parity-tested against scikit-learn, and integrated into ASP.NET Core with explicit fallback behavior.**
+- A **38.4% MAE reduction** versus direct OSRM on the locked confirmation cohort: **5.488 min to 3.383 min**.
+- A public model demo that shows the OSRM baseline, ML correction, final prediction, and model version for Porto routes.
+- Reproducible feature engineering, chronological validation, and model selection for the Porto taxi dataset.
+
+## Architecture
+
+The quote path starts with a Porto route request. The API obtains an OSRM baseline and quote-time context, applies the ONNX correction when it is available, and persists the resulting quote snapshot in PostgreSQL. Minimal API endpoints, services, repositories, DTOs, and validators keep those responsibilities separate.
+
+```mermaid
+flowchart LR
+    A[Porto route] --> B[ASP.NET Core quote API]
+    B --> C[OSRM road-route baseline]
+    B --> D[Weather and calendar context]
+    C --> E[ONNX residual model]
+    D --> E
+    E --> F[Predicted trip duration]
+    F --> G[PostgreSQL quote snapshot]
+```
+
+## Technology Stack
+
+| Area | Technologies |
+| --- | --- |
+| Backend | .NET 10, ASP.NET Core Minimal APIs, Entity Framework Core, FluentValidation |
+| Data | PostgreSQL |
+| API | REST, OpenAPI/Swagger |
+| Authentication | ASP.NET Core cookie authentication, role-based authorization |
+| ML | Python, pandas, scikit-learn, LightGBM experiments, ONNX, ONNX Runtime, OSRM |
+| Frontend | Next.js, React, TypeScript |
+| Quality and delivery | xUnit, pytest, Docker Compose, GitHub Actions, centralized NuGet package management |
 
 ## Trip Duration ML Experiment
 
@@ -20,7 +52,9 @@ The application is actively evolving as a portfolio project focused on backend e
 
 The selected model is a HistGradientBoosting residual model: OSRM provides a road-network duration estimate, and the model predicts a correction. When the model, current weather, an OSRM route, and Porto-scoped coordinates are available, the application calculates `max(OSRM duration + model correction, 0)`. Otherwise, it returns the OSRM estimate or the existing straight-line fallback and identifies the source in the quote response.
 
-The deployed residual model was fitted on 199,994 route-ready historical trips drawn from a 1,049,044-trip cleaned training split. It was then evaluated once on a separate, locked 4,999-trip chronological confirmation cohort that was not used for feature, parameter, or model selection:
+The cleaned historical data was split chronologically into 1,049,044 training trips, 224,795 validation trips, and 224,795 test trips. Feature engineering, candidate comparisons, and model selection used the training and validation splits; the final residual parameters were selected with expanding chronological folds inside the route-ready training cohort.
+
+After those decisions were frozen, the deployed residual model was fitted on 199,994 route-ready trips drawn only from the training split. It was evaluated once on a separate, locked 4,999-trip chronological confirmation cohort sampled from the test split. That cohort was not used for feature, parameter, model, or threshold selection:
 
 | Model | MAE | Median absolute error | P90 absolute error |
 | --- | ---: | ---: | ---: |
@@ -36,6 +70,9 @@ The model has a versioned 23-feature float32 ONNX contract. Its ONNX predictions
 When runtime ML inference is enabled, the passenger quote page shows the estimated trip time separately from the fare calculation and identifies whether it used the ML correction, OSRM routing, or the straight-line fallback. Creating a ride request persists that estimate and, for ML estimates, the configured model version so ride history remains auditable after the quote response expires. OSRM-backed results include OpenStreetMap attribution. The backend accepts quote and ride-request coordinates only inside Cabrynt's Porto service area, matching the route picker and the geographic scope of the model.
 
 Generated data, route caches, and production model binaries are intentionally excluded from Git. The trained ONNX model and its metadata are published as versioned GitHub Release assets rather than committed to source control. See the [ML README](ml/trip-duration/README.md) for methodology, data preparation, benchmarks, and local setup.
+
+<details>
+<summary>Local model inference and status</summary>
 
 ### Enable Model Inference
 
@@ -55,30 +92,7 @@ The tracked [`.env.example`](.env.example) contains the current release URLs and
 
 Administrators can open `/admin` to inspect whether the configured trip-duration model is disabled, loading, ready, or unavailable. The page reads the admin-only `GET /api/private/model-status` endpoint and shows the configured model version when inference is enabled. It intentionally does not expose model paths, release URLs, checksums, or raw startup errors.
 
-## Architecture
-
-The .NET backend uses a pragmatic layered structure:
-
-- **Endpoints** expose Minimal API routes.
-- **Services** contain application and business workflows.
-- **Repositories** isolate PostgreSQL access.
-- **DTOs and validators** define and validate API boundaries.
-
-PostgreSQL stores users, passenger profiles, ride requests and their prediction metadata, tickets, and other application data.
-
-The frontend is a Next.js application that consumes the backend REST API.
-
-## Technology Stack
-
-| Area | Technologies |
-| --- | --- |
-| Backend | .NET 10, ASP.NET Core Minimal APIs, Entity Framework Core, FluentValidation |
-| Data | PostgreSQL |
-| API | REST, OpenAPI/Swagger |
-| Authentication | ASP.NET Core cookie authentication, role-based authorization |
-| ML | Python, pandas, scikit-learn, LightGBM experiments, ONNX, ONNX Runtime, OSRM |
-| Frontend | Next.js, React, TypeScript |
-| Quality and delivery | xUnit, pytest, Docker Compose, GitHub Actions, centralized NuGet package management |
+</details>
 
 ## Repository Structure
 
@@ -132,15 +146,11 @@ Readiness: http://localhost:5113/health/ready
 
 Docker Compose defaults to the `Development` environment because the local frontend and backend use HTTP. This lets the development cookie policy use the request scheme. A deployed production environment must set `ASPNETCORE_ENVIRONMENT=Production` and terminate HTTPS before enabling secure browser authentication.
 
-## Deployment Checklist
+## Production Deployment
 
-Before deploying, configure the production frontend URL through `Cors__AllowedOrigins` and `NEXT_PUBLIC_API_BASE_URL`. Do not commit a production `.env` file. Store database, admin, and application secrets in the hosting provider or GitHub Secrets. The backend now fails fast in `Production` when PostgreSQL, the admin password, data-protection settings, HTTPS CORS origins, or enabled-model URLs are missing or use placeholder values.
+The frontend is hosted on Vercel and the backend runs on Azure Container Apps alongside private OSRM routing and PostgreSQL. GitHub Actions publishes immutable GHCR images and deploys through Azure OpenID Connect. Production uses persistent storage for database data, protected cookie-authentication keys, the ONNX model cache, and the prepared OSRM graph.
 
-The production deployment must provide persistent PostgreSQL storage and a persistent data-protection key store. Configure `Routing__OsrmBaseUrl`, the model release URLs, and weather settings before enabling model inference. After deployment, verify registration, cookie login, a model-backed route quote, fallback behavior, ride cancellation, and backend restart behavior.
-
-The required production settings and pre-deployment checks are documented in [Production configuration](docs/production-configuration.md).
-
-Cookie-authentication keys are persisted in Docker's `data_protection_keys` volume. This preserves active sessions when the backend container is recreated. For a multi-instance production deployment, replace the local volume with a shared protected key store such as a cloud key-management service.
+Deployment configuration, release steps, and operational checks are documented in [Production configuration](docs/production-configuration.md) and [Azure infrastructure](infra/README.md).
 
 ### Enable Local Road Routing
 
@@ -185,10 +195,10 @@ The ML environment and data preparation instructions are documented in the [ML R
 
 ## Roadmap
 
-- Configure a production routing provider and deployment environment.
 - Add OpenID Connect login for a production identity provider.
-- Add OpenTelemetry traces, metrics, and production deployment configuration.
-- Improve dispatch, concurrency handling, API consistency, and integration-test infrastructure.
+- Add OpenTelemetry traces and application-level metrics.
+- Improve API consistency and integration-test infrastructure.
+- Extend administrator workflows only when a concrete operational use case requires them.
 
 ## Notes
 
